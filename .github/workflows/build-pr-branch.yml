@@ -1,4 +1,4 @@
-name: Build PR Branch
+name: Build PR Branch (Next.JS)
 
 on:
   pull_request:
