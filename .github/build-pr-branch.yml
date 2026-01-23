@@ -1,0 +1,28 @@
+name: Build PR Branch
+
+on:
+  pull_request:
+    types: [opened, synchronized, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+
+      - name: Create .env file
+        uses: SpicyPizza/create-envfile@v1.3.0
+        with:
+          file_name: .env.local
+          envkey_NEXT_PUBLIC_BACKEND_URL: 'test'
+
+      - name: Install Dependencies
+        uses: npm i
+
+      - name: Build
+        uses: npm run build
