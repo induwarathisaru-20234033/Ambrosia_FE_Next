@@ -2,7 +2,7 @@ name: Build PR Branch (Next.JS)
 
 on:
   pull_request:
-    types: [opened, synchronized, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
