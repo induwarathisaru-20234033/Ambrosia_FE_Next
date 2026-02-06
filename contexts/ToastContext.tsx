@@ -15,7 +15,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ toastRef }}>
-      <Toast ref={toastRef} position="top-right" />
+      <Toast ref={toastRef} position="top-right"/>
       {children}
     </ToastContext.Provider>
   );

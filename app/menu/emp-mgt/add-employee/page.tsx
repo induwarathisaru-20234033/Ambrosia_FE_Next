@@ -32,7 +32,7 @@ export default function AddEmployeePage() {
   const toastRef = useToastRef();
   const mutation = usePostQuery({
     redirectPath: "/menu/emp-mgt",
-    successMessage: "Employee created successfully",
+    successMessage: "Employee created successfully!",
     toastRef: toastRef,
   });
 
