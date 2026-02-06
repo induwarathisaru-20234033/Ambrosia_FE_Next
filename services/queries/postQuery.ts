@@ -53,7 +53,7 @@ export const usePostQuery = ({
       if (invalidateKey) {
         if (Array.isArray(invalidateKey)) {
           invalidateKey.forEach((key) =>
-            queryClient.invalidateQueries({ queryKey: [key] })
+            queryClient.invalidateQueries({ queryKey: [key] }),
           );
         } else {
           queryClient.invalidateQueries({ queryKey: invalidateKey });
