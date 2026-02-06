@@ -2,6 +2,7 @@
 
 import { IEmployeeCreateRequest } from "@/data-types";
 import { addEmployeeSchema } from "@/schemas";
+import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { Form, Formik } from "formik";
 import dynamic from "next/dynamic";
@@ -28,9 +29,11 @@ interface InitialValues {
 }
 
 export default function AddEmployeePage() {
+  const toastRef = useToastRef();
   const mutation = usePostQuery({
     redirectPath: "/menu/emp-mgt",
     successMessage: "Employee created successfully",
+    toastRef: toastRef,
   });
 
   return (

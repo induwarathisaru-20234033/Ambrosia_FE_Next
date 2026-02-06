@@ -23,14 +23,7 @@ interface PostQueryOptions extends UseMutationOptions<
   redirectPath?: string;
   successMessage?: string | null;
   invalidateKey?: (string | number)[];
-  toastRef?: RefObject<{
-    show: (options: {
-      severity: string;
-      summary: string;
-      detail: string | null;
-      life: number;
-    }) => void;
-  }>;
+  toastRef?: RefObject<any>;
 }
 
 export const usePostQuery = ({
