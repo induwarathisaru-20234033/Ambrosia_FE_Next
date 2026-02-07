@@ -23,14 +23,7 @@ interface PostQueryOptions extends UseMutationOptions<
   redirectPath?: string;
   successMessage?: string | null;
   invalidateKey?: (string | number)[];
-  toastRef?: RefObject<{
-    show: (options: {
-      severity: string;
-      summary: string;
-      detail: string | null;
-      life: number;
-    }) => void;
-  }>;
+  toastRef?: RefObject<any>;
 }
 
 export const usePostQuery = ({
@@ -53,7 +46,7 @@ export const usePostQuery = ({
       if (invalidateKey) {
         if (Array.isArray(invalidateKey)) {
           invalidateKey.forEach((key) =>
-            queryClient.invalidateQueries({ queryKey: [key] })
+            queryClient.invalidateQueries({ queryKey: [key] }),
           );
         } else {
           queryClient.invalidateQueries({ queryKey: invalidateKey });

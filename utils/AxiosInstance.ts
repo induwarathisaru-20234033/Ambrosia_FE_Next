@@ -1,8 +1,7 @@
 import axios from "axios";
-import { getSession } from "next-auth/react";
 
 const axiosAuth = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_API,
   headers: {
     "Content-Type": "application/json",
   },
