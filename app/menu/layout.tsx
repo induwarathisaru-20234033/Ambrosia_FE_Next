@@ -8,9 +8,9 @@ export default async function MenuLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    redirect("/login");
-  }
+  // if (!session) {
+  //   redirect("/login");
+  // }
 
   return <MenuLayoutClient session={session}>{children}</MenuLayoutClient>;
 }
