@@ -134,7 +134,10 @@ export default function SigninForm() {
             </div>
 
             {errorMessage ? (
-              <p className="text-sm !text-red-600 !text-center">
+              <p
+                className="text-sm text-center text-red-600"
+                style={{ color: "#dc2626" }}
+              >
                 {errorMessage}
               </p>
             ) : null}
