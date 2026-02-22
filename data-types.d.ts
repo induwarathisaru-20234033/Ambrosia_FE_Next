@@ -8,3 +8,9 @@ export interface IEmployeeCreateRequest {
     username: string;
     password: string;
 }
+
+export interface IRoleCreateRequest {
+    roleCode: string;
+    roleName: string;
+    description?: string;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { IEmployeeCreateRequest } from "@/data-types";
+import { IEmployeeCreateRequest, IRoleCreateRequest } from "@/data-types";
 import { addEmployeeSchema } from "@/schemas";
 import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
@@ -40,15 +40,10 @@ export default function AddRolePage() {
       }}
       validationSchema={addEmployeeSchema}
       onSubmit={async (values) => {
-        const body: IEmployeeCreateRequest = {
-          employeeId: values.roleCode,
-          firstName: values.roleName,
-          lastName: values.description,
-          email: values.email,
-          mobileNumber: fullMobileNumber,
-          username: values.username,
-          password: values.password,
-          address: values.address,
+        const body: IRoleCreateRequest = {
+          roleCode: values.roleCode,
+          roleName: values.roleName,
+          description: values.description,
         };
         mutation.mutate({ url: "/employees", body });
       }}
@@ -60,76 +55,35 @@ export default function AddRolePage() {
               <h1 className="h1-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] font-semibold">
                 Add Role
               </h1>
-                 <h2 className="h2-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] ">
-                Add Role
+              <h2 className="h2-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] pl-4">
+                Role
               </h2>
               <Container className="scrollable-container">
                 <div className="scrollable-content">
                   <LabelGroup
-                    label="Employee Id*"
-                    name="employeeId"
+                    label="Role Code*"
+                    name="roleCode"
                     type="text"
                     placeholder="ID"
                     id="formID"
                     disabled={false}
                   />
                   <LabelGroup
-                    label="Username*"
-                    name="username"
+                    label="Title/Name*"
+                    name="roleName"
                     type="text"
-                    placeholder="Username"
-                    id="formUserName"
+                    placeholder="Role Name"
+                    id="formRoleName"
                     disabled={false}
                   />
                   <LabelGroup
-                    label="Password*"
-                    name="password"
-                    type="password"
-                    placeholder="Password"
-                    id="formPassword"
-                    disabled={false}
-                  />
-                  <LabelGroup
-                    label="Email"
-                    name="email"
-                    type="email"
-                    placeholder="Email"
-                    id="formEmail"
-                    disabled={false}
-                  />
-                  <LabelGroup
-                    label="First Name*"
-                    name="firstName"
+                    label="Description*"
+                    name="description"
                     type="text"
-                    placeholder="First Name"
-                    id="formFirstName"
+                    placeholder="Description"
+                    id="formDescription"
                     disabled={false}
-                  />
-                  <LabelGroup
-                    label="Last Name*"
-                    name="lastName"
-                    type="text"
-                    placeholder="Last Name"
-                    id="formLastName"
-                    disabled={false}
-                  />
-                  <LabelGroup
-                    label="Mobile Number*"
-                    name="mobileNumber"
-                    type="text"
-                    placeholder="Mobile Number"
-                    id="formMobileNumber"
-                    disabled={false}
-                    prefix={`+94`}
-                  />
-                  <LabelGroup
-                    name="address"
-                    label="Address*"
-                    type="text"
-                    id="address"
-                    placeholder="Address"
-                    disabled={false}
-                  />
+                  />         
                 </div>
                 <div>
                   <Col className="btn-group w-full mr-2 p-0">
