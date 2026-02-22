@@ -18,43 +18,32 @@ const ScrollPanel = dynamic(() =>
 );
 
 interface InitialValues {
-  employeeId: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  mobileNumber: string;
-  username: string;
-  password: string;
-  address: string;
+  roleCode: string;
+  roleName: string;
+  description: string;
 }
 
-export default function AddEmployeePage() {
+export default function AddRolePage() {
   const toastRef = useToastRef();
   const mutation = usePostQuery({
     redirectPath: "/menu/emp-mgt",
-    successMessage: "Employee created successfully!",
+    successMessage: "Role created successfully!",
     toastRef: toastRef,
   });
 
   return (
     <Formik<InitialValues>
       initialValues={{
-        employeeId: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        mobileNumber: "",
-        username: "",
-        password: "",
-        address: "",
+        roleCode: "",
+        roleName: "",
+        description: "",
       }}
       validationSchema={addEmployeeSchema}
       onSubmit={async (values) => {
-        const fullMobileNumber = `94${values.mobileNumber}`;
         const body: IEmployeeCreateRequest = {
-          employeeId: values.employeeId,
-          firstName: values.firstName,
-          lastName: values.lastName,
+          employeeId: values.roleCode,
+          firstName: values.roleName,
+          lastName: values.description,
           email: values.email,
           mobileNumber: fullMobileNumber,
           username: values.username,
