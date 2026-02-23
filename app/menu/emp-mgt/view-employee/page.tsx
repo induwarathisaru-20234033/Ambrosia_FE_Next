@@ -208,11 +208,12 @@ const { data, isFetching } = useGetQuery<
         responsiveLayout="scroll"
       >
         <Column field="employeeId" header="Employee ID" sortable />
-        <Column field="firstName" header="First Name" sortable />
-        <Column field="lastName" header="Last Name" sortable />
+        <Column header="Full Name" sortable
+            body={(rowData: EmployeeDto) => `${rowData.firstName} ${rowData.lastName}`}/>
         <Column field="username" header="Username" sortable />
         <Column field="email" header="Email" sortable />
         <Column field="mobileNumber" header="Mobile Number" sortable />
+        <Column field="status" header="Status" sortable />
         <Column field="address" header="Address" sortable />
       </DataTable>
     </Container>
