@@ -736,3 +736,9 @@ a {
   width: 110px;
 }
 
+/* Makes all PrimeReact table headers light grey */
+.p-datatable-thead > tr > th {
+  background-color: #e5e7eb; /* Tailwind gray-200 */
+  color: #1f2937; /* dark text */
+}
+

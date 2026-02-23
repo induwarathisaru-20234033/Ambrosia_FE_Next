@@ -8,6 +8,8 @@ import { Formik, Form, Field } from "formik";
 
 import { DataTable, SortOrder } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+
+import { useRouter } from "next/navigation"; // Next.js 13+ router
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -74,18 +76,20 @@ export default function ViewEmployeePage() {
 
   const [filters, setFilters] = useState<EmployeeFilter>(initialFilters);
 
-  // Custom GET hook
-const { data, isFetching } = useGetQuery<
-  ApiResponse<PagedResponse<EmployeeDto>>,
-  EmployeeFilter
->(
-  ["employees", JSON.stringify(filters)],
-  "/employees",
-  filters,
-  true
-);
+  // Custom GET hook for employee data
+  const { data, isFetching } = useGetQuery<
+    ApiResponse<PagedResponse<EmployeeDto>>,
+    EmployeeFilter
+  >(
+    ["employees", JSON.stringify(filters)],
+    "/employees",
+    filters,
+    true
+  );
 
-    // Handle form submission  SEARCH
+  const router = useRouter();
+
+  // Handle form submission  SEARCH
   const handleSubmit = (values: EmployeeFilter) => {
     setFilters({ ...values, pageNumber: 1 }); // reset page to 1 on new search
     // refetch(); // No need to call refetch, useGetQuery will automatically fetch when filters change
@@ -103,6 +107,12 @@ const { data, isFetching } = useGetQuery<
     // refetch();
   };
 
+  const handleEdit = (employeeId: number) => {
+    router.push(`/employees/edit/${employeeId}`); // navigate to edit page
+  };
+
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeDto | null>(null);
+
   const onSort = (event: any) => {
   const updated: EmployeeFilter= {
     ...filters,
@@ -110,11 +120,9 @@ const { data, isFetching } = useGetQuery<
     sortOrder: event.sortOrder as SortOrder,
     pageNumber: 1,
   };
+
   setFilters(updated);
-  // refetch();
-};
-
-
+  };
 
   return (
     <Container>
@@ -169,16 +177,15 @@ const { data, isFetching } = useGetQuery<
                   id="filterEmployeeBtn"
                   text="Filter"
                   type="submit"
-                  className="bg-[#0086ED] text-white flex-1 py-2 rounded-xl"
+                  className="bg-[#0086ED] text-white flex-1 py-2 rounded-xl hover:bg-blue-600 transition-colors duration-200"
                   state={true}
                 />
                 <Button
                   id="clearFilterEmployeeBtn"
                   text="Clear"
                   type="button"
-                  className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 rounded-xl"
+                  className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 rounded-xl hover:bg-[#E6F0FF] hover:text-[#0056B3] transition-colors duration-200"
                   state={true}
-                  // onClick={() => resetForm({ values: initialFilters })}
                   onClick={() => {
                         resetForm({ values: initialFilters });
                         setFilters(initialFilters);
@@ -213,8 +220,19 @@ const { data, isFetching } = useGetQuery<
         <Column field="username" header="Username" sortable />
         <Column field="email" header="Email" sortable />
         <Column field="mobileNumber" header="Mobile Number" sortable />
-        <Column field="status" header="Status" sortable />
         <Column field="address" header="Address" sortable />
+        <Column field="status" header="Status" sortable />
+        <Column
+          // header=""
+          body={(rowData: EmployeeDto) => (
+            <button
+              className="bg-[#0086ED] text-white py-1 px-3 rounded hover:bg-blue-600"
+              // onClick={() => handleEdit(rowData.id)}
+              onClick={(e) => { e.stopPropagation(); handleEdit(rowData.id); }}
+            >
+              Edit
+            </button>
+          )} />
       </DataTable>
     </Container>
 
