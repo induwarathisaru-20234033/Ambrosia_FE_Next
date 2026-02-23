@@ -14,4 +14,5 @@ export interface IRoleCreateRequest {
     roleName: string;
     description?: string;
     isActive?: boolean;
+    permissions?: string[];
 }
