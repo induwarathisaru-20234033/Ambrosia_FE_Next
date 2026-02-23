@@ -1,21 +1,37 @@
 "use client";
 
 import Navbar from "@/components/Navbar";
-import { Session } from "next-auth";
-import { SessionProvider } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getAccessToken } from "@/utils/authTokens";
 import "../globals.css";
 
 export default function MenuLayoutClient({
   children,
-  session,
 }: Readonly<{
   children: React.ReactNode;
-  session: Session;
 }>) {
+  const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      router.replace("/login");
+      return;
+    }
+
+    setIsReady(true);
+  }, [router]);
+
+  if (!isReady) {
+    return null;
+  }
+
   return (
-    <SessionProvider session={session}>
+    <>
       <Navbar />
       <div className="ml-5">{children}</div>
-    </SessionProvider>
+    </>
   );
 }
