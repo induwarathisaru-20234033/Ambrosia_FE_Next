@@ -13,7 +13,7 @@ import {
   ensureFreshAccessToken,
   forceRefreshAccessToken,
   getAccessToken,
-} from "@/utils/authTokens";
+} from "@/utils/auth/authTokens";
 
 /**
  * Create axios instance with backend API base URL

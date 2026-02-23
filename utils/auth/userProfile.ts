@@ -3,7 +3,7 @@
  * Uses localStorage for client-side caching to minimize API calls
  */
 
-import { ensureFreshAccessToken } from "@/utils/authTokens";
+import { ensureFreshAccessToken } from "@/utils/auth/authTokens";
 
 /**
  * User profile shape from Auth0

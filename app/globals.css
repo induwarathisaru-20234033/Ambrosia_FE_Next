@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-input[type='password']::-ms-reveal {
+input[type="password"]::-ms-reveal {
   display: none;
 }
 
@@ -164,7 +164,7 @@ a {
 
 .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
   scale: unset !important;
-  background: #fc7945 !important;
+  background: #ef6630 !important;
 }
 
 .text-size {
@@ -505,20 +505,20 @@ a {
   font-size: 10px;
 }
 
-.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+/* .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link .custom-tabs {
   background: #fafafa;
   border-color: #dee2e6 #dee2e6 #fafafa #dee2e6;
   color: black;
   width: 100%;
   display: flex;
   justify-content: center;
-}
+} */
 
-.p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus,
+/* .p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus,
 .p-sidebar .p-sidebar-header .p-sidebar-close:focus,
 .p-sidebar .p-sidebar-header .p-sidebar-icon:focus {
   box-shadow: none;
-}
+} */
 
 .p-sidebar .p-sidebar-header {
   justify-content: space-between;
@@ -526,7 +526,7 @@ a {
   padding-right: 0.5rem;
 }
 
-.p-tabview
+/* .p-tabview
   .p-tabview-nav
   li:not(.p-highlight):not(.p-disabled):hover
   .p-tabview-nav-link {
@@ -537,7 +537,7 @@ a {
 
 .p-tabview .p-tabview-panels {
   background: #fafafa;
-}
+} */
 
 .p-overlaypanel::before,
 .p-overlaypanel::after {
@@ -705,7 +705,6 @@ a {
   }
 }
 
-
 .p-datatable .p-datatable-tbody > tr.p-highlight {
   background-color: transparent !important;
   color: inherit !important;
@@ -716,13 +715,13 @@ a {
 }
 
 .p-checkbox .p-checkbox-box.p-highlight {
-  background: #EF6630 !important;
-  border-color: #EF6630 !important;
+  background: #ef6630 !important;
+  border-color: #ef6630 !important;
 }
 
 .error-popup .p-dialog-header {
-  background-color: #FB6565;
-  border-bottom: 1px solid #FB6565;
+  background-color: #fb6565;
+  border-bottom: 1px solid #fb6565;
 }
 
 .error-popup .p-dialog-content {
@@ -731,8 +730,47 @@ a {
 }
 
 .error-popup .p-button {
-  background: #FB6565 !important;
-  border-color: #FB6565 !important;
+  background: #fb6565 !important;
+  border-color: #fb6565 !important;
   width: 110px;
 }
 
+.custom-tabs .p-tabview-nav {
+  background-color: transparent;
+  border-bottom: none;
+  padding: 0;
+}
+
+.custom-tabs .p-tabview-panels {
+  padding: 0;
+  background-color: transparent;
+}
+
+.custom-tabs .p-tabview-nav-link {
+  border: none !important;
+  background-color: #d1d5db !important;
+  color: #9ca3af !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+  border-bottom: 3px solid transparent !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.custom-tabs .p-tabview-nav-link:hover {
+  background-color: #d1d5db !important;
+}
+
+.custom-tabs .p-tabview-nav-link .p-highlight {
+  background-color: white !important;
+  color: #000000 !important;
+  border-bottom-color: #ff6b6b !important;
+}
+
+.custom-tabs .p-tabview-nav-link .p-highlight:hover {
+  background-color: white !important;
+}
+
+.custom-toggle.p-highlight .p-inputswitch-slider {
+  background: #ff6b6b !important;
+}
