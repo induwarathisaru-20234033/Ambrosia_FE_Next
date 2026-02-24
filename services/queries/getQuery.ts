@@ -1,21 +1,17 @@
-import axiosAuth from '@/utils/AxiosInstance';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
-export const useGetQuery = <TResponse, TParams>(
-  queryKey: (string | number)[],
-  url: string,
-  params?: TParams,
-  enabled: boolean = true,
-) => {
+interface UseGetQueryProps {
+  url: string;
+  key: string[];
+}
 
+export const useGetQuery = ({ url, key }: UseGetQueryProps) => {
   return useQuery({
-    queryKey: queryKey,
+    queryKey: key,
     queryFn: async () => {
-      const { data } = await axiosAuth.get(url, {
-        params: params,
-      });
-      return data as TResponse;
+      const { data } = await axios.get(url);
+      return data;
     },
-    enabled: enabled,
   });
 };

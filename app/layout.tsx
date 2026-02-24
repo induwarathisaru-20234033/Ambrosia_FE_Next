@@ -6,6 +6,7 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "./globals.css";
 import LayoutClient from "./layout.client";
+import Navbar from "@/components/Navbar";
 
 const inter = localFont({
   src: "../fonts/Inter/Inter-VariableFont_opsz,wght.ttf",
@@ -26,7 +27,10 @@ export default function RootLayout({
   return (
     <html lang='en' className={`${inter.variable}`}>
       <body className={inter.className}>
-        <LayoutClient>{children}</LayoutClient>
+        <LayoutClient>
+          <Navbar />
+          <main className="pt-4">{children}</main>
+        </LayoutClient>
       </body>
     </html>
   );
