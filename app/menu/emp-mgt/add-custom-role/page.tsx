@@ -10,14 +10,10 @@ import { useState } from "react";
 import { Container } from "react-bootstrap";
 import Switch from '@mui/material/Switch';
 
-const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
-  ssr: false,
-});
+const LabelGroup = dynamic(() => import("@/components/LabelGroup"),{ ssr: false,});
 const Col = dynamic(() => import("react-bootstrap/Col"), { ssr: false });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
-const ScrollPanel = dynamic(() =>
-  import("primereact/scrollpanel").then((mod) => mod.ScrollPanel),
-);
+const ScrollPanel = dynamic(() =>import("primereact/scrollpanel").then((mod) => mod.ScrollPanel),);
 const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
 interface InitialValues {
@@ -57,7 +53,7 @@ export default function AddRolePage() {
           isActive: values.isActive,
           permissions: values.permissions,
         };
-        mutation.mutate({ url: "/employees", body });
+        mutation.mutate({ url: "/roles", body });
       }}
     >
       {({ values, setFieldValue }) => (
@@ -99,7 +95,7 @@ export default function AddRolePage() {
                       className="border border-gray-300 rounded p-2"
                     />
                     <div className="mb-4 flex items-center gap-3">
-                      <label className="text-sm font-medium">Status</label>
+                      <label className="text-sm font-medium">Active</label>
                       <Switch
                         checked={values.isActive}
                         onChange={(e) => setFieldValue("isActive", e.target.checked)}
