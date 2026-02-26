@@ -126,24 +126,24 @@ export default function ViewEmployeePage() {
 
   return (
     <Container fluid>
-<Row className="align-items-center mb-4">
-  <Col>
-    <h1 className="h1-custom text-[#0086ED] font-semibold">
-      Employee and Roles Management
-    </h1>
-  </Col>
+        <Row className="align-items-center mb-4">
+            <Col>
+                <h1 className="h1-custom text-[#0086ED] font-semibold">
+                Employee and Roles Management
+                </h1>
+            </Col>
 
-  <Col xs="auto">
-    <Button
-      id="addEmployeeBtn"
-      text="Add Employee"
-      type="button"
-      className="bg-[#0086ED] text-white px-4 py-2 rounded-xl"
-      state={true}
-      onClick={() => router.push("/emp-mgt/add-employee")}
-    />
-  </Col>
-</Row>
+            <Col xs="auto">
+                <Button
+                id="addEmployeeBtn"
+                text="Add Employee"
+                type="button"
+                className="bg-[#0086ED] text-white px-4 py-2 rounded-xl"
+                state={true}
+                onClick={() => router.push("/emp-mgt/add-employee")}
+                />
+            </Col>
+        </Row>
 
 {/* FILTER FORM */}
       <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
