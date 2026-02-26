@@ -142,7 +142,7 @@ export default function ViewEmployeePage() {
                 id="addEmployeeBtn"
                 text="Add Employee"
                 type="button"
-                className="bg-[#0086ED] text-white px-4 py-2 rounded-xl"
+                className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
                 state={true}
                 onClick={() => router.push("/menu/emp-mgt/add-employee")}
                 />
@@ -172,55 +172,43 @@ export default function ViewEmployeePage() {
             
             <Row className="mb-3 align-items-end">
               <Col md={3}>
-                <LabelGroup label="Mobile Number" name="mobileNumber" type="text" placeholder="Mobile Number" />
+                <LabelGroup label="Phone Number" name="mobileNumber" type="text" placeholder="Phone Number" />
               </Col>
               <Col md={3}>
                 <LabelGroup label="Email" name="email" type="text" placeholder="Email" />
               </Col>
-              <Col md={6}>
+              <Col md={3}>
                 <LabelGroup label="Address" name="address" type="text" placeholder="Address" />
               </Col>
               </Row>
               <Row className="mb-3 align-items-end">
-                              <Col md={2}>
-                <label className="block mb-1 font-medium text-sm text-gray-700">Status</label>
-                <Field
-                  as="select"
-                  name="status"
-                  className="form-select w-full p-2 border border-gray-300 rounded">
-                  <option value="">All</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </Field>
-              </Col>
-              <Col md={2} className="d-flex gap-2">
-                <Button
-                  id="filterEmployeeBtn"
-                  text="Filter"
-                  type="submit"
-                  className="bg-[#0086ED] text-white flex-1 py-2 rounded-xl hover:bg-blue-600 transition-colors duration-200"
-                  state={true}
-                />
-                <Button
-                  id="clearFilterEmployeeBtn"
-                  text="Clear"
-                  type="button"
-                  className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 rounded-xl hover:bg-[#E6F0FF] hover:text-[#0056B3] transition-colors duration-200"
-                  state={true}
-                  onClick={() => {
-                        resetForm({ values: initialFilters });
-                        setFilters(initialFilters);
-                      }}
-                        
-                />
-              </Col>
+                <Col md={2} className="d-flex gap-2">
+                    <Button
+                        id="filterEmployeeBtn"
+                        text="Filter"
+                        type="submit"
+                        className="bg-[#0086ED] text-white flex-1 py-2 rounded-none hover:bg-blue-600 transition-colors duration-200 shadow-md"
+                        state={true}
+                    />
+                    <Button
+                        id="clearFilterEmployeeBtn"
+                        text="Clear"
+                        type="button"
+                        className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 rounded-none hover:bg-[#E6F0FF] hover:text-[#0056B3] transition-colors duration-200 shadow-md"
+                        state={true}
+                        onClick={() => {
+                                resetForm({ values: initialFilters });
+                                setFilters(initialFilters);
+                            }}
+                    />
+                </Col>
               </Row>
           </Form>
         )}
       </Formik>
 
 {/* DATATABLE  */}
-      <DataTable
+      <DataTable stripedRows removableSort
         value={data?.data?.items || []}
         lazy
         paginator
@@ -240,14 +228,14 @@ export default function ViewEmployeePage() {
             body={(rowData: EmployeeDto) => `${rowData.firstName} ${rowData.lastName}`}/>
         <Column field="username" header="Username" sortable />
         <Column field="email" header="Email" sortable />
-        <Column field="mobileNumber" header="Mobile Number" sortable />
+        <Column field="mobileNumber" header="Phone Number" sortable />
         <Column field="address" header="Address" sortable />
         <Column field="status" header="Status" sortable />
         <Column
           // header=""
           body={(rowData: EmployeeDto) => (
             <button
-              className="bg-[#0086ED] text-white py-1 px-3 rounded hover:bg-blue-600"
+              className="bg-[#0086ED] text-white py-1 px-3 rounded-n hover:bg-blue-600"
               // // onClick={() => handleEdit(rowData.id)}
               // onClick={(e) => { e.stopPropagation(); handleEdit(rowData.id); }}
             >
