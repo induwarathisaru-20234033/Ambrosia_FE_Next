@@ -12,7 +12,7 @@ import { Column } from 'primereact/column';
 import { useRouter } from "next/navigation"; // Next.js 13+ router
 import { TabView,TabPanel } from "primereact/tabview";
 
-import { IEmployeeCreateRequest } from "@/data-types";  
+import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest} from "@/data-types";  
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -47,20 +47,20 @@ interface EmployeeDto {
   createdDate: string;
 }
 
-interface PagedResponse<T> {
-  pageNumber: number;
-  pageSize: number;
-  pageCount: number;
-  items: T[];
-  totalItemCount: number;
-}
+// interface PagedResponse<T> {
+//   pageNumber: number;
+//   pageSize: number;
+//   pageCount: number;
+//   items: T[];
+//   totalItemCount: number;
+// }
 
-interface ApiResponse<T> {
-  succeeded: boolean;
-  message: string;
-  errors: string[];
-  data: T;
-}
+// interface ApiResponse<T> {
+//   succeeded: boolean;
+//   message: string;
+//   errors: string[];
+//   data: T;
+// }
 
 
 // components
@@ -81,14 +81,13 @@ export default function ViewEmployeePage() {
 
   // Custom GET hook for employee data
   const { data, isFetching } = useGetQuery<
-    ApiResponse<PagedResponse<EmployeeDto>>,
-    EmployeeFilter
-  >(
-    ["employees", JSON.stringify(filters)],
-    "/employees",
-    filters,
-    true
-  );
+    IBaseApiResponse<IPaginatedApiResponse<EmployeeDto>>, EmployeeFilter>
+    (
+        ["employees", JSON.stringify(filters)],
+        "/employees",
+        filters,
+        true
+    );
 
   const router = useRouter();
 
