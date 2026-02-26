@@ -12,7 +12,8 @@ import { Column } from 'primereact/column';
 import { useRouter } from "next/navigation"; // Next.js 13+ router
 import { TabView,TabPanel } from "primereact/tabview";
 
-import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest} from "@/data-types";  
+import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest} from "@/data-types"; 
+import { IEmployee } from "@/data-types";   
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -35,33 +36,6 @@ interface EmployeeFilter {
   sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
 }
 
-interface EmployeeDto {
-  id: number;
-  employeeId: string;
-  firstName: string;
-  lastName: string;
-  mobileNumber: string;
-  username: string;
-  email: string;
-  address: string;
-  createdDate: string;
-}
-
-// interface PagedResponse<T> {
-//   pageNumber: number;
-//   pageSize: number;
-//   pageCount: number;
-//   items: T[];
-//   totalItemCount: number;
-// }
-
-// interface ApiResponse<T> {
-//   succeeded: boolean;
-//   message: string;
-//   errors: string[];
-//   data: T;
-// }
-
 
 // components
 export default function ViewEmployeePage() {
@@ -81,7 +55,7 @@ export default function ViewEmployeePage() {
 
   // Custom GET hook for employee data
   const { data, isFetching } = useGetQuery<
-    IBaseApiResponse<IPaginatedApiResponse<EmployeeDto>>, EmployeeFilter>
+    IBaseApiResponse<IPaginatedApiResponse<IEmployee>>, EmployeeFilter>
     (
         ["employees", JSON.stringify(filters)],
         "/employees",
@@ -112,7 +86,7 @@ export default function ViewEmployeePage() {
     router.push(`/employees/edit/${employeeId}`); // navigate to edit page
   };
 
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeDto | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<IEmployee | null>(null);
 
   const onSort = (event: any) => {
   const updated: EmployeeFilter= {
@@ -224,7 +198,7 @@ export default function ViewEmployeePage() {
       >
         <Column field="employeeId" header="Employee ID" sortable />
         <Column header="Full Name" sortable
-            body={(rowData: EmployeeDto) => `${rowData.firstName} ${rowData.lastName}`}/>
+            body={(rowData: IEmployee) => `${rowData.firstName} ${rowData.lastName}`}/>
         <Column field="username" header="Username" sortable />
         <Column field="email" header="Email" sortable />
         <Column field="mobileNumber" header="Phone Number" sortable />
@@ -232,7 +206,7 @@ export default function ViewEmployeePage() {
         <Column field="status" header="Status" sortable />
         <Column
           // header=""
-          body={(rowData: EmployeeDto) => (
+          body={(rowData: IEmployee) => (
             <button
               className="bg-[#0086ED] text-white py-1 px-3 rounded-n hover:bg-blue-600"
             >
