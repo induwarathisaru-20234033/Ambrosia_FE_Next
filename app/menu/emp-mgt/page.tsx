@@ -12,8 +12,7 @@ import { Column } from 'primereact/column';
 import { useRouter } from "next/navigation"; // Next.js 13+ router
 import { TabView,TabPanel } from "primereact/tabview";
 
-import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest} from "@/data-types"; 
-import { SearchEmployeeRequest, IEmployee } from "@/data-types";
+import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest, SearchEmployeeRequest, IEmployee } from "@/data-types"; 
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -188,10 +187,10 @@ export default function ViewEmployeePage() {
         <Column field="address" header="Address" sortable />
         <Column field="status" header="Status" sortable />
         <Column
-          // header=""
           body={(rowData: IEmployee) => (
             <button
               className="bg-[#0086ED] text-white py-1 px-3 rounded-n hover:bg-blue-600"
+              onClick={() => handleEdit(rowData.id)}
             >
               Edit
             </button>
