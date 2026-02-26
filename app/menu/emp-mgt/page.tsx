@@ -10,6 +10,8 @@ import { DataTable, SortOrder } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 
 import { useRouter } from "next/navigation"; // Next.js 13+ router
+
+import { TabView,TabPanel } from "primereact/tabview";
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -123,8 +125,10 @@ export default function ViewEmployeePage() {
 
   setFilters(updated);
   };
+  
 
   return (
+
     <Container fluid>
         <Row className="align-items-center mb-4">
             <Col>
@@ -140,14 +144,16 @@ export default function ViewEmployeePage() {
                 type="button"
                 className="bg-[#0086ED] text-white px-4 py-2 rounded-xl"
                 state={true}
-                onClick={() => router.push("/emp-mgt/add-employee")}
+                onClick={() => router.push("/menu/emp-mgt/add-employee")}
                 />
             </Col>
         </Row>
 
-{/* FILTER FORM */}
-      <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
-         {({ resetForm }) => (
+        <TabView className="custom-tabs mb-4">
+            <TabPanel header="Employees">
+
+        <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
+                {({ resetForm }) => (
           <Form>
             <Row className="mb-3 align-items-end">
               <Col md={3}>
@@ -249,6 +255,14 @@ export default function ViewEmployeePage() {
             </button>
           )} />
       </DataTable>
+            </TabPanel>
+
+            <TabPanel header="Roles">
+                <div className="p-3">
+                <h5>Roles content goes here</h5>
+                </div>
+            </TabPanel>
+        </TabView>
     </Container>
 
   );
