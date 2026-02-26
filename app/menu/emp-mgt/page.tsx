@@ -236,8 +236,6 @@ export default function ViewEmployeePage() {
           body={(rowData: EmployeeDto) => (
             <button
               className="bg-[#0086ED] text-white py-1 px-3 rounded-n hover:bg-blue-600"
-              // // onClick={() => handleEdit(rowData.id)}
-              // onClick={(e) => { e.stopPropagation(); handleEdit(rowData.id); }}
             >
               Edit
             </button>
