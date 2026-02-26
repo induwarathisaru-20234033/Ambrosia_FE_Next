@@ -1,3 +1,21 @@
+export interface IBaseApiResponse<T> {
+  succeeded: boolean;
+  message: string;
+  errors?: string[];
+  data: T;
+}
+
+export interface IPaginationMetaData {
+  pageNumber: number;
+  pageSize: number;
+  pageCount: number;
+  totalItemCount: number;
+}
+
+export interface IPaginatedApiResponse<T> extends IPaginationMetaData {
+  items: T[];
+}
+
 export interface IEmployeeCreateRequest {
     employeeId: string;
     firstName: string;
