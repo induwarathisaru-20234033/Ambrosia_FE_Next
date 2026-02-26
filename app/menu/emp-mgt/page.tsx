@@ -13,33 +13,16 @@ import { useRouter } from "next/navigation"; // Next.js 13+ router
 import { TabView,TabPanel } from "primereact/tabview";
 
 import { IBaseApiResponse, IPaginatedApiResponse, IEmployeeCreateRequest} from "@/data-types"; 
-import { IEmployee } from "@/data-types";   
+import { SearchEmployeeRequest, IEmployee } from "@/data-types";
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
 
-// Types
-interface EmployeeFilter {
-  employeeId?: string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  email?: string;
-  mobileNumber?: string;
-  address?: string;
-  status?: string; 
-  pageNumber: number;
-  pageSize: number;
-  sortField?: string;
-  sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
-}
-
-
 // components
 export default function ViewEmployeePage() {
-  const initialFilters: EmployeeFilter = {
+  const initialFilters: SearchEmployeeRequest = {
     employeeId: "",
     firstName: "",
     lastName: "",
@@ -51,11 +34,11 @@ export default function ViewEmployeePage() {
     pageSize: 10
   };
 
-  const [filters, setFilters] = useState<EmployeeFilter>(initialFilters);
+  const [filters, setFilters] = useState<SearchEmployeeRequest>(initialFilters);
 
   // Custom GET hook for employee data
   const { data, isFetching } = useGetQuery<
-    IBaseApiResponse<IPaginatedApiResponse<IEmployee>>, EmployeeFilter>
+    IBaseApiResponse<IPaginatedApiResponse<IEmployee>>, SearchEmployeeRequest>
     (
         ["employees", JSON.stringify(filters)],
         "/employees",
@@ -66,7 +49,7 @@ export default function ViewEmployeePage() {
   const router = useRouter();
 
   // Handle form submission  SEARCH
-  const handleSubmit = (values: EmployeeFilter) => {
+  const handleSubmit = (values: SearchEmployeeRequest) => {
     setFilters({ ...values, pageNumber: 1 }); // reset page to 1 on new search
  };
 
@@ -89,7 +72,7 @@ export default function ViewEmployeePage() {
   const [selectedEmployee, setSelectedEmployee] = useState<IEmployee | null>(null);
 
   const onSort = (event: any) => {
-  const updated: EmployeeFilter= {
+  const updated: SearchEmployeeRequest= {
     ...filters,
     sortField: event.sortField,
     sortOrder: event.sortOrder as SortOrder,
