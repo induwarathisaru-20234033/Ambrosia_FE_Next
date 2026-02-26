@@ -10,8 +10,9 @@ import { DataTable, SortOrder } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 
 import { useRouter } from "next/navigation"; // Next.js 13+ router
-
 import { TabView,TabPanel } from "primereact/tabview";
+
+import { IEmployeeCreateRequest } from "@/data-types";  
      
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
@@ -94,8 +95,7 @@ export default function ViewEmployeePage() {
   // Handle form submission  SEARCH
   const handleSubmit = (values: EmployeeFilter) => {
     setFilters({ ...values, pageNumber: 1 }); // reset page to 1 on new search
-    // refetch(); // No need to call refetch, useGetQuery will automatically fetch when filters change
-  };
+ };
 
   // PAGINATION (SERVER SIDE)
   const onPage = (event: any) => {
