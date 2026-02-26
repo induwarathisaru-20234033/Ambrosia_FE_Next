@@ -742,3 +742,34 @@ a {
   color: #1f2937; /* dark text */
 }
 
+
+/* Make each tab equal width */
+.custom-tabs .p-tabview-nav li {
+  width: 300px;            /* Equal width */
+  text-align: center;
+  position: relative;
+}
+
+/* All tab text default (inactive) */
+.custom-tabs .p-tabview-nav li .p-tabview-nav-link {
+  font-weight: 600;
+  color: #9ca3af !important;   /* grey */
+  padding: 1rem 2rem;
+  border: none !important;
+  background: #f3f4f6;       /* light grey rectangle */
+  transition: all 0.3s ease;
+  text-align: center;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Active tab text */
+.custom-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: #000000 !important;   /* black */
+  font-weight: 700;
+}
+
+/* Blue underline for active tab */
+.custom-tabs .p-tabview-nav li.p-highlight {
+  border-bottom: 3px solid #0086ED;
+}
