@@ -1,3 +1,5 @@
+import { SortOrder } from 'primereact/datatable';
+
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
   message: string;
@@ -33,4 +35,29 @@ export interface IRoleCreateRequest {
     description?: string;
     isActive?: boolean;
     permissions?: string[];
+export interface IEmployee {
+  id: number;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  mobileNumber: string;
+  username: string;
+  email?: string;
+  address?: string;
+  createdDate: string;
+}
+
+export interface SearchEmployeeRequest {
+  employeeId?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  mobileNumber?: string;
+  address?: string;
+  status?: string;
+  pageNumber: number;
+  pageSize: number;
+  sortField?: string;
+  sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
 }
