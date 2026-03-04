@@ -29,6 +29,12 @@ export interface IEmployeeCreateRequest {
     password: string;
 }
 
+export interface IRoleCreateRequest {
+    roleCode: string;
+    roleName: string;
+    description?: string;
+    isActive?: boolean;
+    permissions?: string[];
 export interface IEmployee {
   id: number;
   employeeId: string;

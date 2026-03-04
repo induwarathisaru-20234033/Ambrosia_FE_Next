@@ -22,3 +22,9 @@ export const addEmployeeSchema = Yup.object({
       },
     ),
 });
+
+export const addRoleSchema = Yup.object({
+  roleCode: Yup.string().required("Role Code is required"),
+  roleName: Yup.string().required("Role Name is required"),
+  description: Yup.string().optional(),
+});
