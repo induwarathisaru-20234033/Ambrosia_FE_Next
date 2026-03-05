@@ -1,5 +1,7 @@
 import * as Yup from "yup";
 
+const TURN_TIME_INCREMENT_MINUTES = 5;
+
 const parseTimeToMinutes = (value: unknown): number | null => {
   if (!value) return null;
 
@@ -49,17 +51,69 @@ export const addEmployeeSchema = Yup.object({
     ),
 });
 
-export const ServiceLogicSchema = Yup.object().shape({
-  bufferTime: Yup.number()
-    .min(0, "Buffer time cannot be negative")
-    .required("Buffer time is required"),
-  turnTime: Yup.number()
-    .min(0, "Turn time cannot be negative")
-    .required("Turn time is required"),
-  bookingInterval: Yup.number()
-    .oneOf([15, 30, 45, 60], "Invalid booking interval")
-    .required("Booking interval is required"),
-});
+export const ServiceLogicSchema = Yup.object()
+  .shape({
+    bufferTime: Yup.number()
+      .min(0, "Buffer time cannot be negative")
+      .integer("Buffer time must be a whole number")
+      .required("Buffer time is required"),
+    turnTime: Yup.number()
+      .min(0, "Turn time cannot be negative")
+      .integer("Turn time must be a whole number")
+      .required("Turn time is required"),
+    bookingInterval: Yup.number()
+      .min(0, "Booking interval cannot be negative")
+      .integer("Booking interval must be a whole number")
+      .required("Booking interval is required"),
+  })
+  .test(
+    "booking-interval-min-turn-increment",
+    `Booking interval cannot be smaller than ${TURN_TIME_INCREMENT_MINUTES} minutes`,
+    function (value) {
+      if (!value) return true;
+
+      const bookingInterval = value.bookingInterval;
+      if (typeof bookingInterval !== "number") return true;
+
+      if (bookingInterval < TURN_TIME_INCREMENT_MINUTES) {
+        return this.createError({
+          path: "bookingInterval",
+          message: `Booking interval cannot be smaller than ${TURN_TIME_INCREMENT_MINUTES} minutes`,
+        });
+      }
+
+      return true;
+    },
+  )
+  .test(
+    "fixed-buffer-no-bleed",
+    "Total table block (turn time + buffer time) must align with booking interval to avoid unfillable gaps",
+    function (value) {
+      if (!value) return true;
+
+      const { turnTime, bufferTime, bookingInterval } = value;
+
+      if (
+        typeof turnTime !== "number" ||
+        typeof bufferTime !== "number" ||
+        typeof bookingInterval !== "number" ||
+        bookingInterval <= 0
+      ) {
+        return true;
+      }
+
+      const totalTableBlock = turnTime + bufferTime;
+      if (totalTableBlock % bookingInterval !== 0) {
+        return this.createError({
+          path: "bookingInterval",
+          message:
+            "Turn time + buffer time must be divisible by booking interval to prevent buffer bleed into the next slot",
+        });
+      }
+
+      return true;
+    },
+  );
 
 export const StandardOpeningHoursSchema = Yup.object().shape({
   schedule: Yup.array().of(
@@ -189,4 +243,22 @@ export const StandardOpeningHoursSchema = Yup.object().shape({
       }),
     }),
   ),
+});
+
+export const AddTableSchema = Yup.object().shape({
+  tableName: Yup.string()
+    .required("Table name is required")
+    .min(3, "Table Name must be at least 3 characters"),
+  capacity: Yup.number()
+    .required("Capacity is required")
+    .positive("Capacity must be a positive number")
+    .integer("Capacity must be an integer"),
+  isOnlineBookingEnabled: Yup.boolean(),
+});
+
+export const AddExclusionSchema = Yup.object().shape({
+  exclusionDate: Yup.date().required("Exclusion date is required"),
+  reason: Yup.string()
+    .required("Reason is required")
+    .min(5, "Reason must be at least 5 characters"),
 });
