@@ -16,7 +16,7 @@ export default function TablesList() {
   const { data: tablesData, isLoading } = useGetQuery<
     IBaseApiResponse<ITable[]>,
     {}
-  >(["tables"], "/Tables");
+  >(["tables"], "/Tables", undefined, { enabled: true, toastRef });
 
   const { mutate: deleteTable } = useDeleteQuery({
     invalidateKey: ["tables"],

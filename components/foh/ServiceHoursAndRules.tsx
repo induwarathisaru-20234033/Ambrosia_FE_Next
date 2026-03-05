@@ -28,7 +28,7 @@ export default function ServiceHoursAndRules() {
   const { data: initialData, isLoading } = useGetQuery<
     IMutateScheduleConfig,
     void
-  >(["getScheduleConfig"], "Configs");
+  >(["getScheduleConfig"], "Configs", undefined, { enabled: true, toastRef });
 
   const postMutation = usePostQuery({
     invalidateKey: ["schedule"],

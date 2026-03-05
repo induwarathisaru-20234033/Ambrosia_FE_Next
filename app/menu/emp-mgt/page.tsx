@@ -11,6 +11,7 @@ import { Column } from "primereact/column";
 
 import { useRouter } from "next/navigation"; // Next.js 13+ router
 import { TabView, TabPanel } from "primereact/tabview";
+import { useToastRef } from "@/contexts/ToastContext";
 
 import {
   IPaginatedApiResponse,
@@ -38,12 +39,13 @@ export default function ViewEmployeePage() {
   };
 
   const [filters, setFilters] = useState<SearchEmployeeRequest>(initialFilters);
+  const toastRef = useToastRef();
 
   // Custom GET hook for employee data
   const { data, isFetching } = useGetQuery<
     IPaginatedApiResponse<IEmployee>,
     SearchEmployeeRequest
-  >(["employees", JSON.stringify(filters)], "/employees", filters, true);
+  >(["employees", JSON.stringify(filters)], "/employees", filters, { enabled: true, toastRef });
 
   const router = useRouter();
 

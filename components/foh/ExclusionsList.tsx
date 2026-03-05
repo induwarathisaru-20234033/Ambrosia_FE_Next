@@ -14,7 +14,7 @@ export default function ExclusionsList() {
   const { data: exclusionsData, isLoading } = useGetQuery<
     IBaseApiResponse<IExclusion[]>,
     {}
-  >(["exclusions"], "/CalenderExclusions");
+  >(["exclusions"], "/CalenderExclusions", undefined, { enabled: true, toastRef });
 
   const { mutate: deleteExclusion } = useDeleteQuery({
     invalidateKey: ["exclusions"],

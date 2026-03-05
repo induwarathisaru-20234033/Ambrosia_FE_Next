@@ -1,4 +1,4 @@
-export const defaultDateFormat = "mm-dd-yy";
+export const defaultDateFormat = "MM-dd-yyyy";
 
 export const defaultTimeFormat = "hh:mm a";
 

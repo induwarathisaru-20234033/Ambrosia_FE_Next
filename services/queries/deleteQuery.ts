@@ -7,14 +7,14 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import { useRouter } from "next/navigation";
-import type { RefObject } from "react";
 
 interface MutationVariables {
   url: string;
-  body: any;
+  body?: any;
+  invalidateKey?: (string | number)[];
 }
 
-interface PatchQueryOptions extends UseMutationOptions<
+interface DeleteQueryOptions extends UseMutationOptions<
   AxiosResponse,
   unknown,
   MutationVariables,
@@ -23,15 +23,15 @@ interface PatchQueryOptions extends UseMutationOptions<
   redirectPath?: string;
   successMessage?: string | null;
   invalidateKey?: (string | number)[];
-  toastRef?: RefObject<any>;
+  toastRef?: React.RefObject<any>;
 }
 
-export const usePatchQuery = ({
+export const useDeleteQuery = ({
   redirectPath,
   invalidateKey,
-  successMessage,
+  successMessage = "Deleted successfully!",
   toastRef,
-}: PatchQueryOptions = {}): UseMutationResult<
+}: DeleteQueryOptions = {}): UseMutationResult<
   AxiosResponse,
   unknown,
   MutationVariables,
@@ -42,7 +42,7 @@ export const usePatchQuery = ({
 
   return useMutation({
     mutationFn: ({ url, body }: MutationVariables) =>
-      axiosAuth.patch(url, body),
+      axiosAuth.delete(url, { data: body }),
     onSuccess: () => {
       if (invalidateKey) {
         if (Array.isArray(invalidateKey)) {
@@ -74,7 +74,7 @@ export const usePatchQuery = ({
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "An error occurred while processing your request";
+        "An error occurred while deleting";
 
       toastRef?.current?.show({
         severity: "error",
