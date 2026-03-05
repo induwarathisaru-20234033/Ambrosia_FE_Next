@@ -5,7 +5,7 @@ import { Tooltip } from "primereact/tooltip";
 import { IServiceLogic } from "@/data-types";
 import { ServiceLogicSchema } from "@/schemas";
 import { Formik, Form } from "formik";
-import Dropdown from "../Dropdown";
+import LabelGroup from "../LabelGroup";
 import { ServiceLogicTooltipMessages } from "@/utils/constants";
 import { classNames } from "primereact/utils";
 
@@ -57,13 +57,6 @@ function ServiceLogicCardForm({
   useEffect(() => {
     onValidityChange?.(formik.isValid);
   }, [formik.isValid, onValidityChange]);
-
-  const bookingIntervalOptions = [
-    { label: "15 minutes", value: 15 },
-    { label: "30 minutes", value: 30 },
-    { label: "45 minutes", value: 45 },
-    { label: "60 minutes", value: 60 },
-  ];
 
   const handleTurnTimeIncrement = () => {
     setFieldValue("turnTime", values.turnTime + 5);
@@ -187,17 +180,15 @@ function ServiceLogicCardForm({
 
             {/* Booking Interval Section */}
             <div className="flex-1 min-w-fit">
-              <Dropdown
+              <LabelGroup
                 label="Booking Interval"
                 id="formBookingInterval"
-                placeholder="Select Booking Interval"
-                options={bookingIntervalOptions.map((option) => ({
-                  label: option.label,
-                  value: option.value,
-                }))}
-                className="w-full"
+                type="number"
+                placeholder="Enter booking interval in minutes"
+                min={0}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 name="bookingInterval"
-                formLabelClassName="text-sm font-medium text-gray-900"
+                formLableClassName="text-sm font-medium text-gray-900"
                 labelTooltip={ServiceLogicTooltipMessages.bookingInterval}
               />
             </div>

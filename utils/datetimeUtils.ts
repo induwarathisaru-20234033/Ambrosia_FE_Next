@@ -12,18 +12,19 @@ import {
   subSeconds,
   addDays,
   addHours,
-} from 'date-fns';
+} from "date-fns";
 import {
   defaultDateFormat,
   hourFormat,
   NumberConstants,
   defaultTimeFormat,
-} from './constants';
-import { Nullable } from 'primereact/ts-helpers';
-
+} from "./constants";
+import { Nullable } from "primereact/ts-helpers";
+import { DateTimeFormatMode } from "@/data-types";
+import { format } from "date-fns-tz/format";
 
 export function parseDate(date: Date | string): Date {
-  return typeof date === 'string' ? parseISO(date) : date;
+  return typeof date === "string" ? parseISO(date) : date;
 }
 
 export function getNow(): number {
@@ -42,7 +43,7 @@ export function getDateTimeCombinedDate(date: Date, time: Date): Date {
 }
 
 export function getDateTimeCombinedString(date: Date, time?: Date): string {
-  if (!date) return '';
+  if (!date) return "";
   if (time) return getDateTimeCombinedDate(date, time).toISOString();
   return date.toISOString();
 }
@@ -91,7 +92,7 @@ export const combineDateTime = (date: Date, time?: Date | string): Date => {
   if (!time) {
     return setTimeToMidnight(date);
   }
-  if (typeof time === 'string') {
+  if (typeof time === "string") {
     return getDateTimeCombinedDate(date, new Date(time));
   }
   return getDateTimeCombinedDate(date, time);
@@ -118,7 +119,6 @@ export const isStartDateTimeBeforeEndDateTime = (
   return true;
 };
 
-
 export function addMinutesToDate(date: Date, minutes: number): Date {
   return addMinutes(date, minutes);
 }
@@ -143,7 +143,7 @@ export function subMillisecondsFromGivenDate(
 }
 
 export function getNearestMinuteTime(date?: Date | string): Date {
-  date = typeof date === 'string' ? new Date(date) : date;
+  date = typeof date === "string" ? new Date(date) : date;
   const now = date ?? getNewDate();
   now.setSeconds(0, 0);
   now.setMinutes(
@@ -195,29 +195,27 @@ export const getSelectedEndDate = (
   return date;
 };
 
-
-
 export const toPrimeReactDateFormat = (dateFormat: string) => {
   const dateFormatMap: Record<string, string> = {
-    YYYY: 'yy',
-    yyyy: 'yy',
-    MM: 'mm',
-    DD: 'dd',
-    SS: 'ss',
+    YYYY: "yy",
+    yyyy: "yy",
+    MM: "mm",
+    DD: "dd",
+    SS: "ss",
   };
 
   const convertedDateFormat = dateFormat.replaceAll(
     /\b(YYYY|yyyy|MM|DD|SS)\b/g,
-    token => dateFormatMap[token],
+    (token) => dateFormatMap[token],
   );
 
   return convertedDateFormat.trim();
 };
 export function toPrimeReactTimeFormat(timeFormat: string) {
-  const normalizedTimeFormat = timeFormat.replaceAll(/[\u202F\u00A0]/g, ' ');
+  const normalizedTimeFormat = timeFormat.replaceAll(/[\u202F\u00A0]/g, " ");
 
   const hFormat: HourFormat =
-    /AM|PM|A|a|P|p/.test(normalizedTimeFormat) && !timeFormat.includes('HH')
+    /AM|PM|A|a|P|p/.test(normalizedTimeFormat) && !timeFormat.includes("HH")
       ? hourFormat.twelve
       : hourFormat.twentyFour;
 
@@ -228,7 +226,7 @@ export type HourFormat = (typeof hourFormat)[keyof typeof hourFormat];
 
 export const getPrimeReactHourFormat = (): HourFormat => {
   return toPrimeReactTimeFormat(
-    localStorage.getItem('timeFormat') ?? defaultTimeFormat,
+    localStorage.getItem("timeFormat") ?? defaultTimeFormat,
   ) === hourFormat.twentyFour
     ? hourFormat.twentyFour
     : hourFormat.twelve;
@@ -236,7 +234,7 @@ export const getPrimeReactHourFormat = (): HourFormat => {
 
 export const getPrimeReactDateFormat = () => {
   return toPrimeReactDateFormat(
-    localStorage.getItem('dateFormat') ?? defaultDateFormat,
+    localStorage.getItem("dateFormat") ?? defaultDateFormat,
   );
 };
 
@@ -273,3 +271,98 @@ export const toMinutes = (value: unknown): number | null => {
   return null;
 };
 
+export const toDateFnsFormat = (format: string): string => {
+  const is24Hour = format.includes("HH");
+
+  return format
+    .replace(/[\u202F\u00A0]/g, " ")
+    .replace(/DD/g, "dd")
+    .replace(/SS/g, "ss")
+    .replace(/YYYY/g, "yyyy")
+    .replace(/\b h \b/, ":")
+    .replace(/\b min \b/, ":")
+    .replace(/\b s\b/, "")
+    .replace(/[ap](?:[.\-\s\u00A0\u202F]+)?m\.?/gi, is24Hour ? "" : "a")
+    .replace(/[aApP]/g, is24Hour ? "" : "a");
+};
+
+export const getDateFnsHourFormat = () => {
+  return toDateFnsFormat(defaultTimeFormat);
+};
+
+export const getDateFnsDateFormat = () => {
+  return toDateFnsFormat(defaultDateFormat);
+};
+
+export function formatWithTimeZone(
+  date: Date | string,
+  mode: DateTimeFormatMode = "datetime",
+  timeF?: string,
+  dateF?: string,
+  timeZone = "auto",
+): string {
+  try {
+    const parsedDate = parseDate(date);
+    if (
+      !parsedDate ||
+      !(parsedDate instanceof Date) ||
+      Number.isNaN(parsedDate.getTime())
+    ) {
+      return "";
+    }
+    if (timeZone === "auto") {
+      timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log("Auto-detected time zone:", timeZone);
+    }
+    const dFormat = dateF ?? getDateFnsDateFormat();
+    const tFormat = timeF ?? getDateFnsHourFormat();
+    let formatString = "";
+    switch (mode) {
+      case "date":
+        formatString = `${dFormat}`;
+        break;
+      case "time":
+        formatString = `${tFormat}`;
+        break;
+      case "datetime":
+        formatString = `${dFormat} ${tFormat}`;
+        break;
+      default:
+        formatString = `${dFormat} ${tFormat}`;
+    }
+    return format(parsedDate, formatString, { timeZone });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("formatWithTimeZone error:", error, date);
+    }
+    return "";
+  }
+}
+
+export function getDateStringFromISODateString(
+  isoDateString: string | Date,
+): string {
+  return formatWithTimeZone(isoDateString);
+}
+
+export function getLocalDateFromISODateString(
+  isoDateString: string | Date,
+): string {
+  if (!isoDateString) return "";
+  try {
+    const parsedDate = parseDate(isoDateString);
+    console.log("Parsed date in getLocalDateFromISODateString:", parsedDate);
+    if (
+      !parsedDate ||
+      !(parsedDate instanceof Date) ||
+      Number.isNaN(parsedDate.getTime())
+    ) {
+      return "";
+    }
+    const date =  formatWithTimeZone(isoDateString, "date");
+    console.log("Formatted date in getLocalDateFromISODateString:", date);
+    return date;
+  } catch (error) {
+    return "";
+  }
+}

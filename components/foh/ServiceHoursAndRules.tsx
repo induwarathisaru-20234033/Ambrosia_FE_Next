@@ -151,7 +151,7 @@ export default function ServiceHoursAndRules() {
       <div className="flex justify-end gap-4">
         <Button
           text="Save"
-          className="bg-[#ff6b6b] text-white p-[12px] rounded-xl box-shadow w-48"
+          className="bg-[#ff6b6b] text-white p-[12px] rounded-xl box-shadow w-48 shadow-md"
           type="submit"
           state={!postMutation.isPending}
           disabled={isSaveDisabled}
