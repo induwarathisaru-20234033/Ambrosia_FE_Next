@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { TabView, TabPanel } from "primereact/tabview";
 import ServiceHoursAndRules from "@/components/foh/ServiceHoursAndRules";
+import TableInventory from "@/components/foh/TableInventory";
+import { Divider } from "primereact/divider";
+import CalenderExclusions from "@/components/foh/CalenderExclusions";
 
 export default function ConfigurationsPage() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -31,6 +34,10 @@ export default function ConfigurationsPage() {
             >
               <div className="pt-8">
                 <ServiceHoursAndRules />
+                <Divider />
+                <TableInventory />
+                <Divider />
+                <CalenderExclusions />
               </div>
             </TabPanel>
 
