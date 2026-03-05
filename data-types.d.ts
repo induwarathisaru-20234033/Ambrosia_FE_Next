@@ -1,8 +1,7 @@
 import { Day } from "./enums/day";
-import { SortOrder } from 'primereact/datatable';
+import { SortOrder } from "primereact/datatable";
 
-
-export type DateTimeFormatMode = 'date' | 'time' | 'datetime';
+export type DateTimeFormatMode = "date" | "time" | "datetime";
 
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
@@ -18,9 +17,13 @@ export interface IPaginationMetaData {
   totalItemCount: number;
 }
 
-export interface IPaginatedApiResponse<T> extends IPaginationMetaData {
+export interface IPaginatedData<T> extends IPaginationMetaData {
   items: T[];
 }
+
+export interface IPaginatedApiResponse<T> extends IBaseApiResponse<
+  IPaginatedData<T>
+> {}
 
 export interface IEmployeeCreateRequest {
   employeeId: string;
@@ -91,4 +94,22 @@ export interface SearchEmployeeRequest {
   pageSize: number;
   sortField?: string;
   sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
+}
+export interface IMutateTable {
+  tableName: string;
+  capacity: number;
+  isOnlineBookingEnabled: boolean;
+}
+
+export interface ITable extends IMutateTable {
+  id: number;
+}
+
+export interface IMutateExclusion {
+  exclusionDate: Date;
+  reason: string;
+}
+
+export interface IExclusion extends IMutateExclusion {
+  id: number;
 }

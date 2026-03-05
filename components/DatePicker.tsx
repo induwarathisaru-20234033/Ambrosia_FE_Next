@@ -55,6 +55,8 @@ export default function DatePicker({
         readOnlyInput
         placeholder={placeholder}
         className={disabled ? "bg-[#ced5db]" : ""}
+        inputClassName="border border-gray-300 pl-3"
+        panelClassName="border border-gray-300"
       />
 
       <ErrorMessage
