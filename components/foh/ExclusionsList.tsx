@@ -14,7 +14,10 @@ export default function ExclusionsList() {
   const { data: exclusionsData, isLoading } = useGetQuery<
     IBaseApiResponse<IExclusion[]>,
     {}
-  >(["exclusions"], "/CalenderExclusions", undefined, { enabled: true, toastRef });
+  >(["exclusions"], "/CalenderExclusions", undefined, {
+    enabled: true,
+    toastRef,
+  });
 
   const { mutate: deleteExclusion } = useDeleteQuery({
     invalidateKey: ["exclusions"],
@@ -63,9 +66,9 @@ export default function ExclusionsList() {
 
   const renderExclusionDate = (date: Date | string) => {
     console.log("Rendering exclusion date:", date);
-    const datetime = getLocalDateFromISODateString(date)
-    return <div>{datetime}</div>
-  }
+    const datetime = getLocalDateFromISODateString(date);
+    return <div>{datetime}</div>;
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -86,7 +89,11 @@ export default function ExclusionsList() {
           scrollHeight="300px"
           className="tables-list-datatable"
         >
-          <Column body={(rowData) => renderExclusionDate(rowData.exclusionDate)} header="Exclusion Date" sortable />
+          <Column
+            body={(rowData) => renderExclusionDate(rowData.exclusionDate)}
+            header="Exclusion Date"
+            sortable
+          />
           <Column field="reason" header="Reason" sortable />
           <Column
             body={actionBodyTemplate}

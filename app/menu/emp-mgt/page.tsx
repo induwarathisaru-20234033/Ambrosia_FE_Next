@@ -45,7 +45,10 @@ export default function ViewEmployeePage() {
   const { data, isFetching } = useGetQuery<
     IPaginatedApiResponse<IEmployee>,
     SearchEmployeeRequest
-  >(["employees", JSON.stringify(filters)], "/employees", filters, { enabled: true, toastRef });
+  >(["employees", JSON.stringify(filters)], "/employees", filters, {
+    enabled: true,
+    toastRef,
+  });
 
   const router = useRouter();
 
