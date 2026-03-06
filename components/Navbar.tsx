@@ -7,10 +7,10 @@ import {
   fetchUserProfile,
   getCachedUserProfile,
   type UserProfile,
-} from "@/utils/userProfile";
+} from "@/utils/auth/userProfile";
 import { OverlayPanel } from "primereact/overlaypanel";
 import { useRouter } from "next/navigation";
-import { performLogout } from "@/utils/logout";
+import { performLogout } from "@/utils/auth/logout";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

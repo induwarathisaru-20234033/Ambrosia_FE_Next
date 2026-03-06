@@ -3,7 +3,7 @@
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/utils/authTokens";
+import { getAccessToken } from "@/utils/auth/authTokens";
 import "../globals.css";
 
 export default function MenuLayoutClient({

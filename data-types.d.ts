@@ -1,4 +1,7 @@
-import { SortOrder } from 'primereact/datatable';
+import { Day } from "./enums/day";
+import { SortOrder } from "primereact/datatable";
+
+export type DateTimeFormatMode = "date" | "time" | "datetime";
 
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
@@ -14,20 +17,57 @@ export interface IPaginationMetaData {
   totalItemCount: number;
 }
 
-export interface IPaginatedApiResponse<T> extends IPaginationMetaData {
+export interface IPaginatedData<T> extends IPaginationMetaData {
   items: T[];
 }
 
+export interface IPaginatedApiResponse<T> extends IBaseApiResponse<
+  IPaginatedData<T>
+> {}
+
 export interface IEmployeeCreateRequest {
-    employeeId: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-    mobileNumber: string;
-    address: string;
-    username: string;
-    password: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  mobileNumber: string;
+  address: string;
+  username: string;
+  password: string;
 }
+
+export interface ITimeSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface IDaySchedule {
+  day: Day;
+  dayName: string;
+  isOpen: boolean;
+  timeSlots: ITimeSlot[];
+}
+
+export interface IServiceShiftPayload {
+  day: Day;
+  isOpen: boolean;
+  startTime: string | null;
+  endTime: string | null;
+}
+
+export interface IServiceLogic {
+  bufferTime: number;
+  turnTime: number;
+  bookingInterval: number;
+}
+
+export interface IMutateScheduleConfig {
+  timeSlotLogic: IServiceLogic;
+  serviceShiftPayload: IServiceShiftPayload[];
+}
+
+export interface IScheduleConfigResponse extends IMutateScheduleConfig {}
 
 export interface IEmployee {
   id: number;
@@ -54,4 +94,22 @@ export interface SearchEmployeeRequest {
   pageSize: number;
   sortField?: string;
   sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
+}
+export interface IMutateTable {
+  tableName: string;
+  capacity: number;
+  isOnlineBookingEnabled: boolean;
+}
+
+export interface ITable extends IMutateTable {
+  id: number;
+}
+
+export interface IMutateExclusion {
+  exclusionDate: Date;
+  reason: string;
+}
+
+export interface IExclusion extends IMutateExclusion {
+  id: number;
 }

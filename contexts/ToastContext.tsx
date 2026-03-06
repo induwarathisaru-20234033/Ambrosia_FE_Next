@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useRef, useMemo } from "react";
 import { Toast } from "primereact/toast";
 import type { ReactNode, RefObject } from "react";
 
@@ -10,12 +10,13 @@ interface ToastContext {
 
 const ToastContext = createContext<ToastContext | null>(null);
 
-function ToastProvider({ children }: { children: ReactNode }) {
+function ToastProvider({ children }: Readonly<{ children: ReactNode }>) {
   const toastRef = useRef<Toast | null>(null);
+  const value = useMemo(() => ({ toastRef }), []);
 
   return (
-    <ToastContext.Provider value={{ toastRef }}>
-      <Toast ref={toastRef} position="top-right"/>
+    <ToastContext.Provider value={value}>
+      <Toast ref={toastRef} position="top-right" />
       {children}
     </ToastContext.Provider>
   );

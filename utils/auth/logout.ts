@@ -3,8 +3,11 @@
  * Handles token cleanup, cache clearing, and redirect flow
  */
 
-import { clearAuthTokens, ensureFreshAccessToken } from "@/utils/authTokens";
-import { clearCachedUserProfile } from "@/utils/userProfile";
+import {
+  clearAuthTokens,
+  ensureFreshAccessToken,
+} from "@/utils/auth/authTokens";
+import { clearCachedUserProfile } from "@/utils/auth/userProfile";
 
 /**
  * Get the base URL of the application (protocol + host)
@@ -20,14 +23,14 @@ const getBaseUrl = () => {
 
 /**
  * Perform logout: clear tokens, call backend logout, redirect to Auth0
- * 
+ *
  * Flow:
  * 1. Get valid access token (refresh if needed)
  * 2. Call /Auth/logout endpoint with returnTo URL
  * 3. Clear all tokens and cached profile from browser
  * 4. Redirect to logout URL from backend (Auth0 session clear)
  * 5. After Auth0 logout, user redirected to /login
- * 
+ *
  * @param onRedirect - Optional callback instead of immediate redirect
  *                     Useful for testing or custom redirect logic
  */
