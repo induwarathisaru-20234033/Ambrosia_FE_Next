@@ -83,7 +83,7 @@ export interface IEmployee {
   email?: string;
   address?: string;
   createdDate: string;
-  status: boolean;
+  status: number;
 }
 
 export interface SearchEmployeeRequest {
