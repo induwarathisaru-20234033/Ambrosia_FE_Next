@@ -2,18 +2,19 @@
 
 import { useToastRef } from "@/contexts/ToastContext";
 import {
+  IBaseApiResponse,
   IEmployee,
-  IEmployeeCreateRequest,
   IEmployeeUpdateRequest,
 } from "@/data-types";
-import { employeeValidationSchema } from "@/schemas";
+import { employeeEditValidationSchema } from "@/schemas";
 import { useGetQuery } from "@/services/queries/getQuery";
 import { usePatchQuery } from "@/services/queries/patchQuery";
+import EditEmployeeSkeleton from "@/components/skeletons/EditEmployeeSkeleton";
 import { Form, Formik } from "formik";
 import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
 import { InputSwitch } from "primereact/inputswitch";
-import { useState } from "react";
-import { Container } from "react-bootstrap";
+import { Container, Form as BootstrapForm } from "react-bootstrap";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -36,12 +37,9 @@ interface InitialValues {
   status: boolean;
 }
 
-interface PageProps {
-  readonly params: { id: number };
-}
-
-export default function EditEmployeePage({ params: { id } }: PageProps) {
-  const [status, setStatus] = useState(true);
+export default function EditEmployeePage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const toastRef = useToastRef();
 
   const patchMutation = usePatchQuery({
@@ -50,10 +48,26 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
     toastRef: toastRef,
   });
 
-  const { data: employeeData } = useGetQuery<IEmployee, number>(
-    ["getEmployee", id],
-    `employees/${id}`,
+  const {
+    data: employeeResponse,
+    isLoading,
+    isFetching,
+  } = useGetQuery<IBaseApiResponse<IEmployee> | IEmployee, undefined>(
+    ["getEmployee", id ?? ""],
+    `/employees/${id}`,
+    undefined,
+    {
+      enabled: !!id,
+      toastRef,
+    },
   );
+
+  const employeeData =
+    employeeResponse && "data" in employeeResponse
+      ? employeeResponse.data
+      : employeeResponse;
+
+  const isInitialLoading = (isLoading || isFetching) && !employeeData;
 
   const formatCountryCode = (countryCode: string) => {
     return countryCode.replace("+", "");
@@ -67,8 +81,13 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
       : mobileNumber;
   };
 
+  if (isInitialLoading) {
+    return <EditEmployeeSkeleton />;
+  }
+
   return (
     <Formik<InitialValues>
+      enableReinitialize
       initialValues={{
         employeeId: employeeData?.employeeId ?? "",
         firstName: employeeData?.firstName ?? "",
@@ -78,10 +97,12 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
         username: employeeData?.username ?? "",
         password: "",
         address: employeeData?.address ?? "",
-        status: employeeData?.status ?? status,
+        status: employeeData?.status === 1,
       }}
-      validationSchema={employeeValidationSchema}
+      validationSchema={employeeEditValidationSchema}
       onSubmit={async (values) => {
+        if (!id) return;
+
         const fullMobileNumber = `94${values.mobileNumber}`;
         const body: IEmployeeUpdateRequest = {
           employeeId: values.employeeId,
@@ -97,7 +118,7 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
         patchMutation.mutate({ url: `/employees/${id}`, body });
       }}
     >
-      {
+      {({ values, setFieldValue }) => (
         <ScrollPanel style={{ width: "100%", height: "100vh" }}>
           <Form className="form-container w-full xs:w-2/3 sm:w-1/2 lg:w-2/5 xl:w-1/3 mb-3">
             <div className="mt-4 main">
@@ -123,13 +144,13 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
                     disabled={false}
                   />
                   <LabelGroup
-                    label="Password*"
+                    label="Password"
                     name="password"
                     type="password"
                     placeholder="********"
                     id="formPassword"
                     disabled={false}
-                    tooltipValue="To update the password, enter a new one. Leaving it blank keeps the existing password unchanged."
+                    labelTooltip="To update the password, enter a new one. Leaving it blank keeps the existing password unchanged."
                   />
                   <LabelGroup
                     label="Email"
@@ -172,12 +193,15 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
                     placeholder="Address"
                     disabled={false}
                   />
-                  <InputSwitch
-                    id="status"
-                    checked={status}
-                    onChange={(e) => setStatus(e.value)}
-                    className="custom-toggle"
-                  />
+                  <div className="flex items-center justify-between m-2">
+                    <BootstrapForm.Label>Status</BootstrapForm.Label>
+                    <InputSwitch
+                      id="status"
+                      checked={values.status}
+                      onChange={(e) => setFieldValue("status", !!e.value)}
+                      className="custom-toggle custom-toggle-blue"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Col className="btn-group w-full mr-2 p-0">
@@ -203,7 +227,7 @@ export default function EditEmployeePage({ params: { id } }: PageProps) {
             </div>
           </Form>
         </ScrollPanel>
-      }
+      )}
     </Formik>
   );
 }
