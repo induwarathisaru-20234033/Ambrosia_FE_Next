@@ -69,13 +69,17 @@ export default function ViewEmployeePage() {
     // refetch();
   };
 
-  const handleEdit = (employeeId: number) => {
-    router.push(`/employees/edit/${employeeId}`); // navigate to edit page
+  const handleEdit = (employeeId: string | number) => {
+    router.push(`/menu/emp-mgt/employee/${employeeId}`); // navigate to edit page
   };
 
   const [selectedEmployee, setSelectedEmployee] = useState<IEmployee | null>(
     null,
   );
+
+  const renderStatus = (status: number) => {
+    return status === 1 ? <div>Active</div> : <div>Inactive</div>;
+  };
 
   const onSort = (event: any) => {
     const updated: SearchEmployeeRequest = {
@@ -104,7 +108,7 @@ export default function ViewEmployeePage() {
             type="button"
             className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
             state={true}
-            onClick={() => router.push("/menu/emp-mgt/add-employee")}
+            onClick={() => router.push("/emp-mgt/employee/add")}
           />
         </Col>
       </Row>
@@ -185,14 +189,14 @@ export default function ViewEmployeePage() {
                       id="filterEmployeeBtn"
                       text="Filter"
                       type="submit"
-                      className="bg-[#0086ED] text-white flex-1 py-2 rounded-none hover:bg-blue-600 transition-colors duration-200 shadow-md"
+                      className="bg-[#0086ED] text-white flex-1 py-2 hover:bg-blue-600 transition-colors duration-200 shadow-md rounded-md"
                       state={true}
                     />
                     <Button
                       id="clearFilterEmployeeBtn"
                       text="Clear"
                       type="button"
-                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 rounded-none hover:bg-[#E6F0FF] hover:text-[#0056B3] transition-colors duration-200 shadow-md"
+                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 hover:bg-[#E6F0FF] hover:text-[#0056B3] transition-colors duration-200 shadow-md rounded-md"
                       state={true}
                       onClick={() => {
                         resetForm({ values: initialFilters });
@@ -221,7 +225,6 @@ export default function ViewEmployeePage() {
             sortOrder={filters.sortOrder ?? 0}
             loading={isFetching}
             rowsPerPageOptions={[5, 10, 20, 50]}
-            responsiveLayout="scroll"
           >
             <Column field="employeeId" header="Employee ID" sortable />
             <Column
@@ -235,11 +238,15 @@ export default function ViewEmployeePage() {
             <Column field="email" header="Email" sortable />
             <Column field="mobileNumber" header="Phone Number" sortable />
             <Column field="address" header="Address" sortable />
-            <Column field="status" header="Status" sortable />
+            <Column
+              header="Status"
+              sortable
+              body={(rowData: IEmployee) => renderStatus(rowData.status)}
+            />
             <Column
               body={(rowData: IEmployee) => (
                 <button
-                  className="bg-[#0086ED] text-white py-1 px-3 rounded-n hover:bg-blue-600"
+                  className="bg-[#0086ED] text-white py-1 px-3 rounded-md hover:bg-blue-600"
                   onClick={() => handleEdit(rowData.id)}
                 >
                   Edit

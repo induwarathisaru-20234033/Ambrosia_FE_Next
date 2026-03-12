@@ -1,7 +1,7 @@
 "use client";
 
 import { IEmployeeCreateRequest } from "@/data-types";
-import { addEmployeeSchema } from "@/schemas";
+import { employeeValidationSchema } from "@/schemas";
 import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { Form, Formik } from "formik";
@@ -48,7 +48,7 @@ export default function AddEmployeePage() {
         password: "",
         address: "",
       }}
-      validationSchema={addEmployeeSchema}
+      validationSchema={employeeValidationSchema}
       onSubmit={async (values) => {
         const fullMobileNumber = `94${values.mobileNumber}`;
         const body: IEmployeeCreateRequest = {

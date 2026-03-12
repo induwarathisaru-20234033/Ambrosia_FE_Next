@@ -116,7 +116,7 @@ export const StandardOpeningHours = ({
                     <InputSwitch
                       checked={daySchedule.isOpen}
                       onChange={() => toggleDay(dayIndex)}
-                      className="custom-toggle"
+                      className="custom-toggle custom-toggle-coral"
                     />
 
                     {/* Time Slots */}

@@ -36,6 +36,10 @@ export interface IEmployeeCreateRequest {
   password: string;
 }
 
+export interface IEmployeeUpdateRequest extends IEmployeeCreateRequest {
+  status: number;
+}
+
 export interface ITimeSlot {
   id: string;
   startTime: string;
@@ -79,6 +83,7 @@ export interface IEmployee {
   email?: string;
   address?: string;
   createdDate: string;
+  status: number;
 }
 
 export interface SearchEmployeeRequest {

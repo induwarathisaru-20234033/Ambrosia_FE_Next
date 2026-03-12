@@ -130,7 +130,7 @@ export default function AddTableForm({
                   onChange={(e) =>
                     setFieldValue("isOnlineBookingEnabled", e.value)
                   }
-                  className="custom-toggle"
+                  className="custom-toggle custom-toggle-coral"
                 />
               </div>
 

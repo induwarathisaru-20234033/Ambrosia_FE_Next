@@ -53,7 +53,7 @@ export default function TablesList() {
       <InputSwitch
         checked={rowData.isOnlineBookingEnabled}
         disabled
-        className="custom-toggle"
+        className="custom-toggle custom-toggle-coral"
       />
     );
   };
