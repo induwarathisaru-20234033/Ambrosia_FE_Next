@@ -28,7 +28,7 @@ const parseTimeToMinutes = (value: unknown): number | null => {
   return null;
 };
 
-export const addEmployeeSchema = Yup.object({
+export const employeeValidationSchema = Yup.object({
   employeeId: Yup.string().required("Employee ID is required"),
   firstName: Yup.string().required("First Name is required"),
   lastName: Yup.string().required("Last Name is required"),
