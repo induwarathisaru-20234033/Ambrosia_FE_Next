@@ -1,6 +1,34 @@
 import * as Yup from "yup";
 
-export const addEmployeeSchema = Yup.object({
+const TURN_TIME_INCREMENT_MINUTES = 5;
+
+const parseTimeToMinutes = (value: unknown): number | null => {
+  if (!value) return null;
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.getHours() * 60 + value.getMinutes();
+  }
+
+  if (typeof value === "string") {
+    const timeMatch = /^(\d{1,2}):(\d{2})/.exec(value);
+    if (timeMatch) {
+      const hours = Number.parseInt(timeMatch[1], 10);
+      const minutes = Number.parseInt(timeMatch[2], 10);
+      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+        return hours * 60 + minutes;
+      }
+    }
+
+    const parsedDate = new Date(value);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate.getHours() * 60 + parsedDate.getMinutes();
+    }
+  }
+
+  return null;
+};
+
+export const employeeValidationSchema = Yup.object({
   employeeId: Yup.string().required("Employee ID is required"),
   firstName: Yup.string().required("First Name is required"),
   lastName: Yup.string().required("Last Name is required"),
@@ -27,4 +55,238 @@ export const addRoleSchema = Yup.object({
   roleCode: Yup.string().required("Role Code is required"),
   roleName: Yup.string().required("Role Name is required"),
   description: Yup.string().optional(),
+});
+export const employeeEditValidationSchema = Yup.object({
+  employeeId: Yup.string().required("Employee ID is required"),
+  firstName: Yup.string().required("First Name is required"),
+  lastName: Yup.string().required("Last Name is required"),
+  email: Yup.string().email("Please enter a valid email.").optional(),
+  mobileNumber: Yup.string().required("Mobile Number is required"),
+  address: Yup.string().required("Address is required"),
+  username: Yup.string().required("Username is required"),
+  password: Yup.string().test(
+    "password-validation-optional",
+    "Password must be at least 8 characters with an uppercase letter, lowercase letter, number, and special character.",
+    function (value) {
+      if (!value) return true;
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      return passwordRegex.test(value);
+    },
+  ),
+});
+
+export const ServiceLogicSchema = Yup.object()
+  .shape({
+    bufferTime: Yup.number()
+      .min(0, "Buffer time cannot be negative")
+      .integer("Buffer time must be a whole number")
+      .required("Buffer time is required"),
+    turnTime: Yup.number()
+      .min(0, "Turn time cannot be negative")
+      .integer("Turn time must be a whole number")
+      .required("Turn time is required"),
+    bookingInterval: Yup.number()
+      .min(0, "Booking interval cannot be negative")
+      .integer("Booking interval must be a whole number")
+      .required("Booking interval is required"),
+  })
+  .test(
+    "booking-interval-min-turn-increment",
+    `Booking interval cannot be smaller than ${TURN_TIME_INCREMENT_MINUTES} minutes`,
+    function (value) {
+      if (!value) return true;
+
+      const bookingInterval = value.bookingInterval;
+      if (typeof bookingInterval !== "number") return true;
+
+      if (bookingInterval < TURN_TIME_INCREMENT_MINUTES) {
+        return this.createError({
+          path: "bookingInterval",
+          message: `Booking interval cannot be smaller than ${TURN_TIME_INCREMENT_MINUTES} minutes`,
+        });
+      }
+
+      return true;
+    },
+  );
+
+export const StandardOpeningHoursSchema = Yup.object().shape({
+  schedule: Yup.array().of(
+    Yup.object().shape({
+      day: Yup.number().required("Day is required").min(1).max(7),
+      isOpen: Yup.boolean().required("Open/Closed status is required"),
+      timeSlots: Yup.array().when("isOpen", {
+        is: true,
+        then: (schema) =>
+          schema
+            .of(
+              Yup.object().shape({
+                id: Yup.string().required("Time slot ID is required"),
+                startTime: Yup.mixed()
+                  .test(
+                    "start-required",
+                    "Start time is required",
+                    function (value) {
+                      const endTime = (this.parent as { endTime?: unknown })
+                        .endTime;
+                      const startMinutes = parseTimeToMinutes(value);
+                      const endMinutes = parseTimeToMinutes(endTime);
+                      if (startMinutes === null && endMinutes === null) {
+                        return true;
+                      }
+                      return startMinutes !== null;
+                    },
+                  )
+                  .test(
+                    "start-before-end",
+                    "Start time must be before end time",
+                    function (value) {
+                      const endTime = (this.parent as { endTime?: unknown })
+                        .endTime;
+                      const startMinutes = parseTimeToMinutes(value);
+                      const endMinutes = parseTimeToMinutes(endTime);
+                      if (startMinutes === null || endMinutes === null) {
+                        return true;
+                      }
+                      return startMinutes < endMinutes;
+                    },
+                  ),
+                endTime: Yup.mixed()
+                  .test(
+                    "end-required",
+                    "End time is required",
+                    function (value) {
+                      const startTime = (this.parent as { startTime?: unknown })
+                        .startTime;
+                      const startMinutes = parseTimeToMinutes(startTime);
+                      const endMinutes = parseTimeToMinutes(value);
+                      if (startMinutes === null && endMinutes === null) {
+                        return true;
+                      }
+                      return endMinutes !== null;
+                    },
+                  )
+                  .test(
+                    "end-after-start",
+                    "End time must be after start time",
+                    function (value) {
+                      const startTime = (this.parent as { startTime?: unknown })
+                        .startTime;
+                      const startMinutes = parseTimeToMinutes(startTime);
+                      const endMinutes = parseTimeToMinutes(value);
+                      if (startMinutes === null || endMinutes === null) {
+                        return true;
+                      }
+                      return endMinutes > startMinutes;
+                    },
+                  ),
+              }),
+            )
+            .test(
+              "at-least-one-shift",
+              "At least one shift must be added",
+              function (slots) {
+                if (!Array.isArray(slots)) {
+                  return false;
+                }
+
+                const validCount = slots.filter((slot) => {
+                  const startMinutes = parseTimeToMinutes(slot?.startTime);
+                  const endMinutes = parseTimeToMinutes(slot?.endTime);
+                  if (startMinutes === null || endMinutes === null) {
+                    return false;
+                  }
+                  return startMinutes < endMinutes;
+                }).length;
+
+                return validCount >= 1;
+              },
+            )
+            .test(
+              "no-overlap",
+              "Time slots must not overlap",
+              function (slots) {
+                if (!Array.isArray(slots)) {
+                  return true;
+                }
+
+                const intervals = slots
+                  .map((slot) => {
+                    const startMinutes = parseTimeToMinutes(slot?.startTime);
+                    const endMinutes = parseTimeToMinutes(slot?.endTime);
+                    if (startMinutes === null || endMinutes === null) {
+                      return null;
+                    }
+                    return { start: startMinutes, end: endMinutes };
+                  })
+                  .filter(
+                    (interval): interval is { start: number; end: number } =>
+                      interval !== null,
+                  )
+                  .sort((a, b) => a.start - b.start);
+
+                for (let i = 1; i < intervals.length; i += 1) {
+                  if (intervals[i].start < intervals[i - 1].end) {
+                    return false;
+                  }
+                }
+
+                return true;
+              },
+            ),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+    }),
+  ),
+});
+
+export const AddTableSchema = Yup.object().shape({
+  tableName: Yup.string()
+    .required("Table name is required")
+    .min(3, "Table Name must be at least 3 characters"),
+  capacity: Yup.number()
+    .required("Capacity is required")
+    .positive("Capacity must be a positive number")
+    .integer("Capacity must be an integer"),
+  isOnlineBookingEnabled: Yup.boolean(),
+});
+
+export const AddExclusionSchema = Yup.object().shape({
+  exclusionDate: Yup.date().required("Exclusion date is required"),
+  reason: Yup.string()
+    .required("Reason is required")
+    .min(5, "Reason must be at least 5 characters"),
+});
+
+export const AddReservationSchema = Yup.object().shape({
+  name: Yup.string()
+    .trim()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name cannot exceed 100 characters"),
+  phone: Yup.string()
+    .trim()
+    .required("Phone number is required")
+    .matches(
+      /^\+?[0-9]{7,15}$/,
+      "Phone number must contain only digits and can include leading +",
+    ),
+  email: Yup.string().trim().email("Please enter a valid email").notRequired(),
+  partySize: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue === null ? NaN : value,
+    )
+    .typeError("Party size must be a number")
+    .required("Party size is required")
+    .integer("Party size must be a whole number")
+    .min(1, "Party size must be at least 1"),
+  occasion: Yup.string()
+    .trim()
+    .max(100, "Occasion cannot exceed 100 characters"),
+  timeSlot: Yup.string().required("Time slot is required"),
+  tableId: Yup.string().required("Table is required"),
+  specialRequests: Yup.string()
+    .trim()
+    .max(500, "Special requests cannot exceed 500 characters"),
 });
