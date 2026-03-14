@@ -8,8 +8,8 @@ import AmbrosiaLogo from "@/public/images/AmbrosiaLogo.png";
 import { Button } from "primereact/button";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { setAuthTokens } from "@/utils/authTokens";
-import { fetchUserProfile } from "@/utils/userProfile";
+import { setAuthTokens } from "@/utils/auth/authTokens";
+import { fetchUserProfile } from "@/utils/auth/userProfile";
 
 export default function SigninForm() {
   const [loading, setLoading] = useState<boolean>(false);

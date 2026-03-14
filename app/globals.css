@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-input[type='password']::-ms-reveal {
+input[type="password"]::-ms-reveal {
   display: none;
 }
 
@@ -164,7 +164,7 @@ a {
 
 .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
   scale: unset !important;
-  background: #fc7945 !important;
+  background: #ef6630 !important;
 }
 
 .text-size {
@@ -505,20 +505,20 @@ a {
   font-size: 10px;
 }
 
-.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+/* .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link .custom-tabs {
   background: #fafafa;
   border-color: #dee2e6 #dee2e6 #fafafa #dee2e6;
   color: black;
   width: 100%;
   display: flex;
   justify-content: center;
-}
+} */
 
-.p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus,
+/* .p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus,
 .p-sidebar .p-sidebar-header .p-sidebar-close:focus,
 .p-sidebar .p-sidebar-header .p-sidebar-icon:focus {
   box-shadow: none;
-}
+} */
 
 .p-sidebar .p-sidebar-header {
   justify-content: space-between;
@@ -526,7 +526,7 @@ a {
   padding-right: 0.5rem;
 }
 
-.p-tabview
+/* .p-tabview
   .p-tabview-nav
   li:not(.p-highlight):not(.p-disabled):hover
   .p-tabview-nav-link {
@@ -537,7 +537,7 @@ a {
 
 .p-tabview .p-tabview-panels {
   background: #fafafa;
-}
+} */
 
 .p-overlaypanel::before,
 .p-overlaypanel::after {
@@ -682,15 +682,6 @@ a {
     width: 100% !important;
   }
 
-  .p-tabview .p-tabview-nav li .p-tabview-nav-link {
-    border-top-right-radius: 0px !important;
-    border-top-left-radius: 0px !important;
-  }
-
-  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-    font-weight: bold;
-  }
-
   .p-paginator .p-paginator-pages .p-paginator-page,
   .p-paginator .p-paginator-last,
   .p-paginator .p-paginator-first,
@@ -705,7 +696,6 @@ a {
   }
 }
 
-
 .p-datatable .p-datatable-tbody > tr.p-highlight {
   background-color: transparent !important;
   color: inherit !important;
@@ -716,13 +706,13 @@ a {
 }
 
 .p-checkbox .p-checkbox-box.p-highlight {
-  background: #EF6630 !important;
-  border-color: #EF6630 !important;
+  background: #ef6630 !important;
+  border-color: #ef6630 !important;
 }
 
 .error-popup .p-dialog-header {
-  background-color: #FB6565;
-  border-bottom: 1px solid #FB6565;
+  background-color: #fb6565;
+  border-bottom: 1px solid #fb6565;
 }
 
 .error-popup .p-dialog-content {
@@ -731,21 +721,42 @@ a {
 }
 
 .error-popup .p-button {
-  background: #FB6565 !important;
-  border-color: #FB6565 !important;
+  background: #fb6565 !important;
+  border-color: #fb6565 !important;
   width: 110px;
 }
 
-/* Makes all PrimeReact table headers light grey */
+.custom-toggle {
+  --toggle-on-bg: #ff6b6b;
+  --toggle-on-knob: #ffffff;
+}
+
+.custom-toggle-blue {
+  --toggle-on-bg: #0086ed;
+}
+
+.custom-toggle-coral {
+  --toggle-on-bg: #ff6b6b;
+}
+
+.custom-toggle.p-inputswitch-checked .p-inputswitch-slider,
+.custom-toggle.p-highlight .p-inputswitch-slider {
+  background: var(--toggle-on-bg) !important;
+}
+
+.custom-toggle.p-inputswitch-checked .p-inputswitch-slider:before,
+.custom-toggle.p-highlight .p-inputswitch-slider:before {
+  background: var(--toggle-on-knob) !important;
+}
+
 .p-datatable-thead > tr > th {
   background-color: #e5e7eb; /* Tailwind gray-200 */
   color: #1f2937; /* dark text */
 }
 
-
 /* Make each tab equal width */
 .custom-tabs .p-tabview-nav li {
-  width: 300px;            /* Equal width */
+  width: 300px; /* Equal width */
   text-align: center;
   position: relative;
 }
@@ -753,10 +764,10 @@ a {
 /* All tab text default (inactive) */
 .custom-tabs .p-tabview-nav li .p-tabview-nav-link {
   font-weight: 600;
-  color: #9ca3af !important;   /* grey */
+  color: #9ca3af !important; /* grey */
   padding: 1rem 2rem;
   border: none !important;
-  background: #f3f4f6;       /* light grey rectangle */
+  background: #f3f4f6; /* light grey rectangle */
   transition: all 0.3s ease;
   text-align: center;
   display: block;
@@ -765,11 +776,11 @@ a {
 
 /* Active tab text */
 .custom-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  color: #000000 !important;   /* black */
+  color: #000000 !important; /* black */
   font-weight: 700;
 }
 
 /* Blue underline for active tab */
 .custom-tabs .p-tabview-nav li.p-highlight {
-  border-bottom: 3px solid #0086ED;
+  border-bottom: 3px solid #0086ed;
 }

@@ -36,7 +36,7 @@ export default function LabelGroup({
   showDecimals,
   labelTooltip,
   ...props
-}: LabelGroupProps) {
+}: Readonly<LabelGroupProps>) {
   const [field, , helpers] = useField(name);
   const showingDecimal = showDecimals && type === "number";
   const [showPassword, setShowPassword] = useState(false);

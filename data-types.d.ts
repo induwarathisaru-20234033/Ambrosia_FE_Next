@@ -1,4 +1,7 @@
-import { SortOrder } from 'primereact/datatable';
+import { Day } from "./enums/day";
+import { SortOrder } from "primereact/datatable";
+
+export type DateTimeFormatMode = "date" | "time" | "datetime";
 
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
@@ -14,27 +17,62 @@ export interface IPaginationMetaData {
   totalItemCount: number;
 }
 
-export interface IPaginatedApiResponse<T> extends IPaginationMetaData {
+export interface IPaginatedData<T> extends IPaginationMetaData {
   items: T[];
 }
 
+export interface IPaginatedApiResponse<T> extends IBaseApiResponse<
+  IPaginatedData<T>
+> {}
+
 export interface IEmployeeCreateRequest {
-    employeeId: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-    mobileNumber: string;
-    address: string;
-    username: string;
-    password: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  mobileNumber: string;
+  address: string;
+  username: string;
+  password: string;
 }
 
-export interface IRoleCreateRequest {
-    roleCode: string;
-    roleName: string;
-    description?: string;
-    isActive?: boolean;
-    permissions?: string[];
+export interface IEmployeeUpdateRequest extends IEmployeeCreateRequest {
+  status: number;
+}
+
+export interface ITimeSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface IDaySchedule {
+  day: Day;
+  dayName: string;
+  isOpen: boolean;
+  timeSlots: ITimeSlot[];
+}
+
+export interface IServiceShiftPayload {
+  day: Day;
+  isOpen: boolean;
+  startTime: string | null;
+  endTime: string | null;
+}
+
+export interface IServiceLogic {
+  bufferTime: number;
+  turnTime: number;
+  bookingInterval: number;
+}
+
+export interface IMutateScheduleConfig {
+  timeSlotLogic: IServiceLogic;
+  serviceShiftPayload: IServiceShiftPayload[];
+}
+
+export interface IScheduleConfigResponse extends IMutateScheduleConfig {}
+
 export interface IEmployee {
   id: number;
   employeeId: string;
@@ -45,6 +83,7 @@ export interface IEmployee {
   email?: string;
   address?: string;
   createdDate: string;
+  status: number;
 }
 
 export interface SearchEmployeeRequest {
@@ -60,4 +99,81 @@ export interface SearchEmployeeRequest {
   pageSize: number;
   sortField?: string;
   sortOrder?: SortOrder; // 1 = ASC, -1 = DESC
+}
+export interface IMutateTable {
+  tableName: string;
+  capacity: number;
+  isOnlineBookingEnabled: boolean;
+}
+
+export interface ITable extends IMutateTable {
+  id: number;
+  existingAllocations?: number;
+}
+
+export interface IMutateExclusion {
+  exclusionDate: Date;
+  reason: string;
+}
+
+export interface IExclusion extends IMutateExclusion {
+  id: number;
+}
+
+
+export interface ICustomerDetail {
+  id: number;
+  name: string;
+  email?: string;
+  phoneNumber: string;
+}
+
+export interface IBookingSlot {
+  id: number;
+  slotId: string;
+  startTime: Date | string;
+  endTime: Date | string;
+  day: Day;
+  existingAllocations?: number;
+}
+
+export interface IReservation {
+  id: number;
+  reservationCode: string;
+  partySize: number;
+  reservationStatus: number;
+  reservationDate: Date;
+  occasion?: string;
+  specialRequests?: string;
+  arrivedAt?: Date;
+  noShowMarkedAt?: Date;
+  cancelledAt?: Date;
+  customerDetails: ICustomerDetail;
+  bookingSlot: IBookingSlot;
+  table: ITable;
+}
+
+export interface ISearchReservationsRequest {
+  reservationCode?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  tableNo?: string;
+  reservationDateFrom?: Date | null;
+  reservationDateTo?: Date | null;
+  createdDateFrom?: Date | null;
+  createdDateTo?: Date | null;
+  timeSlot?: string;
+}
+
+interface ICreateReservationRequest {
+  partySize: number;
+  reservationDate: string;
+  occasion: string;
+  specialRequests: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhoneNumber: string;
+  bookingSlotId: number;
+  tableId: number;
 }

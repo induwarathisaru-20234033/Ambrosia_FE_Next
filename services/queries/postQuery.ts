@@ -46,10 +46,16 @@ export const usePostQuery = ({
       if (invalidateKey) {
         if (Array.isArray(invalidateKey)) {
           invalidateKey.forEach((key) =>
-            queryClient.invalidateQueries({ queryKey: [key] }),
+            queryClient.invalidateQueries({
+              queryKey: [key],
+              refetchType: "active",
+            }),
           );
         } else {
-          queryClient.invalidateQueries({ queryKey: invalidateKey });
+          queryClient.invalidateQueries({
+            queryKey: invalidateKey,
+            refetchType: "active",
+          });
         }
       }
 
@@ -61,6 +67,20 @@ export const usePostQuery = ({
           life: 3000,
         });
       redirectPath && router.push(redirectPath);
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "An error occurred while processing your request";
+
+      toastRef?.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
     },
   });
 };
