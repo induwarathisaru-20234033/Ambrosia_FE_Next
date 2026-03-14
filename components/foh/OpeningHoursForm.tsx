@@ -31,21 +31,25 @@ export const StandardOpeningHours = ({
     { day: Day.Sunday, name: "Sunday" },
   ];
 
+  const defaultSchedule = daysOfWeek.map(({ day, name }) => ({
+    day: day,
+    dayName: name,
+    isOpen: true,
+    timeSlots: [{ id: "1", startTime: "", endTime: "" }],
+  }));
+
   const initialValues = {
     schedule:
-      initialSchedule ||
-      daysOfWeek.map(({ day, name }) => ({
-        day: day,
-        dayName: name,
-        isOpen: true,
-        timeSlots: [{ id: "1", startTime: "", endTime: "" }],
-      })),
+      initialSchedule && initialSchedule.length > 0
+        ? initialSchedule
+        : defaultSchedule,
   };
 
   const formik = useFormik({
     initialValues,
     validationSchema: StandardOpeningHoursSchema,
     validateOnMount: true,
+    enableReinitialize: true,
     onSubmit: () => {},
   });
 
