@@ -104,35 +104,6 @@ export const ServiceLogicSchema = Yup.object()
 
       return true;
     },
-  )
-  .test(
-    "fixed-buffer-no-bleed",
-    "Total table block (turn time + buffer time) must align with booking interval to avoid unfillable gaps",
-    function (value) {
-      if (!value) return true;
-
-      const { turnTime, bufferTime, bookingInterval } = value;
-
-      if (
-        typeof turnTime !== "number" ||
-        typeof bufferTime !== "number" ||
-        typeof bookingInterval !== "number" ||
-        bookingInterval <= 0
-      ) {
-        return true;
-      }
-
-      const totalTableBlock = turnTime + bufferTime;
-      if (totalTableBlock % bookingInterval !== 0) {
-        return this.createError({
-          path: "bookingInterval",
-          message:
-            "Turn time + buffer time must be divisible by booking interval to prevent buffer bleed into the next slot",
-        });
-      }
-
-      return true;
-    },
   );
 
 export const StandardOpeningHoursSchema = Yup.object().shape({
@@ -281,4 +252,36 @@ export const AddExclusionSchema = Yup.object().shape({
   reason: Yup.string()
     .required("Reason is required")
     .min(5, "Reason must be at least 5 characters"),
+});
+
+export const AddReservationSchema = Yup.object().shape({
+  name: Yup.string()
+    .trim()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name cannot exceed 100 characters"),
+  phone: Yup.string()
+    .trim()
+    .required("Phone number is required")
+    .matches(
+      /^\+?[0-9]{7,15}$/,
+      "Phone number must contain only digits and can include leading +",
+    ),
+  email: Yup.string().trim().email("Please enter a valid email").notRequired(),
+  partySize: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue === null ? NaN : value,
+    )
+    .typeError("Party size must be a number")
+    .required("Party size is required")
+    .integer("Party size must be a whole number")
+    .min(1, "Party size must be at least 1"),
+  occasion: Yup.string()
+    .trim()
+    .max(100, "Occasion cannot exceed 100 characters"),
+  timeSlot: Yup.string().required("Time slot is required"),
+  tableId: Yup.string().required("Table is required"),
+  specialRequests: Yup.string()
+    .trim()
+    .max(500, "Special requests cannot exceed 500 characters"),
 });

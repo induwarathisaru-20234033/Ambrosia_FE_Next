@@ -108,6 +108,7 @@ export interface IMutateTable {
 
 export interface ITable extends IMutateTable {
   id: number;
+  existingAllocations?: number;
 }
 
 export interface IMutateExclusion {
@@ -117,4 +118,62 @@ export interface IMutateExclusion {
 
 export interface IExclusion extends IMutateExclusion {
   id: number;
+}
+
+
+export interface ICustomerDetail {
+  id: number;
+  name: string;
+  email?: string;
+  phoneNumber: string;
+}
+
+export interface IBookingSlot {
+  id: number;
+  slotId: string;
+  startTime: Date | string;
+  endTime: Date | string;
+  day: Day;
+  existingAllocations?: number;
+}
+
+export interface IReservation {
+  id: number;
+  reservationCode: string;
+  partySize: number;
+  reservationStatus: number;
+  reservationDate: Date;
+  occasion?: string;
+  specialRequests?: string;
+  arrivedAt?: Date;
+  noShowMarkedAt?: Date;
+  cancelledAt?: Date;
+  customerDetails: ICustomerDetail;
+  bookingSlot: IBookingSlot;
+  table: ITable;
+}
+
+export interface ISearchReservationsRequest {
+  reservationCode?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  tableNo?: string;
+  reservationDateFrom?: Date | null;
+  reservationDateTo?: Date | null;
+  createdDateFrom?: Date | null;
+  createdDateTo?: Date | null;
+  timeSlot?: string;
+}
+
+interface ICreateReservationRequest {
+  partySize: number;
+  reservationDate: string;
+  occasion: string;
+  specialRequests: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhoneNumber: string;
+  bookingSlotId: number;
+  tableId: number;
 }

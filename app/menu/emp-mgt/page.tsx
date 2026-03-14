@@ -96,7 +96,7 @@ export default function ViewEmployeePage() {
     <Container fluid>
       <Row className="align-items-center mb-4">
         <Col>
-          <h1 className="h1-custom text-[#0086ED] font-semibold">
+          <h1 className="text-5xl my-6 text-[#0086ED] font-bold">
             Employee and Roles Management
           </h1>
         </Col>
