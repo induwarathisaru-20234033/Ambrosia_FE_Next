@@ -46,6 +46,14 @@ export interface ITimeSlot {
   endTime: string;
 }
 
+export interface IRoleCreateRequest {
+    roleCode: string;
+    roleName: string;
+    description?: string;
+    isActive?: boolean;
+    permissions?: string[];
+}
+
 export interface IDaySchedule {
   day: Day;
   dayName: string;
