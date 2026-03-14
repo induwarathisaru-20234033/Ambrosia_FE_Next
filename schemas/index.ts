@@ -51,6 +51,11 @@ export const employeeValidationSchema = Yup.object({
     ),
 });
 
+export const addRoleSchema = Yup.object({
+  roleCode: Yup.string().required("Role Code is required"),
+  name: Yup.string().required("Role Name is required"),
+  description: Yup.string().required("Description is required"),
+});
 export const employeeEditValidationSchema = Yup.object({
   employeeId: Yup.string().required("Employee ID is required"),
   firstName: Yup.string().required("First Name is required"),
