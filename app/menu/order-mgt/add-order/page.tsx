@@ -1,132 +1,291 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useToastRef } from "@/contexts/ToastContext";
+import { usePostQuery } from "@/services/queries/postQuery";
+import dynamic from "next/dynamic";
+import { Form, Formik } from "formik";
+import * as Yup from "yup";
+import "primeicons/primeicons.css";
 
-export default function AddOrderPage() {
+const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
+const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
-  const [orderItems, setOrderItems] = useState<any[]>([]);
-
-//   Mock Data
-  const menuItems = [
-  { id: 1, name: "Burger", image: "/burger.png", isAvailable: true },
-  { id: 2, name: "Pizza", image: "/pizza.png", isAvailable: true },
-  { id: 3, name: "Coke", image: "/coke.png", isAvailable: true },
-    ];
-
-    const fireOrder = () => {
-  if (orderItems.length === 0) {
-    alert("Please select a table and add at least one item.");
-    return;
-  }
-
-  alert("Order sent to kitchen successfully.");
+type MenuItem = {
+  id: number;
+  name: string;
 };
 
+interface OrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  specialInstructions: string;
+}
+
+interface InitialValues {
+  table: string;
+  orderItems: OrderItem[];
+}
+
+const menuItems: MenuItem[] = [
+  { id: 1, name: "Burger" },
+  { id: 2, name: "Pizza" },
+  { id: 3, name: "Coke" },
+];
+
+const orderSchema = Yup.object().shape({
+  table: Yup.string().required("Table is required"),
+  orderItems: Yup.array().min(1, "Add at least one menu item"),
+});
+
+export default function AddOrderPage() {
+  const toastRef = useToastRef();
+
+  const mutation = usePostQuery({
+    redirectPath: "/menu/order-mgt",
+    successMessage: "Order sent to kitchen successfully!",
+    toastRef,
+  });
+
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <Formik<InitialValues>
+      initialValues={{ table: "", orderItems: [] }}
+      validationSchema={orderSchema}
+      onSubmit={(values) => mutation.mutate({ url: "/orders", body: values })}
+    >
+      {(formik) => {
 
-      {/* LEFT PANEL */}
-      <div
-        style={{
-          width: "60%",
-          padding: "20px",
-          borderRight: "1px solid #ddd",
-        }}
-      >
-        <h2>Menu</h2>
+        const addItemToForm = (item: MenuItem) => {
+          const items = [...formik.values.orderItems];
+          const index = items.findIndex((i) => i.id === item.id);
 
-        <div style={{ marginBottom: "10px" }}>
-            <button>Food</button>
-            <button>Drinks</button>
-        </div>
+          if (index !== -1) items[index].quantity += 1;
+          else
+            items.push({
+              id: item.id,
+              name: item.name,
+              quantity: 1,
+              specialInstructions: "",
+            });
 
-        <input
-            type="text"
-            placeholder="Search menu item..."
-            style={{ width: "100%", padding: "8px", marginBottom: "20px" }}
-        />
+          formik.setFieldValue("orderItems", items);
+        };
 
-        {/* Menu Grid */}
-        <div
-          style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "10px",
-          }}
-        >
-        
-        {menuItems.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => setOrderItems([...orderItems, item])}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              cursor: "pointer",
-            }}
-          >
-            {/* <img src={item.image} width="100%" /> */}
-            <Image src={item.image} width={120} height={120} alt={item.name} />
-            <p>{item.name}</p>
-          </div>
-        ))}
+        const removeItemFromForm = (id: number) => {
+          formik.setFieldValue(
+            "orderItems",
+            formik.values.orderItems.filter((i) => i.id !== id)
+          );
+        };
 
-      </div>
-</div>
+        const updateInstructions = (id: number, value: string) => {
+          formik.setFieldValue(
+            "orderItems",
+            formik.values.orderItems.map((i) =>
+              i.id === id ? { ...i, specialInstructions: value } : i
+            )
+          );
+        };
 
-      {/* RIGHT PANEL */}
-      <div
-        style={{
-          width: "40%",
-          padding: "20px",
-        }}
-      >
-        <h2>Order Panel</h2>
+        const changeQuantity = (id: number, delta: number) => {
+          const updatedItems = formik.values.orderItems.map((i) =>
+            i.id === id ? { ...i, quantity: i.quantity + delta } : i
+          );
 
-        <select style={{ width: "100%", marginBottom: "20px" }}>
-          <option>Select Table</option>
-          <option>Table 1</option>
-          <option>Table 2</option>
-          <option>Table 3</option>
-        </select>
+          const targetItem = updatedItems.find(i => i.id === id);
+          if (targetItem && targetItem.quantity <= 0) {
+            const confirmRemove = confirm(
+              `Quantity of "${targetItem.name}" is 0. Do you want to remove this item?`
+            );
 
-        {orderItems.map((item, index) => (
-        <div
-            key={index}
-            style={{
-            border: "1px solid #ccc",
-            padding: "10px",
-            marginBottom: "10px",
-            }}
-        >
-            <p>{item.name}</p>
+            if (confirmRemove) {
+              formik.setFieldValue(
+                "orderItems",
+                updatedItems.filter(i => i.id !== id)
+              );
+            } else {
+              formik.setFieldValue(
+                "orderItems",
+                updatedItems.map(i =>
+                  i.id === id ? { ...i, quantity: 1 } : i
+                )
+              );
+            }
+          } else {
+            formik.setFieldValue("orderItems", updatedItems);
+          }
+        };
 
-            <textarea
-              placeholder="Special instructions..."
-              style={{ width: "100%", marginBottom: "10px" }}
-            />
+        return (
+          <Form className="h-screen flex flex-col">
 
-            <button onClick={() => setOrderItems([...orderItems, item])}>
-              Duplicate
-            </button>
-            <button onClick={() =>
-                setOrderItems(orderItems.filter((_, i) => i !== index))
-              }
-            >
-              Remove
-            </button>
-        </div>
-        ))}
+            {/* PAGE TITLE */}
+            <h1 className="text-center text-2xl font-semibold text-[#FFD166] py-4">
+              Add Order
+            </h1>
 
-        {/* Order Action buttons */}
-        <div style={{ marginTop: "20px" }}>
-          <button style={{ marginRight: "10px" }}> Draft </button>
-          <button style={{ marginRight: "10px" }}> Remove </button>
-          <button onClick={fireOrder}> Fire </button>
-        </div>
-      
-      </div>
-    </div>
+            <div className="flex flex-1 overflow-hidden">
+
+              {/* MENU PANEL */}
+              <div className="w-[55%] p-6 overflow-y-auto">
+
+                <h2 className="font-semibold mb-3 text-lg">Menu</h2>
+
+                {/* SEARCH BAR */}
+                <div className="flex gap-3 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Search menu item..."
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.preventDefault();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="bg-[#FFD166] px-4 rounded flex items-center justify-center"
+                  >
+                    <i className="pi pi-search text-white"></i>
+                  </button>
+                </div>
+
+                {/* MENU ITEMS */}
+                {menuItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center border p-3 rounded mb-3"
+                  >
+                    <p>{item.name}</p>
+                    <Button
+                      text="+"
+                      className="bg-[#FFD166] text-white px-3 py-1 rounded"
+                      onClick={() => addItemToForm(item)}
+                      state={true}
+                      id={`add-item-${item.id}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* VERTICAL DIVIDER */}
+              <div className="w-px bg-gray-300"></div>
+
+              {/* ORDER PANEL */}
+              <div className="w-[45%] flex flex-col p-6">
+
+                <h2 className="font-semibold text-lg mb-3">Order Panel</h2>
+
+                {/* ORDER HEADER */}
+                <div className="flex justify-between items-center mb-3">
+
+                  <div>
+                    <span className="text-[#FFD166] font-semibold">Order ID:</span>
+                    <span className="ml-2 text-gray-700">123</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#FFD166] font-semibold">Table:</span>
+                    <select
+                      name="table"
+                      value={formik.values.table}
+                      onChange={formik.handleChange}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="">Select</option>
+                      <option value="Table 1">Table 1</option>
+                      <option value="Table 2">Table 2</option>
+                      <option value="Table 3">Table 3</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* DIVIDER */}
+                <div className="border-b border-gray-300 mb-4"></div>
+
+                {/* ORDER ITEMS */}
+                <div className="flex-1 overflow-y-auto pr-2">
+
+                  {formik.values.orderItems.length === 0 && (
+                    <p className="text-gray-500">No items added</p>
+                  )}
+
+                  {formik.values.orderItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border border-black shadow-sm p-3 mb-3 rounded-md flex flex-col gap-2"
+                    >
+                      <p className="font-bold text-lg">{item.name}</p>
+
+                      {/* QUANTITY CONTROL */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          text="-"
+                          className="bg-white border border-gray-400 text-gray-700 py-1 px-3 rounded"
+                          state={true}
+                          id={`decrease-quantity-${item.id}`}
+                          onClick={() => changeQuantity(item.id, -1)}
+                        />
+                        <span className="px-2">{item.quantity}</span>
+                        <Button
+                          text="+"
+                          className="bg-white border border-gray-400 text-gray-700 py-1 px-3 rounded"
+                          state={true}
+                          id={`increase-quantity-${item.id}`}
+                          onClick={() => changeQuantity(item.id, 1)}
+                        />
+                      </div>
+
+                      <textarea
+                        placeholder="Special instructions..."
+                        className="w-full p-2 border rounded"
+                        value={item.specialInstructions}
+                        onChange={(e) => updateInstructions(item.id, e.target.value)}
+                      />
+
+                      {/* REMOVE BUTTON */}
+                      <div className="flex mt-2">
+                        <Button
+                          text="Remove"
+                          className="bg-white !border-2 !border-red-600 !text-red-600 py-2 px-4 rounded"
+                          state={true}
+                          id={`remove-item-${item.id}`}
+                          onClick={() => removeItemFromForm(item.id)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* BOTTOM BUTTONS */}
+                <div className="mt-4">
+                  <div className="flex gap-2 mb-2">
+                    <Button
+                      text="Draft"
+                      className="bg-white border border-[#FFD166] text-[#FFD166] py-2 flex-1 rounded"
+                      state={true}
+                      id="draft-btn"
+                    />
+                    <Button
+                      text="Remove"
+                      className="bg-white border border-red-500 text-red-500 py-2 flex-1 rounded"
+                      state={true}
+                      id="remove-bottom-btn"
+                    />
+                  </div>
+
+                  <Button
+                    text="Fire"
+                    className="bg-[#FFD166] text-white py-3 w-full rounded"
+                    state={true}
+                    id="fire-bottom-btn"
+                  />
+                </div>
+
+              </div>
+            </div>
+          </Form>
+        );
+      }}
+    </Formik>
   );
 }
