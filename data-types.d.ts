@@ -47,11 +47,11 @@ export interface ITimeSlot {
 }
 
 export interface IRoleCreateRequest {
-    roleCode: string;
-    roleName: string;
-    description?: string;
-    isActive?: boolean;
-    permissions?: string[];
+  roleCode: string;
+  name: string;
+  description?: string;
+  status?: number;
+  permissionIds?: number[];
 }
 
 export interface IDaySchedule {

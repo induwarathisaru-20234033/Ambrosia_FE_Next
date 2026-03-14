@@ -18,10 +18,10 @@ const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
 interface InitialValues {
   roleCode: string;
-  roleName: string;
+  name: string;
   description: string;
-  isActive?: boolean;
-  permissions?: string[];
+  status?: number;
+  permissionIds?: number[];
 }
 
 export default function AddRolePage() {
@@ -39,19 +39,19 @@ export default function AddRolePage() {
     <Formik<InitialValues>
       initialValues={{
         roleCode: "",
-        roleName: "",
+        name: "",
         description: "",
-        isActive: true,
-        permissions: [],
+        status: 1,
+        permissionIds: [],
       }}
       validationSchema={addRoleSchema}
       onSubmit={async (values) => {
         const body: IRoleCreateRequest = {
           roleCode: values.roleCode,
-          roleName: values.roleName,
+          name: values.name,
           description: values.description,
-          isActive: values.isActive,
-          permissions: values.permissions,
+          status: values.status,
+          permissionIds: values.permissionIds,
         };
         mutation.mutate({ url: "/roles", body });
       }}
@@ -78,10 +78,10 @@ export default function AddRolePage() {
                     />
                     <LabelGroup
                       label="Title/Name*"
-                      name="roleName"
+                      name="name"
                       type="text"
                       placeholder="Role Name"
-                      id="formRoleName"
+                      id="formname"
                       disabled={false}
                     />
                     <LabelGroup
@@ -97,8 +97,8 @@ export default function AddRolePage() {
                     <div className="mb-4 flex items-center gap-3">
                       <label className="text-sm font-medium">Active</label>
                       <Switch
-                        checked={values.isActive}
-                        onChange={(e) => setFieldValue("isActive", e.target.checked)}
+                        checked={values.status === 1}
+                        onChange={(e) => setFieldValue("status", e.target.checked ? 1 : 0)}
                       />
                     </div>
                     <div className="mt-4">
@@ -138,13 +138,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="view_employee"
-                              checked={values.permissions?.includes("view_employee")}
+                              value="1"
+                              checked={values.permissionIds?.includes(1)}
                               onChange={(e) => {
+                                const permId = 1;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             View Employee
@@ -152,13 +153,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="add_employee"
-                              checked={values.permissions?.includes("add_employee")}
+                              value="2"
+                              checked={values.permissionIds?.includes(2)}
                               onChange={(e) => {
+                                const permId = 2;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             Add Employee
@@ -166,13 +168,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="edit_employee"
-                              checked={values.permissions?.includes("edit_employee")}
+                              value="3"
+                              checked={values.permissionIds?.includes(3)}
                               onChange={(e) => {
+                                const permId = 3;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             Edit Employee
@@ -188,13 +191,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="view_user"
-                              checked={values.permissions?.includes("view_user")}
+                              value="4"
+                              checked={values.permissionIds?.includes(4)}
                               onChange={(e) => {
+                                const permId = 4;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             View User
@@ -202,13 +206,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="add_user"
-                              checked={values.permissions?.includes("add_user")}
+                              value="5"
+                              checked={values.permissionIds?.includes(5)}
                               onChange={(e) => {
+                                const permId = 5;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             Add User
@@ -224,13 +229,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="view_department"
-                              checked={values.permissions?.includes("view_department")}
+                              value="6"
+                              checked={values.permissionIds?.includes(6)}
                               onChange={(e) => {
+                                const permId = 6;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             View Department
@@ -238,13 +244,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="add_department"
-                              checked={values.permissions?.includes("add_department")}
+                              value="7"
+                              checked={values.permissionIds?.includes(7)}
                               onChange={(e) => {
+                                const permId = 7;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             Add Department
@@ -252,13 +259,14 @@ export default function AddRolePage() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              value="edit_department"
-                              checked={values.permissions?.includes("edit_department")}
+                              value="8"
+                              checked={values.permissionIds?.includes(8)}
                               onChange={(e) => {
+                                const permId = 8;
                                 const newPerms = e.target.checked
-                                  ? [...(values.permissions || []), e.target.value]
-                                  : values.permissions?.filter(p => p !== e.target.value) || [];
-                                setFieldValue("permissions", newPerms);
+                                  ? [...(values.permissionIds || []), permId]
+                                  : values.permissionIds?.filter(p => p !== permId) || [];
+                                setFieldValue("permissionIds", newPerms);
                               }}
                             />
                             Edit Department
