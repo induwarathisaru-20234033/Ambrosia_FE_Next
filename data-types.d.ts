@@ -2,6 +2,8 @@ import { Day } from "./enums/day";
 import { SortOrder } from "primereact/datatable";
 
 export type DateTimeFormatMode = "date" | "time" | "datetime";
+export type NullableNumberLike = number | string | null;
+export type NullableString = string | null;
 
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
@@ -128,7 +130,6 @@ export interface IExclusion extends IMutateExclusion {
   id: number;
 }
 
-
 export interface ICustomerDetail {
   id: number;
   name: string;
@@ -184,4 +185,67 @@ interface ICreateReservationRequest {
   customerPhoneNumber: string;
   bookingSlotId: number;
   tableId: number;
+}
+
+export interface IInventoryItem {
+  id?: number | string;
+  itemNumber?: string;
+  itemName?: string;
+  currentQuantity?: NullableNumberLike;
+  openingQuantity?: NullableNumberLike;
+  itemType?: string;
+  itemCategory?: string;
+  uoM?: string;
+  uom?: string;
+  unitPrice?: NullableNumberLike;
+  currency?: NullableString;
+  inventoryStatus?: string | number;
+  remarks?: NullableString;
+  itemSubCategory?: string;
+  minimumStockLevel?: NullableNumberLike;
+  maximumStockLevel?: NullableNumberLike;
+  reOrderLevel?: NullableNumberLike;
+  reorderLevel?: NullableNumberLike;
+  storageLocation?: NullableString;
+  shelveLife?: NullableNumberLike;
+  shelfLife?: NullableNumberLike;
+  storageConditions?: NullableString;
+  sku?: NullableString;
+  barCode?: NullableString;
+  expiryDate?: NullableString;
+  specialRemarks?: NullableString;
+}
+
+export interface IInventoryItemCreateRequest {
+  itemNumber: string;
+  itemName: string;
+  openingQuantity: number;
+  itemType: string;
+  itemCategory: string;
+  uoM: string;
+  unitPrice: number | null;
+  currency: string | null;
+  remarks: string | null;
+  minimumStockLevel: number | null;
+  maximumStockLevel: number | null;
+  reOrderLevel: number | null;
+  storageLocation: string | null;
+  shelveLife: number | null;
+  storageConditions: string | null;
+  sku: string | null;
+  expiryDate: string | null;
+}
+
+export interface IInventoryItemUpdateRequest extends IInventoryItemCreateRequest {}
+
+export interface IInventoryCurrency {
+  id: number;
+  currencyCode: string;
+  description: string;
+}
+
+export interface IInventoryUoM {
+  id: number;
+  uoM: string;
+  description: string;
 }

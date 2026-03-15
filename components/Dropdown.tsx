@@ -69,7 +69,7 @@ export default function Dropdown({
       controlId={id}
     >
       {label && (
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-2">
           <Form.Label className={`${formLabelClassName} m-0`}>
             {label}
           </Form.Label>
@@ -100,7 +100,7 @@ export default function Dropdown({
         name={name}
         options={options}
         placeholder={placeholder}
-        className={`${disabled ? "bg-gray-300 cursor-not-allowed" : ""} truncate ${className} border border-gray-300`}
+        className={`${disabled ? "bg-gray-300 cursor-not-allowed" : ""} truncate w-full ${className} border border-gray-300`}
         optionLabel={optionLabel}
         panelClassName="border border-gray-300"
         disabled={disabled}

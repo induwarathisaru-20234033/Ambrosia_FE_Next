@@ -290,3 +290,34 @@ export const AddReservationSchema = Yup.object().shape({
     .trim()
     .max(500, "Special requests cannot exceed 500 characters"),
 });
+
+const numericField = Yup.number()
+  .transform((value, originalValue) =>
+    originalValue === "" || originalValue === null ? NaN : value,
+  )
+  .typeError("Must be a number")
+  .min(0, "Cannot be negative");
+
+export const AddInventoryItemSchema = Yup.object().shape({
+  itemNumber: Yup.string().trim().required("Item Number is required"),
+  itemName: Yup.string().trim().required("Item Name is required"),
+  openingQuantity: numericField.required("Opening Quantity is required"),
+  itemType: Yup.string().required("Item Type is required"),
+  itemCategory: Yup.string().required("Item Category is required"),
+  uom: Yup.string().required("UOM is required"),
+  unitPrice: numericField.nullable().notRequired(),
+  currency: Yup.string().notRequired(),
+  remarks: Yup.string()
+    .trim()
+    .max(500, "Remarks cannot exceed 500 characters")
+    .notRequired(),
+  minimumStockLevel: numericField.nullable().notRequired(),
+  maximumStockLevel: numericField.nullable().notRequired(),
+  reorderLevel: numericField.nullable().notRequired(),
+  storageLocation: Yup.string().trim().max(200).notRequired(),
+  shelfLife: numericField.nullable().notRequired(),
+  storageConditions: Yup.string().trim().max(300).notRequired(),
+  sku: Yup.string().trim().notRequired(),
+  expiryDate: Yup.date().nullable().notRequired(),
+  specialRemarks: Yup.string().trim().max(500).notRequired(),
+});
