@@ -8,7 +8,10 @@ import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { useState } from "react";
 import "primeicons/primeicons.css";
-import KitchenBarOpsLayout, { YellowButton } from "../../layout";
+import { YellowButton } from "../../layout";
+import { Col, Container, Row } from "react-bootstrap";
+
+import "../../styles/kitchen-bar-ops.css";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
@@ -54,6 +57,23 @@ export default function AddOrderPage() {
   });
 
   return (
+        <Container fluid className="relative">
+        <Row className="align-items-center mb-4">
+          <Col>
+            <h1 className="kbo-title">
+              Order Management and History
+            </h1>
+          </Col>
+
+          <Col xs="auto">
+                <YellowButton
+                    onClick={() => {
+                      window.location.href = "/menu/kitchen-bar-ops/order-mgt";
+                    }}>Back
+                </YellowButton>
+          </Col>
+        </Row>
+
     <Formik<InitialValues>
       initialValues={{ table: "", orderItems: [] }}
       validationSchema={orderSchema}
@@ -140,18 +160,6 @@ export default function AddOrderPage() {
 
         return (
           <Form className="h-screen flex flex-col">
-            <KitchenBarOpsLayout title="Add Order">
-                {/* Back Button at top-right */}
-                <div className="flex justify-end mb-3">
-                  <YellowButton
-                    onClick={() => {
-                      window.location.href = "/menu/kitchen-bar-ops/order-mgt";
-                    }}
-                    className="text-white"
-                  >
-                    Back
-                  </YellowButton>
-                </div>
 
             <div className="flex flex-1 overflow-hidden">
               {/* MENU PANEL */}
@@ -314,10 +322,10 @@ export default function AddOrderPage() {
                 </div>
               </div>
             </div>
-            </KitchenBarOpsLayout>
           </Form>
         );
       }}
     </Formik>
+    </Container>
   );
 }

@@ -126,17 +126,21 @@ export default function OrderManagementPage() {
     <Container fluid className="relative">
       {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
       
-<Row className="align-items-center mb-4">
-  <Col>
-    <h1 className="kbo-title">
-      Order Management and History
-    </h1>
-  </Col>
+      <Row className="align-items-center mb-4">
+        <Col>
+          <h1 className="kbo-title">
+            Order Management and History
+          </h1>
+        </Col>
 
-  <Col xs="auto">
-    <YellowButton>Add Order</YellowButton>
-  </Col>
-</Row>
+        <Col xs="auto">
+          <YellowButton 
+            onClick={() => {
+                window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
+                  }}>Add Order
+          </YellowButton>
+        </Col>
+      </Row>
 
       <TabView className="custom-tabs-order-mgt mb-4">
         {/* Ongoing Orders Tab */}
