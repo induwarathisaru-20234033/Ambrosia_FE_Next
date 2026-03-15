@@ -6,16 +6,19 @@ import React, { ButtonHTMLAttributes } from "react";
 interface LayoutProps {
   children: React.ReactNode;
   title?: string;
+  titleClassName?: string; // optional class for extra styling
 }
 
-export default function KitchenBarOpsLayout({ children, title }: LayoutProps) {
+export default function KitchenBarOpsLayout({
+  children,
+  title,
+  titleClassName,
+}: LayoutProps) {
   return (
     <div className="p-6 font-sans">
       {/* Header */}
       {title && (
-        <h1 className="text-2xl font-bold text-[#F4A62A] mb-4">
-          {title}
-        </h1>
+        <h1 className={`h1-title ${titleClassName ?? ""}`}>{title}</h1>
       )}
 
       {/* Render children */}
@@ -26,32 +29,35 @@ export default function KitchenBarOpsLayout({ children, title }: LayoutProps) {
 
 // --- Helper components ---
 
-// Shared button props
 interface SharedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
 
 // Yellow button
-export const YellowButton: React.FC<SharedButtonProps> = ({ children, className, ...props }) => {
-  return (
-    <button
-      className={`bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded font-bold ${className ?? ""}`}
-      {...props} // now supports type, onClick, etc.
-    >
-      {children}
-    </button>
-  );
-};
+export const YellowButton: React.FC<SharedButtonProps> = ({
+  children,
+  className,
+  ...props
+}) => (
+  <button
+    className={`bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded font-bold ${className ?? ""}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 // White button with yellow border
-export const WhiteButton: React.FC<SharedButtonProps> = ({ children, className, ...props }) => {
-  return (
-    <button
-      className={`bg-white hover:bg-gray-100 border border-yellow-400 text-yellow-400 px-4 py-2 rounded font-bold ${className ?? ""}`}
-      {...props} // now supports type, onClick, etc.
-    >
-      {children}
-    </button>
-  );
-};
+export const WhiteButton: React.FC<SharedButtonProps> = ({
+  children,
+  className,
+  ...props
+}) => (
+  <button
+    className={`bg-white hover:bg-gray-100 border border-yellow-400 text-yellow-400 px-4 py-2 rounded font-bold ${className ?? ""}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 // Tabs with yellow underline
 export const Tabs = ({
