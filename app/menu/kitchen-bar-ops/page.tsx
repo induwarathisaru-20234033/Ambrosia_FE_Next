@@ -1,8 +1,8 @@
 "use client";
 
 import TileCard from "@/components/TileCard";
-import KitchenBarOps from "@/public/images/KitchenBarOps.png";
-import Analytics from "@/public/images/Analytics.png";
+import Kitchen from "@/public/images/kitchen.png";
+import Bar from "@/public/images/bar.png";
 import PurchaseInventory from "@/public/images/PurchaseInventory.png";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default function ViewKitchenBarOpsPage() {
     {
       id: "kitchen",
       title: "Kitchen Display System",
-      image: KitchenBarOps,
+      image: Kitchen,
       borderColor: "border-gray-400",
       textColor: "text-black",
       onClick: () => router.push("/menu/kitchen-bar-ops/kitchen"),
@@ -21,7 +21,7 @@ export default function ViewKitchenBarOpsPage() {
     {
       id: "bar",
       title: "Bar Display System",
-      image: Analytics,
+      image: Bar,
       borderColor: "border-gray-400",
       textColor: "text-black",
       onClick: () => router.push("/menu/kitchen-bar-ops/bar"),
