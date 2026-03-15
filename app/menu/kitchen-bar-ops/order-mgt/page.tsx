@@ -8,6 +8,8 @@ import { TabView, TabPanel } from "primereact/tabview";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 
+import OrderDrawer from "@/components/OrderDrawer";
+
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
@@ -17,7 +19,7 @@ interface IOrderItem {
   price: string;
 }
 
-interface IOrder {
+export interface IOrder {
   orderId: string;
   tableNo: string;
   email: string;
@@ -100,9 +102,7 @@ export default function OrderManagementPage() {
     },
   ]);
 
-  const handleSubmit = (values: any) => {
-    setFilters(values);
-  };
+  const handleSubmit = (values: any) => setFilters(values);
 
   const filterOrders = (status: "ongoing" | "completed") =>
     orders.filter((o) => {
@@ -122,7 +122,10 @@ export default function OrderManagementPage() {
     });
 
   return (
-    <Container fluid>
+    <Container fluid className="relative">
+      {/* Dim background when drawer is open */}
+      {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
+
       <Row className="align-items-center mb-4">
         <Col>
           <h1 className="h1-custom text-[#F4A62A] font-semibold">
@@ -284,37 +287,7 @@ export default function OrderManagementPage() {
 
       {/* SIDE DRAWER */}
       {isDrawerOpen && selectedOrder && (
-        <div className="fixed top-0 right-0 h-full w-[45%] bg-white shadow-xl z-50 overflow-auto transition-transform duration-300">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-yellow-500 font-semibold text-lg">More Information</h2>
-              <button className="text-black font-bold text-xl" onClick={handleCloseDrawer}>
-                X
-              </button>
-            </div>
-
-            <hr className="border-gray-300 mb-4" />
-
-            <div className="mb-4">
-              <p className="text-gray-500 inline-block">Table: </p>
-              <span className="font-bold text-black">{selectedOrder.tableNo}</span>
-              <br />
-              <p className="text-gray-500 inline-block">Waiter: </p>
-              <span className="font-bold text-black">{selectedOrder.waiterName}</span>
-            </div>
-
-            <h3 className="text-gray-500 font-medium mb-2">Order Items:</h3>
-            <div className="flex flex-wrap gap-2">
-              {selectedOrder.items?.map((item, idx) => (
-                <div key={idx} className="border p-2 rounded w-[45%] bg-[#FFF3E0]">
-                  <p className="font-bold">{item.name}</p>
-                  <p>Qty: {item.quantity}</p>
-                  <p>Price: {item.price}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />
       )}
     </Container>
   );
