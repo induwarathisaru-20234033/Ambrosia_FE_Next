@@ -241,3 +241,21 @@ export interface IInventoryUoM {
   uoM: string;
   description: string;
 }
+
+export interface IOrderItem {
+  name: string;
+  quantity: number;
+  price: string;
+}
+
+export interface IOrder {
+  orderId: string;
+  tableNo: string;
+  email: string;
+  phone: string;
+  waiterName: string;
+  customerName: string;
+  orderDate: string;
+  status: "ongoing" | "completed" | "unassigned";
+  items?: IOrderItem[];
+}
