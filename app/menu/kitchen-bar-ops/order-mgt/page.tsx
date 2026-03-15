@@ -4,14 +4,15 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Container, Row, Col } from "react-bootstrap";
 import { Formik, Form } from "formik";
-import { TabView, TabPanel } from "primereact/tabview";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+
+// import KitchenBarOpsLayout, { YellowButton, WhiteButton } from "./layout"; // Layout + buttons
+import KitchenBarOpsLayout, {YellowButton, WhiteButton} from "../layout"; // adjust path if needed
 
 import OrderDrawer from "@/components/OrderDrawer";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
-const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
 interface IOrderItem {
   name: string;
@@ -122,173 +123,74 @@ export default function OrderManagementPage() {
     });
 
   return (
-    <Container fluid className="relative">
-      {/* Dim background when drawer is open */}
-      {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
+    <KitchenBarOpsLayout title="Order Management and History">
+      <Container fluid className="relative">
+        {/* Dim background when drawer is open */}
+        {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
 
-      <Row className="align-items-center mb-4">
-        <Col>
-          <h1 className="h1-custom text-[#F4A62A] font-semibold">
-            Order Management and History
-          </h1>
-        </Col>
-      </Row>
-
-      <TabView className="custom-tabs mb-4">
         {/* ONGOING ORDERS */}
-        <TabPanel header="Ongoing Orders">
-          <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
-            {({ resetForm }) => (
-              <Form>
-                <Row className="mb-3 align-items-end">
-                  <Col md={2}>
-                    <LabelGroup label="Order ID" name="orderId" type="text" placeholder="Order ID" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Table No" name="tableNo" type="text" placeholder="Table No" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Waiter Name" name="waiterName" type="text" placeholder="Waiter Name" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Customer Name" name="customerName" type="text" placeholder="Customer Name" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Order Date From" name="orderDateFrom" type="date" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Order Date To" name="orderDateTo" type="date" />
-                  </Col>
-                  <Col md={2} className="d-flex gap-2 mt-2">
-                    <Button
-                      id="filterOngoingBtn"
-                      text="Filter"
-                      type="submit"
-                      className="bg-[#F4A62A] text-white flex-1 py-2 rounded-none hover:bg-[#e2951f] shadow-md"
-                      state={true}
-                    />
-                    <Button
-                      id="clearOngoingBtn"
-                      text="Clear"
-                      type="button"
-                      className="bg-white border border-[#F4A62A] text-[#F4A62A] flex-1 py-2 rounded-none hover:bg-[#FFF3E0]"
-                      state={true}
-                      onClick={() => {
-                        resetForm({ values: initialFilters });
-                        setFilters(initialFilters);
-                      }}
-                    />
-                  </Col>
-                </Row>
-              </Form>
-            )}
-          </Formik>
-
-          <DataTable stripedRows value={filterOrders("ongoing")} paginator rows={10} responsiveLayout="scroll">
-            <Column field="orderId" header="Order ID" />
-            <Column field="tableNo" header="Table" />
-            <Column field="email" header="Email" />
-            <Column field="phone" header="Phone" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
-            <Column
-              header="Actions"
-              body={(rowData: IOrder) => (
-                <div className="flex gap-2">
-                  <button
-                    className="bg-[#F4A62A] text-white py-1 px-3 rounded hover:bg-[#e2951f]"
-                    onClick={() => handleViewOrder(rowData)}
+        <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
+          {({ resetForm }) => (
+            <Form>
+              <Row className="mb-3 align-items-end">
+                <Col md={2}>
+                  <LabelGroup label="Order ID" name="orderId" type="text" placeholder="Order ID" />
+                </Col>
+                <Col md={2}>
+                  <LabelGroup label="Table No" name="tableNo" type="text" placeholder="Table No" />
+                </Col>
+                <Col md={2}>
+                  <LabelGroup label="Waiter Name" name="waiterName" type="text" placeholder="Waiter Name" />
+                </Col>
+                <Col md={2}>
+                  <LabelGroup label="Customer Name" name="customerName" type="text" placeholder="Customer Name" />
+                </Col>
+                <Col md={2}>
+                  <LabelGroup label="Order Date From" name="orderDateFrom" type="date" />
+                </Col>
+                <Col md={2}>
+                  <LabelGroup label="Order Date To" name="orderDateTo" type="date" />
+                </Col>
+                <Col md={2} className="d-flex gap-2 mt-2">
+                  <YellowButton type="submit">Filter</YellowButton>
+                  <WhiteButton
+                    type="button"
+                    onClick={() => {
+                      resetForm({ values: initialFilters });
+                      setFilters(initialFilters);
+                    }}
                   >
-                    View Order
-                  </button>
-                  <button className="border border-[#F4A62A] text-[#F4A62A] py-1 px-3 rounded hover:bg-[#FFF3E0]">
-                    Cancel
-                  </button>
-                </div>
-              )}
-            />
-          </DataTable>
-        </TabPanel>
+                    Clear
+                  </WhiteButton>
+                </Col>
+              </Row>
+            </Form>
+          )}
+        </Formik>
 
-        {/* COMPLETED ORDERS */}
-        <TabPanel header="Completed Orders">
-          <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
-            {({ resetForm }) => (
-              <Form>
-                <Row className="mb-3 align-items-end">
-                  <Col md={2}>
-                    <LabelGroup label="Order ID" name="orderId" type="text" placeholder="Order ID" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Table No" name="tableNo" type="text" placeholder="Table No" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Waiter Name" name="waiterName" type="text" placeholder="Waiter Name" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Customer Name" name="customerName" type="text" placeholder="Customer Name" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Order Date From" name="orderDateFrom" type="date" />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup label="Order Date To" name="orderDateTo" type="date" />
-                  </Col>
-                  <Col md={2} className="d-flex gap-2 mt-2">
-                    <Button
-                      id="filterCompletedBtn"
-                      text="Filter"
-                      type="submit"
-                      className="bg-[#F4A62A] text-white flex-1 py-2 rounded-none hover:bg-[#e2951f] shadow-md"
-                      state={true}
-                    />
-                    <Button
-                      id="clearCompletedBtn"
-                      text="Clear"
-                      type="button"
-                      className="bg-white border border-[#F4A62A] text-[#F4A62A] flex-1 py-2 rounded-none hover:bg-[#FFF3E0]"
-                      state={true}
-                      onClick={() => {
-                        resetForm({ values: initialFilters });
-                        setFilters(initialFilters);
-                      }}
-                    />
-                  </Col>
-                </Row>
-              </Form>
+        {/* Ongoing Orders Table */}
+        <DataTable stripedRows value={filterOrders("ongoing")} paginator rows={10} responsiveLayout="scroll">
+          <Column field="orderId" header="Order ID" />
+          <Column field="tableNo" header="Table" />
+          <Column field="email" header="Email" />
+          <Column field="phone" header="Phone" />
+          <Column field="waiterName" header="Waiter Name" />
+          <Column field="customerName" header="Customer Name" />
+          <Column field="orderDate" header="Order Date" />
+          <Column
+            header="Actions"
+            body={(rowData: IOrder) => (
+              <div className="flex gap-2">
+                <YellowButton onClick={() => handleViewOrder(rowData)}>View Order</YellowButton>
+                <WhiteButton>Cancel</WhiteButton>
+              </div>
             )}
-          </Formik>
+          />
+        </DataTable>
 
-          <DataTable stripedRows value={filterOrders("completed")} paginator rows={10} responsiveLayout="scroll">
-            <Column field="orderId" header="Order ID" />
-            <Column field="tableNo" header="Table" />
-            <Column field="email" header="Email" />
-            <Column field="phone" header="Phone" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
-            <Column
-              header="Actions"
-              body={(rowData: IOrder) => (
-                <div className="flex gap-2">
-                  <button
-                    className="bg-[#F4A62A] text-white py-1 px-3 rounded hover:bg-[#e2951f]"
-                    onClick={() => handleViewOrder(rowData)}
-                  >
-                    View Order
-                  </button>
-                </div>
-              )}
-            />
-          </DataTable>
-        </TabPanel>
-      </TabView>
-
-      {/* SIDE DRAWER */}
-      {isDrawerOpen && selectedOrder && (
-        <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />
-      )}
-    </Container>
+        {/* SIDE DRAWER */}
+        {isDrawerOpen && selectedOrder && <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />}
+      </Container>
+    </KitchenBarOpsLayout>
   );
 }
