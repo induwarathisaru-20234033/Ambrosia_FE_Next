@@ -128,6 +128,19 @@ export default function OrderManagementPage() {
         {/* Dim background when drawer is open */}
         {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
 
+        {/* Add Order Button at top-right */}
+        <div className="flex justify-end mb-3">
+          <YellowButton
+            onClick={() => {
+              // Redirect to Add Order page
+              window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
+            }}
+            className="text-white"
+          >
+            Add Order
+          </YellowButton>
+        </div>
+
         {/* ONGOING ORDERS */}
         <Formik initialValues={filters} enableReinitialize onSubmit={handleSubmit}>
           {({ resetForm }) => (
