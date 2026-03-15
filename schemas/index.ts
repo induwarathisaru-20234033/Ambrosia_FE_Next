@@ -28,7 +28,7 @@ const parseTimeToMinutes = (value: unknown): number | null => {
   return null;
 };
 
-export const addEmployeeSchema = Yup.object({
+export const employeeValidationSchema = Yup.object({
   employeeId: Yup.string().required("Employee ID is required"),
   firstName: Yup.string().required("First Name is required"),
   lastName: Yup.string().required("Last Name is required"),
@@ -49,6 +49,26 @@ export const addEmployeeSchema = Yup.object({
         return passwordRegex.test(value);
       },
     ),
+});
+
+export const employeeEditValidationSchema = Yup.object({
+  employeeId: Yup.string().required("Employee ID is required"),
+  firstName: Yup.string().required("First Name is required"),
+  lastName: Yup.string().required("Last Name is required"),
+  email: Yup.string().email("Please enter a valid email.").optional(),
+  mobileNumber: Yup.string().required("Mobile Number is required"),
+  address: Yup.string().required("Address is required"),
+  username: Yup.string().required("Username is required"),
+  password: Yup.string().test(
+    "password-validation-optional",
+    "Password must be at least 8 characters with an uppercase letter, lowercase letter, number, and special character.",
+    function (value) {
+      if (!value) return true;
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      return passwordRegex.test(value);
+    },
+  ),
 });
 
 export const ServiceLogicSchema = Yup.object()
@@ -79,35 +99,6 @@ export const ServiceLogicSchema = Yup.object()
         return this.createError({
           path: "bookingInterval",
           message: `Booking interval cannot be smaller than ${TURN_TIME_INCREMENT_MINUTES} minutes`,
-        });
-      }
-
-      return true;
-    },
-  )
-  .test(
-    "fixed-buffer-no-bleed",
-    "Total table block (turn time + buffer time) must align with booking interval to avoid unfillable gaps",
-    function (value) {
-      if (!value) return true;
-
-      const { turnTime, bufferTime, bookingInterval } = value;
-
-      if (
-        typeof turnTime !== "number" ||
-        typeof bufferTime !== "number" ||
-        typeof bookingInterval !== "number" ||
-        bookingInterval <= 0
-      ) {
-        return true;
-      }
-
-      const totalTableBlock = turnTime + bufferTime;
-      if (totalTableBlock % bookingInterval !== 0) {
-        return this.createError({
-          path: "bookingInterval",
-          message:
-            "Turn time + buffer time must be divisible by booking interval to prevent buffer bleed into the next slot",
         });
       }
 
@@ -261,4 +252,67 @@ export const AddExclusionSchema = Yup.object().shape({
   reason: Yup.string()
     .required("Reason is required")
     .min(5, "Reason must be at least 5 characters"),
+});
+
+export const AddReservationSchema = Yup.object().shape({
+  name: Yup.string()
+    .trim()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name cannot exceed 100 characters"),
+  phone: Yup.string()
+    .trim()
+    .required("Phone number is required")
+    .matches(
+      /^\+?[0-9]{7,15}$/,
+      "Phone number must contain only digits and can include leading +",
+    ),
+  email: Yup.string().trim().email("Please enter a valid email").notRequired(),
+  partySize: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue === null ? NaN : value,
+    )
+    .typeError("Party size must be a number")
+    .required("Party size is required")
+    .integer("Party size must be a whole number")
+    .min(1, "Party size must be at least 1"),
+  occasion: Yup.string()
+    .trim()
+    .max(100, "Occasion cannot exceed 100 characters"),
+  timeSlot: Yup.string().required("Time slot is required"),
+  tableId: Yup.string().required("Table is required"),
+  specialRequests: Yup.string()
+    .trim()
+    .max(500, "Special requests cannot exceed 500 characters"),
+});
+
+const numericField = Yup.number()
+  .transform((value, originalValue) =>
+    originalValue === "" || originalValue === null ? NaN : value,
+  )
+  .typeError("Must be a number")
+  .min(0, "Cannot be negative");
+
+export const AddInventoryItemSchema = Yup.object().shape({
+  itemNumber: Yup.string().trim().required("Item Number is required"),
+  itemName: Yup.string().trim().required("Item Name is required"),
+  openingQuantity: numericField.required("Opening Quantity is required"),
+  itemType: Yup.string().required("Item Type is required"),
+  itemCategory: Yup.string().required("Item Category is required"),
+  uom: Yup.string().required("UOM is required"),
+  unitPrice: numericField.nullable().notRequired(),
+  currency: Yup.string().notRequired(),
+  remarks: Yup.string()
+    .trim()
+    .max(500, "Remarks cannot exceed 500 characters")
+    .notRequired(),
+  minimumStockLevel: numericField.nullable().notRequired(),
+  maximumStockLevel: numericField.nullable().notRequired(),
+  reorderLevel: numericField.nullable().notRequired(),
+  storageLocation: Yup.string().trim().max(200).notRequired(),
+  shelfLife: numericField.nullable().notRequired(),
+  storageConditions: Yup.string().trim().max(300).notRequired(),
+  sku: Yup.string().trim().notRequired(),
+  expiryDate: Yup.date().nullable().notRequired(),
+  specialRemarks: Yup.string().trim().max(500).notRequired(),
 });

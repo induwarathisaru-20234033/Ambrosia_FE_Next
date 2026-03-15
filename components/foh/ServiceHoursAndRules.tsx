@@ -2,11 +2,15 @@
 
 import { useToastRef } from "@/contexts/ToastContext";
 import {
+  IBaseApiResponse,
+  IServiceShiftPayload,
   IDaySchedule,
   IMutateScheduleConfig,
   IServiceLogic,
 } from "@/data-types";
+import { Day } from "@/enums/day";
 import { useGetQuery } from "@/services/queries/getQuery";
+import { usePatchQuery } from "@/services/queries/patchQuery";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { useRef, useState } from "react";
 import { StandardOpeningHours } from "./OpeningHoursForm";
@@ -16,23 +20,40 @@ import ServiceHoursAndRulesSkeleton from "../skeletons/ServiceHoursAndRulesSkele
 
 export default function ServiceHoursAndRules() {
   const toastRef = useToastRef();
-  const scheduleDataRef = useRef<IDaySchedule[]>([]);
-  const [timeSlotLogic, setTimeSlotLogic] = useState<IServiceLogic>({
+  const defaultTimeSlotLogic: IServiceLogic = {
     bufferTime: 10,
     turnTime: 30,
-    bookingInterval: 15,
-  });
+    bookingInterval: 10,
+  };
+  const daysOfWeek = [
+    { day: Day.Monday, name: "Monday" },
+    { day: Day.Tuesday, name: "Tuesday" },
+    { day: Day.Wednesday, name: "Wednesday" },
+    { day: Day.Thursday, name: "Thursday" },
+    { day: Day.Friday, name: "Friday" },
+    { day: Day.Saturday, name: "Saturday" },
+    { day: Day.Sunday, name: "Sunday" },
+  ];
+  const scheduleDataRef = useRef<IDaySchedule[]>([]);
+  const [timeSlotLogic, setTimeSlotLogic] =
+    useState<IServiceLogic>(defaultTimeSlotLogic);
   const [isServiceLogicValid, setIsServiceLogicValid] = useState(true);
   const [isOpeningHoursValid, setIsOpeningHoursValid] = useState(true);
 
-  const { data: initialData, isLoading } = useGetQuery<
-    IMutateScheduleConfig,
+  const { data: initialResponse, isLoading } = useGetQuery<
+    IBaseApiResponse<IMutateScheduleConfig>,
     void
   >(["getScheduleConfig"], "Configs", undefined, { enabled: true, toastRef });
 
   const postMutation = usePostQuery({
     invalidateKey: ["schedule"],
     successMessage: "Schedule saved successfully",
+    toastRef: toastRef,
+  });
+
+  const patchMutation = usePatchQuery({
+    invalidateKey: ["schedule"],
+    successMessage: "Schedule updated successfully",
     toastRef: toastRef,
   });
 
@@ -53,30 +74,84 @@ export default function ServiceHoursAndRules() {
   };
 
   const transformShiftPayloadToDaySchedule = (
-    payload?: IServiceLogic extends any ? any : never,
+    payload?: IServiceShiftPayload[],
   ): IDaySchedule[] | undefined => {
-    if (!payload) return undefined;
+    if (!payload || payload.length === 0) return undefined;
 
-    const grouped = payload.reduce((acc: Record<string, any>, shift: any) => {
-      if (!acc[shift.day]) {
-        acc[shift.day] = {
-          day: shift.day,
-          dayName: shift.day,
-          isOpen: shift.isOpen,
+    const scheduleByDay = new Map<Day, IDaySchedule>(
+      daysOfWeek.map(({ day, name }) => [
+        day,
+        {
+          day,
+          dayName: name,
+          isOpen: false,
           timeSlots: [],
-        };
+        },
+      ]),
+    );
+
+    payload.forEach((shift) => {
+      const daySchedule = scheduleByDay.get(shift.day);
+      if (!daySchedule) {
+        return;
       }
-      if (shift.isOpen && shift.startTime && shift.endTime) {
-        acc[shift.day].timeSlots.push({
+
+      if (!shift.isOpen) {
+        daySchedule.isOpen = false;
+        daySchedule.timeSlots = [];
+        return;
+      }
+
+      daySchedule.isOpen = true;
+      if (shift.startTime && shift.endTime) {
+        daySchedule.timeSlots.push({
+          id: String(daySchedule.timeSlots.length + 1),
           startTime: shift.startTime,
           endTime: shift.endTime,
         });
       }
-      return acc;
-    }, {});
+    });
 
-    return Object.values(grouped);
+    return Array.from(scheduleByDay.values());
   };
+
+  const configData = initialResponse?.data;
+
+  const hasDefaultTimeSlotLogic = (logic?: IServiceLogic) => {
+    if (!logic) {
+      return true;
+    }
+
+    return (
+      logic.bufferTime === defaultTimeSlotLogic.bufferTime &&
+      logic.turnTime === defaultTimeSlotLogic.turnTime &&
+      logic.bookingInterval === defaultTimeSlotLogic.bookingInterval
+    );
+  };
+
+  const hasExistingServiceShiftData = (payload?: IServiceShiftPayload[]) => {
+    if (!payload || payload.length === 0) {
+      return false;
+    }
+
+    return payload.some(
+      (shift) =>
+        shift.isOpen || shift.startTime !== null || shift.endTime !== null,
+    );
+  };
+
+  const shouldCreateConfig =
+    !configData ||
+    (!hasExistingServiceShiftData(configData.serviceShiftPayload) &&
+      hasDefaultTimeSlotLogic(configData.timeSlotLogic));
+
+  const resolvedTimeSlotLogic =
+    configData?.timeSlotLogic &&
+    typeof configData.timeSlotLogic.bufferTime === "number" &&
+    typeof configData.timeSlotLogic.turnTime === "number" &&
+    typeof configData.timeSlotLogic.bookingInterval === "number"
+      ? configData.timeSlotLogic
+      : defaultTimeSlotLogic;
 
   const handleSave = async () => {
     const payload: IMutateScheduleConfig = {
@@ -102,7 +177,10 @@ export default function ServiceHoursAndRules() {
         })
         .flat(),
     };
-    postMutation.mutate({
+
+    const mutation = shouldCreateConfig ? postMutation : patchMutation;
+
+    mutation.mutate({
       url: "Configs",
       body: payload,
     });
@@ -112,8 +190,10 @@ export default function ServiceHoursAndRules() {
     return <ServiceHoursAndRulesSkeleton />;
   }
 
+  const isSaving = postMutation.isPending || patchMutation.isPending;
+
   const isSaveDisabled =
-    postMutation.isPending || !isServiceLogicValid || !isOpeningHoursValid;
+    isSaving || !isServiceLogicValid || !isOpeningHoursValid;
 
   return (
     <div className="flex flex-col items-start text-left gap-8 max-w-7xl">
@@ -124,13 +204,7 @@ export default function ServiceHoursAndRules() {
       <div className="flex flex-col gap-8 w-full">
         {/* Service Logic Card */}
         <ServiceLogicCard
-          initialValues={
-            initialData?.timeSlotLogic ?? {
-              bufferTime: 10,
-              turnTime: 30,
-              bookingInterval: 15,
-            }
-          }
+          initialValues={resolvedTimeSlotLogic}
           onValuesChange={handleTimeSlotLogicChange}
           onValidityChange={handleServiceLogicValidityChange}
         />
@@ -139,7 +213,7 @@ export default function ServiceHoursAndRules() {
         <div>
           <StandardOpeningHours
             initialSchedule={transformShiftPayloadToDaySchedule(
-              initialData?.serviceShiftPayload,
+              configData?.serviceShiftPayload,
             )}
             onScheduleChange={handleScheduleChange}
             onValidityChange={handleOpeningHoursValidityChange}
@@ -153,7 +227,7 @@ export default function ServiceHoursAndRules() {
           text="Save"
           className="bg-[#ff6b6b] text-white p-[12px] rounded-xl box-shadow w-48 shadow-md"
           type="submit"
-          state={!postMutation.isPending}
+          state={!isSaving}
           disabled={isSaveDisabled}
           id="submit"
           onClick={handleSave}

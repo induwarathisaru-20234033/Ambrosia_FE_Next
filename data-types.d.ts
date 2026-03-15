@@ -2,6 +2,8 @@ import { Day } from "./enums/day";
 import { SortOrder } from "primereact/datatable";
 
 export type DateTimeFormatMode = "date" | "time" | "datetime";
+export type NullableNumberLike = number | string | null;
+export type NullableString = string | null;
 
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
@@ -34,6 +36,10 @@ export interface IEmployeeCreateRequest {
   address: string;
   username: string;
   password: string;
+}
+
+export interface IEmployeeUpdateRequest extends IEmployeeCreateRequest {
+  status: number;
 }
 
 export interface ITimeSlot {
@@ -79,6 +85,7 @@ export interface IEmployee {
   email?: string;
   address?: string;
   createdDate: string;
+  status: number;
 }
 
 export interface SearchEmployeeRequest {
@@ -103,6 +110,7 @@ export interface IMutateTable {
 
 export interface ITable extends IMutateTable {
   id: number;
+  existingAllocations?: number;
 }
 
 export interface IMutateExclusion {
@@ -112,4 +120,124 @@ export interface IMutateExclusion {
 
 export interface IExclusion extends IMutateExclusion {
   id: number;
+}
+
+export interface ICustomerDetail {
+  id: number;
+  name: string;
+  email?: string;
+  phoneNumber: string;
+}
+
+export interface IBookingSlot {
+  id: number;
+  slotId: string;
+  startTime: Date | string;
+  endTime: Date | string;
+  day: Day;
+  existingAllocations?: number;
+}
+
+export interface IReservation {
+  id: number;
+  reservationCode: string;
+  partySize: number;
+  reservationStatus: number;
+  reservationDate: Date;
+  occasion?: string;
+  specialRequests?: string;
+  arrivedAt?: Date;
+  noShowMarkedAt?: Date;
+  cancelledAt?: Date;
+  customerDetails: ICustomerDetail;
+  bookingSlot: IBookingSlot;
+  table: ITable;
+}
+
+export interface ISearchReservationsRequest {
+  reservationCode?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  tableNo?: string;
+  reservationDateFrom?: Date | null;
+  reservationDateTo?: Date | null;
+  createdDateFrom?: Date | null;
+  createdDateTo?: Date | null;
+  timeSlot?: string;
+}
+
+interface ICreateReservationRequest {
+  partySize: number;
+  reservationDate: string;
+  occasion: string;
+  specialRequests: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhoneNumber: string;
+  bookingSlotId: number;
+  tableId: number;
+}
+
+export interface IInventoryItem {
+  id?: number | string;
+  itemNumber?: string;
+  itemName?: string;
+  currentQuantity?: NullableNumberLike;
+  openingQuantity?: NullableNumberLike;
+  itemType?: string;
+  itemCategory?: string;
+  uoM?: string;
+  uom?: string;
+  unitPrice?: NullableNumberLike;
+  currency?: NullableString;
+  inventoryStatus?: string | number;
+  remarks?: NullableString;
+  itemSubCategory?: string;
+  minimumStockLevel?: NullableNumberLike;
+  maximumStockLevel?: NullableNumberLike;
+  reOrderLevel?: NullableNumberLike;
+  reorderLevel?: NullableNumberLike;
+  storageLocation?: NullableString;
+  shelveLife?: NullableNumberLike;
+  shelfLife?: NullableNumberLike;
+  storageConditions?: NullableString;
+  sku?: NullableString;
+  barCode?: NullableString;
+  expiryDate?: NullableString;
+  specialRemarks?: NullableString;
+}
+
+export interface IInventoryItemCreateRequest {
+  itemNumber: string;
+  itemName: string;
+  openingQuantity: number;
+  itemType: string;
+  itemCategory: string;
+  uoM: string;
+  unitPrice: number | null;
+  currency: string | null;
+  remarks: string | null;
+  minimumStockLevel: number | null;
+  maximumStockLevel: number | null;
+  reOrderLevel: number | null;
+  storageLocation: string | null;
+  shelveLife: number | null;
+  storageConditions: string | null;
+  sku: string | null;
+  expiryDate: string | null;
+}
+
+export interface IInventoryItemUpdateRequest extends IInventoryItemCreateRequest {}
+
+export interface IInventoryCurrency {
+  id: number;
+  currencyCode: string;
+  description: string;
+}
+
+export interface IInventoryUoM {
+  id: number;
+  uoM: string;
+  description: string;
 }

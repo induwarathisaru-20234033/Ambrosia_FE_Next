@@ -16,7 +16,7 @@ interface ServiceLogicCardProps {
 }
 
 export default function ServiceLogicCard({
-  initialValues = { bufferTime: 10, turnTime: 30, bookingInterval: 15 },
+  initialValues = { bufferTime: 10, turnTime: 30, bookingInterval: 10 },
   onValuesChange,
   onValidityChange,
 }: Readonly<ServiceLogicCardProps>) {
