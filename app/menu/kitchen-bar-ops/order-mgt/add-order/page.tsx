@@ -8,7 +8,7 @@ import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { useState } from "react";
 import "primeicons/primeicons.css";
-import KitchenBarOpsLayout from "../../layout";
+import KitchenBarOpsLayout, { YellowButton } from "../../layout";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
@@ -140,10 +140,18 @@ export default function AddOrderPage() {
 
         return (
           <Form className="h-screen flex flex-col">
-            {/* <h1 className="text-left text-3xl font-bold text-[#FFD166] py-4">
-              Add Order
-            </h1> */}
             <KitchenBarOpsLayout title="Add Order">
+                {/* Back Button at top-right */}
+                <div className="flex justify-end mb-3">
+                  <YellowButton
+                    onClick={() => {
+                      window.location.href = "/menu/kitchen-bar-ops/order-mgt";
+                    }}
+                    className="text-white"
+                  >
+                    Back
+                  </YellowButton>
+                </div>
 
             <div className="flex flex-1 overflow-hidden">
               {/* MENU PANEL */}
