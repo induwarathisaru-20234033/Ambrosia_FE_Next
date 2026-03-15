@@ -28,7 +28,7 @@ export default function ViewKitchenBarOpsPage() {
     },
     {
       id: "inventory",
-      title: "Management",
+      title: "Order Management",
       image: PurchaseInventory,
       borderColor: "border-gray-400",
       textColor: "text-black",
