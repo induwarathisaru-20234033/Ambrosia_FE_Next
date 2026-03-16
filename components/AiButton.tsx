@@ -27,7 +27,7 @@ export const AiButton = styled((props: ButtonProps) => (
     {...props}
   />
 ))({
-  background: 'linear-gradient(270deg, #e97800, #e99031, #faba76, #ffdfbc)',
+  background: 'linear-gradient(270deg, #e97800, #ff9421, #faba76, #fabe7e)',
   backgroundSize: '300% 300%',
   animation: `${gradientShift} 8s ease infinite`,
   color: '#fff',
@@ -35,10 +35,10 @@ export const AiButton = styled((props: ButtonProps) => (
   borderRadius: 12,
   padding: '10px 24px',
   textTransform: 'none',
-  boxShadow: '0 4px 14px rgba(185, 110, 10, 0.39)',
+  boxShadow: '0 4px 14px rgba(233, 132, 0, 0.39)',
   transition: 'all 0.2s ease-in-out',
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: '0 6px 20px rgba(214, 124, 6, 0.5)',
+    boxShadow: '0 6px 20px rgba(241, 241, 241, 0.5)',
   },
 })
