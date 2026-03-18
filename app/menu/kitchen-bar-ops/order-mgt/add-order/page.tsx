@@ -12,6 +12,7 @@ import { YellowButton } from "../../layout";
 import { Col, Container, Row } from "react-bootstrap";
 import { IBaseApiResponse, ITable } from "@/data-types";
 import { usePutQuery } from "@/services/queries/putQuery";
+import { useDeleteQuery } from "@/services/queries/deleteQuery";
 import "../../styles/kitchen-bar-ops.css";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
@@ -68,6 +69,11 @@ export default function AddOrderPage() {
 
   const updateDraftMutation = usePutQuery({
   toastRef,
+});
+
+const deleteDraftItemMutation = useDeleteQuery({
+  toastRef,
+  successMessage: null,
 });
 
   const fireMutation = usePostQuery({
@@ -135,6 +141,18 @@ export default function AddOrderPage() {
             }
           };
           
+          const deleteDraftItem = async (menuItemId: number) => {
+            if (!draftOrder) return;
+
+            try {
+              await deleteDraftItemMutation.mutateAsync({
+                url: `/orders/${draftOrder.id}/items/${menuItemId}`,
+              });
+            } catch {
+              // error toast handled in useDeleteQuery
+            }
+          };
+
           const saveDraft = async () => {
             if (!formik.values.table) {
               toastRef?.current?.show({
@@ -307,13 +325,16 @@ export default function AddOrderPage() {
             }
           };
 
-          const removeItemFromForm = (menuItemId: number) => {
-            formik.setFieldValue(
-              "orderItems",
-              formik.values.orderItems.filter(
-                (i) => i.menuItemId !== menuItemId
-              )
+          const removeItemFromForm = async (menuItemId: number) => {
+            const updatedItems = formik.values.orderItems.filter(
+              (i) => i.menuItemId !== menuItemId
             );
+
+            formik.setFieldValue("orderItems", updatedItems);
+
+            if (draftOrder) {
+              await deleteDraftItem(menuItemId);
+            }
           };
 
           const updateInstructions = async (menuItemId: number, value: string) => {
@@ -328,12 +349,12 @@ export default function AddOrderPage() {
             }
           };
 
-          const changeQuantity = async (menuItemId: number, delta: number) => {
-            const updatedItems = formik.values.orderItems.map((i) =>
-              i.menuItemId === menuItemId
-                ? { ...i, quantity: i.quantity + delta }
-                : i
-            );
+            const changeQuantity = async (menuItemId: number, delta: number) => {
+              const updatedItems = formik.values.orderItems.map((i) =>
+                i.menuItemId === menuItemId
+                  ? { ...i, quantity: i.quantity + delta }
+                  : i
+              );
 
               const targetItem = updatedItems.find((i) => i.menuItemId === menuItemId);
 
@@ -342,11 +363,15 @@ export default function AddOrderPage() {
                   `Quantity of "${targetItem.name}" is 0. Remove item?`
                 );
 
-              if (confirmRemove) {
-                const filteredItems = updatedItems.filter(
-                  (i) => i.menuItemId !== menuItemId
-                );
-                formik.setFieldValue("orderItems", filteredItems);
+                if (confirmRemove) {
+                  const filteredItems = updatedItems.filter(
+                    (i) => i.menuItemId !== menuItemId
+                  );
+
+                  formik.setFieldValue("orderItems", filteredItems);
+                    if (draftOrder) {
+                    await deleteDraftItem(menuItemId);
+                  }
                 // remove sync will be handled properly in Step 3
                 // for now just leave FE state updated
                 } else {
@@ -354,6 +379,7 @@ export default function AddOrderPage() {
                     i.menuItemId === menuItemId ? { ...i, quantity: 1 } : i
                   );
                   formik.setFieldValue("orderItems", restoredItems);
+
                   if (draftOrder) {
                     await syncDraftItems(restoredItems);
                   }
@@ -364,7 +390,7 @@ export default function AddOrderPage() {
                 if (draftOrder) {
                   await syncDraftItems(updatedItems);
                 }
-            }
+              }
           };
 
           // same filtering/grouping logic, only using corrected menuItems source
@@ -567,7 +593,8 @@ export default function AddOrderPage() {
                         formik.values.orderItems.length === 0 ||
                         fireMutation.isPending ||
                         draftMutation.isPending ||
-                        updateDraftMutation.isPending
+                        updateDraftMutation.isPending ||
+                        deleteDraftItemMutation.isPending
                       }
                     />
                   </div>
