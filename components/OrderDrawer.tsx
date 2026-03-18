@@ -7,6 +7,7 @@ interface OrderDrawerProps {
   order: IOrder;
   onClose: () => void;
 }
+
 const getOrderStatusLabel = (status?: number) => {
   switch (status) {
     case 1:
@@ -47,18 +48,41 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, onClose }) => {
 
         <hr className="border-gray-300 mb-6" />
 
-        <div className="mb-6 text-xl">
-          <div className="mb-2">
-            <span className="text-gray-500">Table: </span>
-            <span className="font-semibold text-black">{order.tableNo}</span>
+        {/* Top Information Section */}
+        <div className="mb-6 grid grid-cols-2 gap-8 text-xl">
+          <div className="space-y-2">
+            <div>
+              <span className="text-gray-500">Table: </span>
+              <span className="font-semibold text-black">{order.tableNo}</span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Waiter: </span>
+              <span className="font-semibold text-black">{order.waiterName}</span>
+            </div>
           </div>
-          <div>
-            <span className="text-gray-500">Waiter: </span>
-            <span className="font-semibold text-black">{order.waiterName}</span>
+
+          <div className="space-y-2">
+            <div>
+              <span className="text-gray-500">Customer: </span>
+              <span className="font-semibold text-black">{order.customerName}</span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Email: </span>
+              <span className="font-semibold text-black">{order.email}</span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Phone: </span>
+              <span className="font-semibold text-black">{order.phone}</span>
+            </div>
           </div>
         </div>
 
-        <h3 className="text-gray-600 font-medium text-2xl mb-4">Order Items:</h3>
+        <h3 className="text-gray-600 font-medium text-2xl mb-4">
+          Order Items:
+        </h3>
 
         <div className="flex flex-col gap-5">
           {order.items?.map((item, idx) => (
