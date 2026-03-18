@@ -1,0 +1,134 @@
+
+
+.container {
+  display: flex;
+  height: 100vh;
+  background: var(--order-bg);
+  font-family: Arial, sans-serif;
+}
+
+/* LEFT SIDE */
+
+.leftPanel {
+  width: 60%;
+  padding: 20px;
+  border-right: 1px solid var(--order-border);
+}
+
+.categoryButtons {
+  margin-bottom: 10px;
+}
+
+.categoryButtons button {
+  padding: 6px 14px;
+  margin-right: 8px;
+  border: 1px solid var(--order-border);
+  background: white;
+  cursor: pointer;
+}
+
+.categoryButtons button:hover {
+  background: var(--order-bg);
+}
+
+.searchBar {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid var(--order-border);
+  border-radius: 4px;
+}
+
+/* MENU GRID */
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.menuCard {
+  background: var(--order-card);
+  border: 1px solid var(--order-border);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.menuCard:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.menuImage {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+/* RIGHT PANEL */
+
+.rightPanel {
+  width: 40%;
+  padding: 20px;
+}
+
+.tableSelect {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid var(--order-border);
+}
+
+/* ORDER ITEMS */
+
+.orderItem {
+  border: 1px solid var(--order-border);
+  background: var(--order-card);
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.instructions {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px;
+  border: 1px solid var(--order-border);
+}
+
+.itemButtons button {
+  margin-right: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* BOTTOM BUTTONS */
+
+.bottomButtons {
+  margin-top: 20px;
+}
+
+.draftButton {
+  padding: 8px 16px;
+  margin-right: 10px;
+}
+
+.clearButton {
+  padding: 8px 16px;
+  margin-right: 10px;
+}
+
+.fireButton {
+  padding: 8px 16px;
+  background: var(--order-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.fireButton:hover {
+  background: var(--order-primary-hover);
+}

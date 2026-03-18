@@ -1,0 +1,53 @@
+/* Title styling for Kitchen & Bar Ops pages */
+/* Title styling for Kitchen & Bar Ops pages */
+.kbo-title {
+  font-size: 3rem;      /* same as Tailwind text-5xl */
+  font-weight: 700;     /* same as font-bold */
+  color: #F4A62A;       /* your orange color */
+  margin: 1.5rem 0;     /* same as my-6 */
+}
+
+
+/* Optional: container for the right-side button */
+.kbo-title-button {
+  margin-left: 1rem;
+}
+
+/* kitchen-bar-ops.css */
+.h1-title {
+  font-size: 3rem;      /* or whatever size you want */
+  font-weight: 700;
+  color: #F4A62A;       /* yellow */
+  margin-bottom: 1.5rem;
+}
+
+
+.custom-tabs-order-mgt .p-tabview-nav li {
+  width: 300px; /* Equal width */
+  text-align: center;
+  position: relative;
+}
+
+/* All tab  text default (inactive) */
+.custom-tabs-order-mgt .p-tabview-nav li .p-tabview-nav-link {
+  font-weight: 600;
+  color: #9ca3af !important; /* grey */
+  padding: 1rem 2rem;
+  border: none !important;
+  background: #f3f4f6; /* light grey rectangle */
+  transition: all 0.3s ease;
+  text-align: center;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Active tab text */
+.custom-tabs-order-mgt .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: #000000 !important; /* black */
+  font-weight: 700;
+}
+
+/* Blue underline for  emp-mgt active tab */
+.custom-tabs-order-mgt .p-tabview-nav li.p-highlight {
+  border-bottom: 3px solid #FFEE58;
+}
