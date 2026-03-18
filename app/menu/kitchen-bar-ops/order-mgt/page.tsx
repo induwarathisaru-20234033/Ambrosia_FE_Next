@@ -108,19 +108,38 @@ export default function OrderManagementPage() {
     { enabled: true, toastRef }
   );
 
-  // mapping now uses shared utility function
   const ongoingOrders: IOrder[] = useMemo(() => {
     const orders = ongoingOrdersResponse?.data?.items ?? [];
     return orders.map((order) => mapBackendOrderToUI(order, "ongoing"));
   }, [ongoingOrdersResponse]);
 
-  // mapping now uses shared utility function
   const completedOrders: IOrder[] = useMemo(() => {
     const orders = completedOrdersResponse?.data?.items ?? [];
     return orders.map((order) => mapBackendOrderToUI(order, "completed"));
   }, [completedOrdersResponse]);
 
   const unassignedOrders: IOrder[] = [];
+
+  const getOrderStatusLabel = (status?: number) => {
+    switch (status) {
+      case 1:
+        return "Draft";
+      case 2:
+        return "Sent to KDS";
+      case 3:
+        return "Preparing";
+      case 4:
+        return "On Hold";
+      case 5:
+        return "Ready";
+      case 6:
+        return "Served";
+      case 7:
+        return "Cancelled";
+      default:
+        return "-";
+    }
+  };
 
   const handleViewOrder = (order: IOrder) => {
     setSelectedOrder(order);
@@ -387,6 +406,12 @@ export default function OrderManagementPage() {
             <Column field="customerName" header="Customer Name" sortable />
             <Column field="orderDate" header="Order Date" sortable />
             <Column
+              field="orderStatus"
+              header="Status"
+              sortable
+              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
+            />
+            <Column
               header="Actions"
               body={(rowData: IOrder) => (
                 <div className="flex gap-2">
@@ -521,6 +546,12 @@ export default function OrderManagementPage() {
             <Column field="customerName" header="Customer Name" sortable />
             <Column field="orderDate" header="Order Date" sortable />
             <Column
+              field="orderStatus"
+              header="Status"
+              sortable
+              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
+            />
+            <Column
               header="Actions"
               body={(rowData: IOrder) => (
                 <div className="flex gap-2">
@@ -552,6 +583,11 @@ export default function OrderManagementPage() {
             <Column field="waiterName" header="Waiter Name" />
             <Column field="customerName" header="Customer Name" />
             <Column field="orderDate" header="Order Date" />
+            <Column
+              field="orderStatus"
+              header="Status"
+              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
+            />
             <Column
               header="Actions"
               body={(rowData: IOrder) => (
