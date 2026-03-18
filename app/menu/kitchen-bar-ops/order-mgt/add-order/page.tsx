@@ -100,10 +100,10 @@ export default function AddOrderPage() {
         onSubmit={() => {}}
       >
         {(formik) => {
-          // ✅ ADDED: helper to create BE payload in the correct format
-          const buildOrderPayload = () => ({
+          // helper to create BE payload in the correct format
+          const buildOrderPayload = (items: OrderItem[] = formik.values.orderItems) => ({
             tableId: formik.values.table ? Number(formik.values.table) : null,
-            items: formik.values.orderItems.map((item) => ({
+            items: items.map((item) => ({
               menuItemId: item.menuItemId,
               quantity: item.quantity,
               specialInstructions: item.specialInstructions,
@@ -226,32 +226,56 @@ export default function AddOrderPage() {
             }
           };
 
-          const addItemToForm = (item: MenuItem) => {
-            if (!formik.values.table) {
-              toastRef?.current?.show({
-                severity: "warn",
-                summary: "Validation",
-                detail: "Select a table first",
-              });
-              return;
-            }
+            const addItemToForm = async (item: MenuItem) => {
+              if (!formik.values.table) {
+                toastRef?.current?.show({
+                  severity: "warn",
+                  summary: "Validation",
+                  detail: "Select a table first",
+                });
+                return;
+              }
+
+            // prevent duplicate create request while draft is being created
+            if (draftMutation.isPending) return;
 
             const items = [...formik.values.orderItems];
             const index = items.findIndex((i) => i.menuItemId === item.id);
 
-            if (index !== -1) {
-              items[index].quantity += 1;
-            } else {
-              items.push({
-                menuItemId: item.id,
-                name: item.name,
-                quantity: 1,
-                specialInstructions: "",
-                price: item.price,
-              });
-            }
+              if (index !== -1) {
+                items[index].quantity += 1;
+              } else {
+                items.push({
+                  menuItemId: item.id,
+                  name: item.name,
+                  quantity: 1,
+                  specialInstructions: "",
+                  price: item.price,
+                });
+              }
 
+            // update FE panel immediately
             formik.setFieldValue("orderItems", items);
+
+            // STEP 1: if draft does not exist yet, create it automatically
+            if (!draftOrder) {
+              try {
+                const response = await draftMutation.mutateAsync({
+                  url: "/orders",
+                  body: buildOrderPayload(items),
+                });
+                const order = response.data?.data;
+                    if (order?.id && order?.orderNumber) {
+                      setDraftOrder({
+                        id: order.id,
+                        orderNumber: order.orderNumber,
+                      });
+                    }
+              } catch {
+                // if creating draft fails, rollback FE changes so user doesn't end up with unsaved order items in the UI
+                formik.setFieldValue("orderItems", items.filter((i) => i.menuItemId !== item.id));  
+              }
+            }
           };
 
           const removeItemFromForm = (menuItemId: number) => {
