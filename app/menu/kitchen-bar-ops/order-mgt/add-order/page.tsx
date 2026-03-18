@@ -330,6 +330,31 @@ export default function AddOrderPage() {
               <div className="flex flex-1 overflow-hidden">
                 {/* MENU PANEL */}
                 <div className="w-[55%] p-6 overflow-y-auto">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-[#FFD166] font-semibold text-lg">Table:</span>
+                      <select
+                        name="table"
+                        value={formik.values.table}
+                        onChange={formik.handleChange}
+                        className="border rounded px-3 py-2 min-w-[220px]"
+                      >
+                        <option value="">Select</option>
+                        {tables.map((table) => (
+                          <option key={table.id} value={table.id}>
+                            {table.tableName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {isTablesLoading && (
+                      <p className="text-sm text-gray-500">Loading tables...</p>
+                    )}
+                    {isTablesError && (
+                      <p className="text-sm text-red-500">Failed to load tables.</p>
+                    )}
+                  </div>
                   {/* SEARCH BAR */}
                   <div className="flex gap-3 mb-4">
                     <input
@@ -385,29 +410,9 @@ export default function AddOrderPage() {
                   <div className="flex justify-between items-center mb-3">
                     <div>
                       <span className="ml-2 text-gray-700">
-                        Order ID: {draftOrder?.orderNumber ?? "—"}
+                        <span className="text-[#FFD166] font-semibold text-lg">Order Number: </span>
+                         {draftOrder?.orderNumber ?? "—"}
                       </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#FFD166] font-semibold text-lg">
-                        Table:
-                      </span>
-                      <select
-                        name="table"
-                        value={formik.values.table}
-                        onChange={formik.handleChange}
-                        className="border rounded px-2 py-1"
-                      >
-                        <option value="">Select</option>
-                        {tables.map((table) => (
-                          <option key={table.id} value={table.id}>
-                            {table.tableName}
-                          </option>
-                        ))}
-                      </select>
-                      {isTablesLoading && <p className="text-sm text-gray-500">Loading tables...</p>}
-                      {isTablesError && <p className="text-sm text-red-500">Failed to load tables.</p>}
                     </div>
                   </div>
 
@@ -479,7 +484,7 @@ export default function AddOrderPage() {
                         id="draft-btn"
                         className="bg-white !border !border-[#FFD166] font-bold text-[#FFD166] py-2 flex-1 rounded"
                         state={true}
-                        onClick={saveDraft} // ✅ CHANGED: Draft button now saves draft
+                        onClick={saveDraft} // Draft button now saves draft
                       />
                       <Button
                         text="Remove"
