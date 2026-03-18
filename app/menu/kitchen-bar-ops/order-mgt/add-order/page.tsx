@@ -11,7 +11,7 @@ import "primeicons/primeicons.css";
 import { YellowButton } from "../../layout";
 import { Col, Container, Row } from "react-bootstrap";
 import { IBaseApiResponse, ITable } from "@/data-types";
-
+import { usePutQuery } from "@/services/queries/putQuery";
 import "../../styles/kitchen-bar-ops.css";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
@@ -66,6 +66,10 @@ export default function AddOrderPage() {
     toastRef,
   });
 
+  const updateDraftMutation = usePutQuery({
+  toastRef,
+});
+
   const fireMutation = usePostQuery({
     redirectPath: "/menu/kitchen-bar-ops/order-mgt",
     successMessage: "Order sent to kitchen successfully!",
@@ -110,6 +114,26 @@ export default function AddOrderPage() {
             })),
             isDraft: true,
           });
+
+          const syncDraftItems = async (items: OrderItem[]) => {
+            if (!draftOrder) return;
+
+            try {
+              await updateDraftMutation.mutateAsync({
+                url: `/orders/${draftOrder.id}/items`,
+                body: {
+                  orderId: draftOrder.id,
+                  items: items.map((item) => ({
+                    menuItemId: item.menuItemId,
+                    quantity: item.quantity,
+                    specialInstructions: item.specialInstructions,
+                  })),
+                },
+              });
+            } catch {
+              // error toast handled in usePutQuery
+            }
+          };
           
           const saveDraft = async () => {
             if (!formik.values.table) {
@@ -226,18 +250,17 @@ export default function AddOrderPage() {
             }
           };
 
-            const addItemToForm = async (item: MenuItem) => {
-              if (!formik.values.table) {
-                toastRef?.current?.show({
-                  severity: "warn",
-                  summary: "Validation",
-                  detail: "Select a table first",
-                });
-                return;
-              }
+          const addItemToForm = async (item: MenuItem) => {
+            if (!formik.values.table) {
+              toastRef?.current?.show({
+                severity: "warn",
+                summary: "Validation",
+                detail: "Select a table first",
+              });
+              return;
+            }
 
-            // prevent duplicate create request while draft is being created
-            if (draftMutation.isPending) return;
+            if (draftMutation.isPending || updateDraftMutation.isPending) return;
 
             const items = [...formik.values.orderItems];
             const index = items.findIndex((i) => i.menuItemId === item.id);
@@ -264,17 +287,23 @@ export default function AddOrderPage() {
                   url: "/orders",
                   body: buildOrderPayload(items),
                 });
+
                 const order = response.data?.data;
-                    if (order?.id && order?.orderNumber) {
-                      setDraftOrder({
-                        id: order.id,
-                        orderNumber: order.orderNumber,
-                      });
-                    }
+                
+                if (order?.id && order?.orderNumber) {
+                  setDraftOrder({
+                    id: order.id,
+                    orderNumber: order.orderNumber,
+                  });
+                }
               } catch {
-                // if creating draft fails, rollback FE changes so user doesn't end up with unsaved order items in the UI
-                formik.setFieldValue("orderItems", items.filter((i) => i.menuItemId !== item.id));  
-              }
+                  formik.setFieldValue(
+                    "orderItems",
+                    items.filter((i) => i.menuItemId !== item.id)
+                  );
+              } 
+            } else {
+                  await syncDraftItems(items);
             }
           };
 
@@ -287,48 +316,54 @@ export default function AddOrderPage() {
             );
           };
 
-          const updateInstructions = (menuItemId: number, value: string) => {
-            formik.setFieldValue(
-              "orderItems",
-              formik.values.orderItems.map((i) =>
-                i.menuItemId === menuItemId
-                  ? { ...i, specialInstructions: value }
-                  : i
-              )
+          const updateInstructions = async (menuItemId: number, value: string) => {
+            const updatedItems = formik.values.orderItems.map((i) =>
+              i.menuItemId === menuItemId
+                ? { ...i, specialInstructions: value }
+                : i
             );
+            formik.setFieldValue("orderItems", updatedItems);
+            if (draftOrder) {
+              await syncDraftItems(updatedItems);
+            }
           };
 
-          const changeQuantity = (menuItemId: number, delta: number) => {
+          const changeQuantity = async (menuItemId: number, delta: number) => {
             const updatedItems = formik.values.orderItems.map((i) =>
               i.menuItemId === menuItemId
                 ? { ...i, quantity: i.quantity + delta }
                 : i
             );
 
-            const targetItem = updatedItems.find(
-              (i) => i.menuItemId === menuItemId
-            );
+              const targetItem = updatedItems.find((i) => i.menuItemId === menuItemId);
 
-            if (targetItem && targetItem.quantity <= 0) {
-              const confirmRemove = confirm(
-                `Quantity of "${targetItem.name}" is 0. Remove item?`
-              );
+              if (targetItem && targetItem.quantity <= 0) {
+                const confirmRemove = confirm(
+                  `Quantity of "${targetItem.name}" is 0. Remove item?`
+                );
 
               if (confirmRemove) {
-                formik.setFieldValue(
-                  "orderItems",
-                  updatedItems.filter((i) => i.menuItemId !== menuItemId)
+                const filteredItems = updatedItems.filter(
+                  (i) => i.menuItemId !== menuItemId
                 );
-              } else {
-                formik.setFieldValue(
-                  "orderItems",
-                  updatedItems.map((i) =>
+                formik.setFieldValue("orderItems", filteredItems);
+                // remove sync will be handled properly in Step 3
+                // for now just leave FE state updated
+                } else {
+                  const restoredItems = updatedItems.map((i) =>
                     i.menuItemId === menuItemId ? { ...i, quantity: 1 } : i
-                  )
-                );
-              }
-            } else {
-              formik.setFieldValue("orderItems", updatedItems);
+                  );
+                  formik.setFieldValue("orderItems", restoredItems);
+                  if (draftOrder) {
+                    await syncDraftItems(restoredItems);
+                  }
+                }
+              } else {
+                formik.setFieldValue("orderItems", updatedItems);
+
+                if (draftOrder) {
+                  await syncDraftItems(updatedItems);
+                }
             }
           };
 
@@ -531,8 +566,9 @@ export default function AddOrderPage() {
                       disabled={
                         formik.values.orderItems.length === 0 ||
                         fireMutation.isPending ||
-                        draftMutation.isPending
-                      } 
+                        draftMutation.isPending ||
+                        updateDraftMutation.isPending
+                      }
                     />
                   </div>
                 </div>
