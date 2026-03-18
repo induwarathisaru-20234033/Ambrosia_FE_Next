@@ -1,100 +1,126 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { Container, Row, Col } from "react-bootstrap";
 import { Formik, Form } from "formik";
-import { DataTable } from "primereact/datatable";
+import { DataTable, SortOrder } from "primereact/datatable";
 import { Column } from "primereact/column";
+import axiosAuth from "@/utils/AxiosInstance";
+import { useGetQuery } from "@/services/queries/getQuery";
+import { useToastRef } from "@/contexts/ToastContext";
+import {
+  IBaseApiResponse,
+  IPaginatedData,
+  IBackendOrder,
+  IOrder,
+  SearchOrderRequest,
+  OrderFilterFormValues,
+} from "@/data-types";
+import {
+  buildOrderQueryParams,
+  mapBackendOrderToUI,
+} from "@/utils/orderUtils.ts"; // ✅ CHANGED: imported shared order utility functions
 
-import { YellowButton, WhiteButton } from "../layout"; 
+import { YellowButton, WhiteButton } from "../layout";
 import OrderDrawer from "@/components/OrderDrawer";
 import { TabView, TabPanel } from "primereact/tabview";
 
 import "../styles/kitchen-bar-ops.css";
 
-const LabelGroup = dynamic(() => import("@/components/LabelGroup"), { ssr: false });
-
-interface IOrderItem {
-  name: string;
-  quantity: number;
-  price: string;
-}
-
-export interface IOrder {
-  orderId: string;
-  tableNo: string;
-  email: string;
-  phone: string;
-  waiterName: string;
-  customerName: string;
-  orderDate: string;
-  status: "ongoing" | "completed" | "unassigned";
-  items?: IOrderItem[];
-}
+const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
+  ssr: false,
+});
 
 export default function OrderManagementPage() {
-  const router = useRouter();
+  const toastRef = useToastRef();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
 
-  const initialFilters = {
-    orderId: "",
-    tableNo: "",
+  const initialFilterFormValues: OrderFilterFormValues = {
+    orderNumber: "",
+    tableName: "",
     waiterName: "",
     customerName: "",
     orderDateFrom: "",
     orderDateTo: "",
   };
 
-  const [ongoingFilters, setOngoingFilters] = useState(initialFilters);
-  const [completedFilters, setCompletedFilters] = useState(initialFilters);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  const initialOngoingFilters: SearchOrderRequest = {
+    category: "ongoing",
+    orderNumber: "",
+    tableName: "",
+    waiterName: "",
+    customerName: "",
+    orderDateFrom: "",
+    orderDateTo: "",
+    sortField: "orderDate",
+    sortOrder: -1,
+    pageNumber: 1,
+    pageSize: 10,
+  };
 
-  const [orders] = useState<IOrder[]>([
-    {
-      orderId: "AMB-ATZ5PUDHT",
-      tableNo: "14",
-      email: "induwara@gmail.com",
-      phone: "+94762387190",
-      waiterName: "Induwara",
-      customerName: "Saman Perera",
-      orderDate: "2026-03-10",
-      status: "ongoing",
-      items: [
-        { name: "Burger", quantity: 2, price: "Rs. 450" },
-        { name: "Coke", quantity: 1, price: "Rs. 150" },
-      ],
-    },
-    {
-      orderId: "AMB-XYZ12345",
-      tableNo: "12",
-      email: "nimal@gmail.com",
-      phone: "+94712345678",
-      waiterName: "Nimal",
-      customerName: "Kamal Silva",
-      orderDate: "2026-03-12",
-      status: "completed",
-      items: [
-        { name: "Pizza", quantity: 1, price: "Rs. 800" },
-        { name: "Sprite", quantity: 2, price: "Rs. 300" },
-      ],
-    },
-    {
-      orderId: "AMB-ABC98765",
-      tableNo: "5",
-      email: "kasun@gmail.com",
-      phone: "+94798765432",
-      waiterName: "Kasun",
-      customerName: "Amaya Detuni",
-      orderDate: "2026-03-11",
-      status: "completed",
-      items: [
-        { name: "Pasta", quantity: 1, price: "Rs. 600" },
-        { name: "Water", quantity: 1, price: "Rs. 100" },
-      ],
-    },
-  ]);
+  const initialCompletedFilters: SearchOrderRequest = {
+    category: "completed",
+    orderNumber: "",
+    tableName: "",
+    waiterName: "",
+    customerName: "",
+    orderDateFrom: "",
+    orderDateTo: "",
+    sortField: "orderDate",
+    sortOrder: -1,
+    pageNumber: 1,
+    pageSize: 10,
+  };
+
+  const [ongoingFilters, setOngoingFilters] =
+    useState<SearchOrderRequest>(initialOngoingFilters);
+  const [completedFilters, setCompletedFilters] =
+    useState<SearchOrderRequest>(initialCompletedFilters);
+
+  const {
+    data: ongoingOrdersResponse,
+    isFetching: isOngoingFetching,
+    isError: isOngoingError,
+  } = useGetQuery<
+    IBaseApiResponse<IPaginatedData<IBackendOrder>>,
+    Record<string, any>
+  >(
+    ["orders", "ongoing", JSON.stringify(ongoingFilters), refreshKey],
+    "/orders",
+    buildOrderQueryParams(ongoingFilters),
+    { enabled: true, toastRef }
+  );
+
+  const {
+    data: completedOrdersResponse,
+    isFetching: isCompletedFetching,
+    isError: isCompletedError,
+  } = useGetQuery<
+    IBaseApiResponse<IPaginatedData<IBackendOrder>>,
+    Record<string, any>
+  >(
+    ["orders", "completed", JSON.stringify(completedFilters), refreshKey],
+    "/orders",
+    buildOrderQueryParams(completedFilters),
+    { enabled: true, toastRef }
+  );
+
+  // ✅ CHANGED: mapping now uses shared utility function
+  const ongoingOrders: IOrder[] = useMemo(() => {
+    const orders = ongoingOrdersResponse?.data?.items ?? [];
+    return orders.map((order) => mapBackendOrderToUI(order, "ongoing"));
+  }, [ongoingOrdersResponse]);
+
+  // ✅ CHANGED: mapping now uses shared utility function
+  const completedOrders: IOrder[] = useMemo(() => {
+    const orders = completedOrdersResponse?.data?.items ?? [];
+    return orders.map((order) => mapBackendOrderToUI(order, "completed"));
+  }, [completedOrdersResponse]);
+
+  const unassignedOrders: IOrder[] = [];
 
   const handleViewOrder = (order: IOrder) => {
     setSelectedOrder(order);
@@ -106,78 +132,222 @@ export default function OrderManagementPage() {
     setSelectedOrder(null);
   };
 
-  const filterOrders = (orders: IOrder[], filters: any) =>
-    orders.filter(o => {
-      const { orderId, tableNo, waiterName, customerName, orderDateFrom, orderDateTo } = filters;
-      const orderDate = new Date(o.orderDate);
-      const fromDate = orderDateFrom ? new Date(orderDateFrom) : null;
-      const toDate = orderDateTo ? new Date(orderDateTo) : null;
-      return (
-        (!orderId || o.orderId.includes(orderId)) &&
-        (!tableNo || o.tableNo.includes(tableNo)) &&
-        (!waiterName || o.waiterName.toLowerCase().includes(waiterName.toLowerCase())) &&
-        (!customerName || o.customerName.toLowerCase().includes(customerName.toLowerCase())) &&
-        (!fromDate || orderDate >= fromDate) &&
-        (!toDate || orderDate <= toDate)
-      );
-    });
+  const handleCancelOrder = async (order: IOrder) => {
+    if (!order.backendId) return;
+
+    const confirmed = confirm(
+      `Are you sure you want to cancel ${order.orderId}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await axiosAuth.put(`/orders/${order.backendId}/status`, {
+        orderId: order.backendId,
+        status: 7,
+        reason: "Cancelled from Order Management page",
+      });
+
+      toastRef?.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: "Order cancelled successfully",
+        life: 3000,
+      });
+
+      setRefreshKey((prev) => prev + 1);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to cancel order";
+
+      toastRef?.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    }
+  };
+
+  const onOngoingPage = (event: any) => {
+    const nextPageNumber = event.page + 1;
+    const nextPageSize = event.rows;
+
+    if (
+      ongoingFilters.pageNumber === nextPageNumber &&
+      ongoingFilters.pageSize === nextPageSize
+    ) {
+      return;
+    }
+
+    setOngoingFilters((prev) => ({
+      ...prev,
+      pageNumber: nextPageNumber,
+      pageSize: nextPageSize,
+    }));
+  };
+
+  const onOngoingSort = (event: any) => {
+    const nextSortField = event.sortField;
+    const nextSortOrder = event.sortOrder as SortOrder;
+
+    if (
+      ongoingFilters.sortField === nextSortField &&
+      ongoingFilters.sortOrder === nextSortOrder
+    ) {
+      return;
+    }
+
+    setOngoingFilters((prev) => ({
+      ...prev,
+      sortField: nextSortField,
+      sortOrder: nextSortOrder,
+      pageNumber: 1,
+    }));
+  };
+
+  const onCompletedPage = (event: any) => {
+    const nextPageNumber = event.page + 1;
+    const nextPageSize = event.rows;
+
+    if (
+      completedFilters.pageNumber === nextPageNumber &&
+      completedFilters.pageSize === nextPageSize
+    ) {
+      return;
+    }
+
+    setCompletedFilters((prev) => ({
+      ...prev,
+      pageNumber: nextPageNumber,
+      pageSize: nextPageSize,
+    }));
+  };
+
+  const onCompletedSort = (event: any) => {
+    const nextSortField = event.sortField;
+    const nextSortOrder = event.sortOrder as SortOrder;
+
+    if (
+      completedFilters.sortField === nextSortField &&
+      completedFilters.sortOrder === nextSortOrder
+    ) {
+      return;
+    }
+
+    setCompletedFilters((prev) => ({
+      ...prev,
+      sortField: nextSortField,
+      sortOrder: nextSortOrder,
+      pageNumber: 1,
+    }));
+  };
 
   return (
     <Container fluid className="relative">
-      {isDrawerOpen && <div className="fixed inset-0 bg-black opacity-30 z-40"></div>}
-      
+      {isDrawerOpen && (
+        <div className="fixed inset-0 bg-black opacity-30 z-40"></div>
+      )}
+
       <Row className="align-items-center mb-4">
         <Col>
-          <h1 className="kbo-title">
-            Order Management and History
-          </h1>
+          <h1 className="kbo-title">Order Management and History</h1>
         </Col>
 
         <Col xs="auto">
-          <YellowButton 
+          <YellowButton
             onClick={() => {
-                window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
-                  }}>Add Order
+              window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
+            }}
+          >
+            Add Order
           </YellowButton>
         </Col>
       </Row>
 
       <TabView className="custom-tabs-order-mgt mb-4">
-        {/* Ongoing Orders Tab */}
         <TabPanel header="Ongoing Orders">
-          <Formik
-            initialValues={ongoingFilters}
+          <Formik<OrderFilterFormValues>
+            initialValues={{
+              orderNumber: ongoingFilters.orderNumber,
+              tableName: ongoingFilters.tableName,
+              waiterName: ongoingFilters.waiterName,
+              customerName: ongoingFilters.customerName,
+              orderDateFrom: ongoingFilters.orderDateFrom,
+              orderDateTo: ongoingFilters.orderDateTo,
+            }}
             enableReinitialize
-            onSubmit={(values) => setOngoingFilters(values)}
+            onSubmit={(values) =>
+              setOngoingFilters((prev) => ({
+                ...prev,
+                orderNumber: values.orderNumber,
+                tableName: values.tableName,
+                waiterName: values.waiterName,
+                customerName: values.customerName,
+                orderDateFrom: values.orderDateFrom,
+                orderDateTo: values.orderDateTo,
+                pageNumber: 1,
+              }))
+            }
           >
             {({ resetForm }) => (
               <Form>
                 <Row className="mb-3 align-items-end">
                   <Col md={2}>
-                    <LabelGroup label="Order ID" name="orderId" type="text" placeholder="Order ID" />
+                    <LabelGroup
+                      label="Order ID"
+                      name="orderNumber"
+                      type="text"
+                      placeholder="Order ID"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Table No" name="tableNo" type="text" placeholder="Table No" />
+                    <LabelGroup
+                      label="Table No"
+                      name="tableName"
+                      type="text"
+                      placeholder="Table No"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Waiter Name" name="waiterName" type="text" placeholder="Waiter Name" />
+                    <LabelGroup
+                      label="Waiter Name"
+                      name="waiterName"
+                      type="text"
+                      placeholder="Waiter Name"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Customer Name" name="customerName" type="text" placeholder="Customer Name" />
+                    <LabelGroup
+                      label="Customer Name"
+                      name="customerName"
+                      type="text"
+                      placeholder="Customer Name"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Order Date From" name="orderDateFrom" type="date" />
+                    <LabelGroup
+                      label="Order Date From"
+                      name="orderDateFrom"
+                      type="date"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Order Date To" name="orderDateTo" type="date" />
+                    <LabelGroup
+                      label="Order Date To"
+                      name="orderDateTo"
+                      type="date"
+                    />
                   </Col>
                   <Col md={2} className="d-flex gap-2 mt-2">
                     <YellowButton type="submit">Filter</YellowButton>
                     <WhiteButton
                       type="button"
                       onClick={() => {
-                        resetForm({ values: initialFilters });
-                        setOngoingFilters(initialFilters);
+                        resetForm({ values: initialFilterFormValues });
+                        setOngoingFilters(initialOngoingFilters);
                       }}
                     >
                       Clear
@@ -188,67 +358,130 @@ export default function OrderManagementPage() {
             )}
           </Formik>
 
+          {isOngoingError && (
+            <p className="text-red-500">Failed to load ongoing orders.</p>
+          )}
+
           <DataTable
             stripedRows
-            value={filterOrders(orders.filter(o => o.status === "ongoing"), ongoingFilters)}
+            removableSort
+            value={ongoingOrders}
+            lazy
             paginator
-            rows={10}
+            first={(ongoingFilters.pageNumber - 1) * ongoingFilters.pageSize}
+            rows={ongoingFilters.pageSize}
+            totalRecords={ongoingOrdersResponse?.data?.totalItemCount || 0}
+            onPage={onOngoingPage}
+            onSort={onOngoingSort}
+            sortField={ongoingFilters.sortField}
+            sortOrder={ongoingFilters.sortOrder ?? 0}
+            loading={isOngoingFetching}
+            rowsPerPageOptions={[5, 10, 20, 50]}
             responsiveLayout="scroll"
           >
-            <Column field="orderId" header="Order ID" />
-            <Column field="tableNo" header="Table" />
-            <Column field="email" header="Email" />
-            <Column field="phone" header="Phone" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
+            <Column field="orderId" header="Order ID" sortable />
+            <Column field="tableNo" header="Table" sortable />
+            <Column field="email" header="Email" sortable />
+            <Column field="phone" header="Phone" sortable />
+            <Column field="waiterName" header="Waiter Name" sortable />
+            <Column field="customerName" header="Customer Name" sortable />
+            <Column field="orderDate" header="Order Date" sortable />
             <Column
               header="Actions"
               body={(rowData: IOrder) => (
                 <div className="flex gap-2">
-                  <YellowButton onClick={() => handleViewOrder(rowData)}>View Order</YellowButton>
-                  <WhiteButton>Cancel</WhiteButton>
+                  <YellowButton onClick={() => handleViewOrder(rowData)}>
+                    View Order
+                  </YellowButton>
+                  <WhiteButton onClick={() => handleCancelOrder(rowData)}>
+                    Cancel
+                  </WhiteButton>
                 </div>
               )}
             />
           </DataTable>
         </TabPanel>
 
-        {/* Completed Orders Tab */}
         <TabPanel header="Completed Orders">
-          <Formik
-            initialValues={completedFilters}
+          <Formik<OrderFilterFormValues>
+            initialValues={{
+              orderNumber: completedFilters.orderNumber,
+              tableName: completedFilters.tableName,
+              waiterName: completedFilters.waiterName,
+              customerName: completedFilters.customerName,
+              orderDateFrom: completedFilters.orderDateFrom,
+              orderDateTo: completedFilters.orderDateTo,
+            }}
             enableReinitialize
-            onSubmit={(values) => setCompletedFilters(values)}
+            onSubmit={(values) =>
+              setCompletedFilters((prev) => ({
+                ...prev,
+                orderNumber: values.orderNumber,
+                tableName: values.tableName,
+                waiterName: values.waiterName,
+                customerName: values.customerName,
+                orderDateFrom: values.orderDateFrom,
+                orderDateTo: values.orderDateTo,
+                pageNumber: 1,
+              }))
+            }
           >
             {({ resetForm }) => (
               <Form>
                 <Row className="mb-3 align-items-end">
                   <Col md={2}>
-                    <LabelGroup label="Order ID" name="orderId" type="text" placeholder="Order ID" />
+                    <LabelGroup
+                      label="Order ID"
+                      name="orderNumber"
+                      type="text"
+                      placeholder="Order ID"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Table No" name="tableNo" type="text" placeholder="Table No" />
+                    <LabelGroup
+                      label="Table No"
+                      name="tableName"
+                      type="text"
+                      placeholder="Table No"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Waiter Name" name="waiterName" type="text" placeholder="Waiter Name" />
+                    <LabelGroup
+                      label="Waiter Name"
+                      name="waiterName"
+                      type="text"
+                      placeholder="Waiter Name"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Customer Name" name="customerName" type="text" placeholder="Customer Name" />
+                    <LabelGroup
+                      label="Customer Name"
+                      name="customerName"
+                      type="text"
+                      placeholder="Customer Name"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Order Date From" name="orderDateFrom" type="date" />
+                    <LabelGroup
+                      label="Order Date From"
+                      name="orderDateFrom"
+                      type="date"
+                    />
                   </Col>
                   <Col md={2}>
-                    <LabelGroup label="Order Date To" name="orderDateTo" type="date" />
+                    <LabelGroup
+                      label="Order Date To"
+                      name="orderDateTo"
+                      type="date"
+                    />
                   </Col>
                   <Col md={2} className="d-flex gap-2 mt-2">
                     <YellowButton type="submit">Filter</YellowButton>
                     <WhiteButton
                       type="button"
                       onClick={() => {
-                        resetForm({ values: initialFilters });
-                        setCompletedFilters(initialFilters);
+                        resetForm({ values: initialFilterFormValues });
+                        setCompletedFilters(initialCompletedFilters);
                       }}
                     >
                       Clear
@@ -259,37 +492,55 @@ export default function OrderManagementPage() {
             )}
           </Formik>
 
+          {isCompletedError && (
+            <p className="text-red-500">Failed to load completed orders.</p>
+          )}
+
           <DataTable
             stripedRows
-            value={filterOrders(orders.filter(o => o.status === "completed"), completedFilters)}
+            removableSort
+            value={completedOrders}
+            lazy
             paginator
-            rows={10}
+            first={(completedFilters.pageNumber - 1) * completedFilters.pageSize}
+            rows={completedFilters.pageSize}
+            totalRecords={completedOrdersResponse?.data?.totalItemCount || 0}
+            onPage={onCompletedPage}
+            onSort={onCompletedSort}
+            sortField={completedFilters.sortField}
+            sortOrder={completedFilters.sortOrder ?? 0}
+            loading={isCompletedFetching}
+            rowsPerPageOptions={[5, 10, 20, 50]}
             responsiveLayout="scroll"
           >
-            <Column field="orderId" header="Order ID" />
-            <Column field="tableNo" header="Table" />
-            <Column field="email" header="Email" />
-            <Column field="phone" header="Phone" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
+            <Column field="orderId" header="Order ID" sortable />
+            <Column field="tableNo" header="Table" sortable />
+            <Column field="email" header="Email" sortable />
+            <Column field="phone" header="Phone" sortable />
+            <Column field="waiterName" header="Waiter Name" sortable />
+            <Column field="customerName" header="Customer Name" sortable />
+            <Column field="orderDate" header="Order Date" sortable />
             <Column
               header="Actions"
               body={(rowData: IOrder) => (
                 <div className="flex gap-2">
-                  <YellowButton onClick={() => handleViewOrder(rowData)}>View Order</YellowButton>
-                  <WhiteButton>Cancel</WhiteButton>
+                  <YellowButton onClick={() => handleViewOrder(rowData)}>
+                    View Order
+                  </YellowButton>
                 </div>
               )}
             />
           </DataTable>
         </TabPanel>
 
-        {/* Unassigned Customers Tab - No Filters */}
         <TabPanel header="Unassigned Customers">
+          <p className="mb-3 text-gray-500">
+            No backend endpoint is available yet for unassigned customers.
+          </p>
+
           <DataTable
             stripedRows
-            value={orders.filter(o => o.status === "unassigned")}
+            value={unassignedOrders}
             paginator
             rows={10}
             responsiveLayout="scroll"
@@ -305,8 +556,9 @@ export default function OrderManagementPage() {
               header="Actions"
               body={(rowData: IOrder) => (
                 <div className="flex gap-2">
-                  <YellowButton onClick={() => handleViewOrder(rowData)}>View Order</YellowButton>
-                  <WhiteButton>Cancel</WhiteButton>
+                  <YellowButton onClick={() => handleViewOrder(rowData)}>
+                    View Order
+                  </YellowButton>
                 </div>
               )}
             />
