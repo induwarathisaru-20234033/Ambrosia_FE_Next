@@ -48,6 +48,14 @@ export interface ITimeSlot {
   endTime: string;
 }
 
+export interface IRoleCreateRequest {
+  roleCode: string;
+  name: string;
+  description?: string;
+  status?: number;
+  permissionIds?: number[];
+}
+
 export interface IDaySchedule {
   day: Day;
   dayName: string;
@@ -240,6 +248,71 @@ export interface IInventoryUoM {
   id: number;
   uoM: string;
   description: string;
+}
+
+export interface ICreatePurchaseRequestBody {
+  description: string;
+  supplier: string;
+  requestedBy: string;
+  requestedDeliveryDate: string;
+  isUrgent: boolean;
+  prItems: Array<{
+    lineItemNo: number;
+    requestedQuantity: number;
+    price: number;
+    inventoryItemId: number;
+  }>;
+}
+
+export interface IMaterialLineItem {
+  lineNo: number;
+  itemNumber: string;
+  itemName: string;
+  itemCategory: string;
+  inventoryItemId: number;
+  quantity: number;
+  uoM: string;
+  unitPrice: number;
+}
+
+export interface IMaterialSearchParams {
+  itemName: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface IPurchaseRequest {
+  id?: number | string;
+  purchaseRequestCode?: string;
+  description?: string;
+  supplier?: string;
+  createdBy?: string;
+  requestedBy?: string;
+  requestedDeliveryDate?: string;
+  createdDate?: string;
+  isUrgent?: boolean;
+  purchaseRequestStatus?: number;
+  reviewedBy?: string;
+  reviewedDate?: string;
+  prItems?: Array<{
+    id?: number;
+    lineItemNo?: number;
+    requestedQuantity?: number;
+    price?: number;
+    inventoryItemId?: number;
+    inventoryItem?: IInventoryItem;
+  }>;
+}
+
+export interface IPurchaseRequestListParams {
+  pageNumber: number;
+  pageSize: number;
+  purchaseRequestCode?: string;
+  supplier?: string;
+  requestedBy?: string;
+  purchaseRequestStatus?: number;
+  createdDateFrom?: string;
+  createdDateTo?: string;
 }
 
 export interface IOrderItem {
