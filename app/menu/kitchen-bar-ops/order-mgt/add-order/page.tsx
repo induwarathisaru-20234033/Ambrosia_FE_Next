@@ -172,11 +172,26 @@ const deleteDraftItemMutation = useDeleteQuery({
               return;
             }
 
-            try {
-              const response = await draftMutation.mutateAsync({
-                url: "/orders",
-                body: buildOrderPayload(),
+          try {
+            // if draft already exists, just update it
+            if (draftOrder) {
+              await syncDraftItems(formik.values.orderItems);
+
+              toastRef?.current?.show({
+                severity: "success",
+                summary: "Success",
+                detail: "Draft updated successfully!",
+                life: 3000,
               });
+
+              return;
+            }
+
+            // if no draft exists, create one
+            const response = await draftMutation.mutateAsync({
+              url: "/orders",
+              body: buildOrderPayload(),
+            });
 
               const order = response.data?.data;
 
