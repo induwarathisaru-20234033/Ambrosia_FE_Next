@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { useGetQuery } from "@/services/queries/getQuery";
@@ -10,7 +12,7 @@ import { useState } from "react";
 import "primeicons/primeicons.css";
 import { YellowButton } from "../../layout";
 import { Col, Container, Row } from "react-bootstrap";
-import { IBaseApiResponse, ITable } from "@/data-types";
+import { IBaseApiResponse, ITable, IBackendOrder } from "@/data-types";
 import { usePutQuery } from "@/services/queries/putQuery";
 import { useDeleteQuery } from "@/services/queries/deleteQuery";
 import "../../styles/kitchen-bar-ops.css";
@@ -40,6 +42,8 @@ interface InitialValues {
 
 export default function AddOrderPage() {
   const toastRef = useToastRef();
+  const searchParams = useSearchParams();
+  const draftOrderId = searchParams.get("id");
   const [searchText, setSearchText] = useState("");
   const [draftOrder, setDraftOrder] = useState<{
     id: number;
@@ -57,8 +61,24 @@ export default function AddOrderPage() {
     ? menuItemsResponse
     : menuItemsResponse?.data ?? [];
   
-  const { data: tablesResponse, isLoading: isTablesLoading, isError: isTablesError } =
-  useGetQuery<IBaseApiResponse<ITable[]>, undefined>(["tables"], "/tables");
+  const { 
+    data: tablesResponse, 
+    isLoading: isTablesLoading, 
+    isError: isTablesError } =
+      useGetQuery<IBaseApiResponse<ITable[]>, undefined>
+        (["tables"], "/tables");
+  
+  const {
+    data: existingDraftResponse,
+    isLoading: isDraftLoading, } = 
+      useGetQuery<IBaseApiResponse<IBackendOrder>, undefined>(
+  ["draftOrder", draftOrderId || ""],
+  `/orders/${draftOrderId}`, undefined,
+  {
+    enabled: !!draftOrderId, // only run if id exists
+    toastRef,
+  }
+);
 
   const tables: ITable[] = tablesResponse?.data ?? [];
 
@@ -103,13 +123,35 @@ const deleteDraftItemMutation = useDeleteQuery({
           </YellowButton>
         </Col>
       </Row>
-
+      {isDraftLoading && (
+        <p className="text-gray-500 mb-3">Loading draft order...</p>)}
       <Formik<InitialValues>
         initialValues={{ table: "", orderItems: [] }}
         validationSchema={orderSchema}
         onSubmit={() => {}}
       >
         {(formik) => {
+          useEffect(() => {
+            const existingOrder = existingDraftResponse?.data;
+
+            if (!existingOrder || draftOrder) return; // prevent overwrite
+
+            setDraftOrder({
+              id: existingOrder.id,
+              orderNumber: existingOrder.orderNumber,
+            });
+
+            formik.setValues({
+              table: existingOrder.tableId ? String(existingOrder.tableId) : "",
+              orderItems: existingOrder.items.map((item) => ({
+                menuItemId: item.menuItemId,
+                name: item.menuItemName,
+                quantity: item.quantity,
+                specialInstructions: item.specialInstructions ?? "",
+                price: item.unitPrice,
+              })),
+            });
+          }, [existingDraftResponse]);
           // helper to create BE payload in the correct format
           const buildOrderPayload = (items: OrderItem[] = formik.values.orderItems) => ({
             tableId: formik.values.table ? Number(formik.values.table) : null,
