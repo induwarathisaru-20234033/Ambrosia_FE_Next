@@ -1,0 +1,87 @@
+import axiosAuth from "@/utils/AxiosInstance";
+import {
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { AxiosResponse } from "axios";
+import { useRouter } from "next/navigation";
+import type { RefObject } from "react";
+
+interface MutationVariables {
+  url: string;
+  body: any;
+}
+
+interface PutQueryOptions extends UseMutationOptions<
+  AxiosResponse,
+  unknown,
+  MutationVariables,
+  unknown
+> {
+  redirectPath?: string;
+  successMessage?: string | null;
+  invalidateKey?: (string | number)[];
+  toastRef?: RefObject<any>;
+}
+
+export const usePutQuery = ({
+  redirectPath,
+  invalidateKey,
+  successMessage,
+  toastRef,
+}: PutQueryOptions = {}): UseMutationResult<
+  AxiosResponse,
+  unknown,
+  MutationVariables,
+  unknown
+> => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ url, body }: MutationVariables) => axiosAuth.put(url, body),
+    onSuccess: () => {
+      if (invalidateKey) {
+        if (Array.isArray(invalidateKey)) {
+          invalidateKey.forEach((key) =>
+            queryClient.invalidateQueries({
+              queryKey: [key],
+              refetchType: "active",
+            })
+          );
+        } else {
+          queryClient.invalidateQueries({
+            queryKey: invalidateKey,
+            refetchType: "active",
+          });
+        }
+      }
+
+      successMessage &&
+        toastRef?.current?.show({
+          severity: "success",
+          summary: "Success",
+          detail: successMessage,
+          life: 3000,
+        });
+
+      redirectPath && router.push(redirectPath);
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "An error occurred while processing your request";
+
+      toastRef?.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    },
+  });
+};
