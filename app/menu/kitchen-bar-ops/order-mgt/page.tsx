@@ -400,8 +400,6 @@ export default function OrderManagementPage() {
           >
             <Column field="orderId" header="Order ID" sortable />
             <Column field="tableNo" header="Table" sortable />
-            <Column field="email" header="Email" sortable />
-            <Column field="phone" header="Phone" sortable />
             <Column field="waiterName" header="Waiter Name" sortable />
             <Column field="customerName" header="Customer Name" sortable />
             <Column field="orderDate" header="Order Date" sortable />
@@ -540,8 +538,6 @@ export default function OrderManagementPage() {
           >
             <Column field="orderId" header="Order ID" sortable />
             <Column field="tableNo" header="Table" sortable />
-            <Column field="email" header="Email" sortable />
-            <Column field="phone" header="Phone" sortable />
             <Column field="waiterName" header="Waiter Name" sortable />
             <Column field="customerName" header="Customer Name" sortable />
             <Column field="orderDate" header="Order Date" sortable />
