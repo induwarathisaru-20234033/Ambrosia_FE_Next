@@ -6,6 +6,7 @@ import ServiceHoursAndRules from "@/components/foh/ServiceHoursAndRules";
 import TableInventory from "@/components/foh/TableInventory";
 import { Divider } from "primereact/divider";
 import CalenderExclusions from "@/components/foh/CalenderExclusions";
+import FloorMapEditor from "@/components/foh/floor-map/FloorMapEditor";
 
 export default function ConfigurationsPage() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -49,9 +50,7 @@ export default function ConfigurationsPage() {
               }
             >
               <div className="p-8">
-                <div className="text-center py-12">
-                  <p className="text-gray-600">Floor Map content coming soon</p>
-                </div>
+                <FloorMapEditor />
               </div>
             </TabPanel>
           </TabView>
