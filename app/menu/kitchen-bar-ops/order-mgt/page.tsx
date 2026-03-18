@@ -38,6 +38,10 @@ export default function OrderManagementPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
 
+  // ✅ ADDED: cancel modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<IOrder | null>(null);
+
   const initialFilterFormValues: OrderFilterFormValues = {
     orderNumber: "",
     tableName: "",
@@ -151,17 +155,25 @@ export default function OrderManagementPage() {
     setSelectedOrder(null);
   };
 
-  const handleCancelOrder = async (order: IOrder) => {
-    if (!order.backendId) return;
+  // ✅ ADDED: open cancel modal
+  const openCancelModal = (order: IOrder) => {
+    setOrderToCancel(order);
+    setShowCancelModal(true);
+  };
 
-    const confirmed = confirm(
-      `Are you sure you want to cancel ${order.orderId}?`
-    );
-    if (!confirmed) return;
+  // ✅ ADDED: close cancel modal
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setOrderToCancel(null);
+  };
+
+  // ✅ CHANGED: actual cancel now happens only from modal confirm button
+  const handleCancelOrder = async () => {
+    if (!orderToCancel?.backendId) return;
 
     try {
-      await axiosAuth.put(`/orders/${order.backendId}/status`, {
-        orderId: order.backendId,
+      await axiosAuth.put(`/orders/${orderToCancel.backendId}/status`, {
+        orderId: orderToCancel.backendId,
         status: 7,
         reason: "Cancelled from Order Management page",
       });
@@ -174,6 +186,7 @@ export default function OrderManagementPage() {
       });
 
       setRefreshKey((prev) => prev + 1);
+      closeCancelModal();
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.message ||
@@ -316,18 +329,18 @@ export default function OrderManagementPage() {
                 <Row className="mb-3 align-items-end">
                   <Col md={2}>
                     <LabelGroup
-                      label="Order ID"
+                      label="Order Number"
                       name="orderNumber"
                       type="text"
-                      placeholder="Order ID"
+                      placeholder="Order Number"
                     />
                   </Col>
                   <Col md={2}>
                     <LabelGroup
-                      label="Table No"
+                      label="Table"
                       name="tableName"
                       type="text"
-                      placeholder="Table No"
+                      placeholder="Table"
                     />
                   </Col>
                   <Col md={2}>
@@ -398,7 +411,7 @@ export default function OrderManagementPage() {
             rowsPerPageOptions={[5, 10, 20, 50]}
             responsiveLayout="scroll"
           >
-            <Column field="orderId" header="Order ID" sortable />
+            <Column field="orderId" header="Order Name" sortable />
             <Column field="tableNo" header="Table" sortable />
             <Column field="waiterName" header="Waiter Name" sortable />
             <Column field="customerName" header="Customer Name" sortable />
@@ -416,7 +429,7 @@ export default function OrderManagementPage() {
                   <YellowButton onClick={() => handleViewOrder(rowData)}>
                     View Order
                   </YellowButton>
-                  <WhiteButton onClick={() => handleCancelOrder(rowData)}>
+                  <WhiteButton onClick={() => openCancelModal(rowData)}>
                     Cancel
                   </WhiteButton>
                 </div>
@@ -574,8 +587,6 @@ export default function OrderManagementPage() {
           >
             <Column field="orderId" header="Order ID" />
             <Column field="tableNo" header="Table" />
-            <Column field="email" header="Email" />
-            <Column field="phone" header="Phone" />
             <Column field="waiterName" header="Waiter Name" />
             <Column field="customerName" header="Customer Name" />
             <Column field="orderDate" header="Order Date" />
@@ -600,6 +611,52 @@ export default function OrderManagementPage() {
 
       {isDrawerOpen && selectedOrder && (
         <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />
+      )}
+
+      {/* ✅ ADDED: Custom Cancel Order Modal */}
+      {showCancelModal && orderToCancel && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="bg-white w-[720px] max-w-[90%] rounded shadow-xl overflow-hidden">
+            <div className="bg-[#F0A84B] px-6 py-4 flex justify-between items-center relative">
+              <div className="w-full text-center">
+                <h2 className="text-white text-2xl font-semibold">
+                  Cancel Order
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="text-white text-3xl leading-none absolute right-6 top-1/2 -translate-y-1/2"
+                onClick={closeCancelModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-8 text-center">
+              <p className="text-2xl text-gray-600 font-semibold mb-8">
+                Do you want to cancel the order #{orderToCancel.orderId}?
+              </p>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  type="button"
+                  className="bg-[#F0A84B] text-white px-10 py-2 rounded-md font-medium hover:opacity-90"
+                  onClick={handleCancelOrder}
+                >
+                  Confirm
+                </button>
+
+                <button
+                  type="button"
+                  className="border border-[#F0A84B] text-[#6B7280] px-10 py-2 rounded-md font-medium bg-white hover:bg-gray-50"
+                  onClick={closeCancelModal}
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </Container>
   );
