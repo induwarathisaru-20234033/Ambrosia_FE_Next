@@ -6,10 +6,11 @@ import { useGetQuery } from "@/services/queries/getQuery";
 import dynamic from "next/dynamic";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useState } from "react"; // ✅ CHANGED: removed useEffect because auto-save draft logic was removed
+import { useState } from "react";
 import "primeicons/primeicons.css";
 import { YellowButton } from "../../layout";
 import { Col, Container, Row } from "react-bootstrap";
+import { IBaseApiResponse, ITable } from "@/data-types";
 
 import "../../styles/kitchen-bar-ops.css";
 
@@ -36,14 +37,6 @@ interface InitialValues {
   orderItems: OrderItem[];
 }
 
-// ✅ ADDED: support wrapped API response as well
-interface ApiResponse<T> {
-  succeeded: boolean;
-  message: string;
-  errors: string[];
-  data: T;
-}
-
 export default function AddOrderPage() {
   const toastRef = useToastRef();
   const [searchText, setSearchText] = useState("");
@@ -52,18 +45,22 @@ export default function AddOrderPage() {
     orderNumber: string;
   } | null>(null);
 
-  // ✅ CHANGED: menu API may return wrapped response { data: [...] }
   const { data: menuItemsResponse, isLoading, isError } = useGetQuery<
-    ApiResponse<MenuItem[]> | MenuItem[],
-    undefined
-  >(["menuItems"], "/menu");
+  IBaseApiResponse<MenuItem[]> | MenuItem[],
+  undefined
+>(["menuItems"], "/menu");
+  
 
-  // ✅ ADDED: safely get menu list whether API returns wrapped or direct array
+  // safely get menu list whether API returns wrapped or direct array
   const menuItems: MenuItem[] = Array.isArray(menuItemsResponse)
     ? menuItemsResponse
     : menuItemsResponse?.data ?? [];
+  
+  const { data: tablesResponse, isLoading: isTablesLoading, isError: isTablesError } =
+  useGetQuery<IBaseApiResponse<ITable[]>, undefined>(["tables"], "/tables");
 
-  // ✅ CHANGED: removed redirectPath from draft mutation
+  const tables: ITable[] = tablesResponse?.data ?? [];
+
   // because saving draft should NOT redirect away from Add Order page
   const draftMutation = usePostQuery({
     toastRef,
@@ -113,9 +110,7 @@ export default function AddOrderPage() {
             })),
             isDraft: true,
           });
-
-          // ✅ ADDED: manual draft save
-          // removed broken auto-save because backend has no update draft endpoint
+          
           const saveDraft = async () => {
             if (!formik.values.table) {
               toastRef?.current?.show({
@@ -161,7 +156,6 @@ export default function AddOrderPage() {
             }
           };
 
-          // ✅ CHANGED: fire order now first creates draft if needed,
           // then calls the correct send-to-kds endpoint
           const fireOrder = async () => {
             if (!formik.values.table) {
@@ -184,7 +178,6 @@ export default function AddOrderPage() {
 
             let currentOrder = draftOrder;
 
-            // ✅ ADDED: if no draft exists, create one first
             if (!currentOrder) {
               try {
                 const draftResponse = await draftMutation.mutateAsync({
@@ -407,10 +400,14 @@ export default function AddOrderPage() {
                         className="border rounded px-2 py-1"
                       >
                         <option value="">Select</option>
-                        <option value="1">Table 1</option>
-                        <option value="2">Table 2</option>
-                        <option value="3">Table 3</option>
+                        {tables.map((table) => (
+                          <option key={table.id} value={table.id}>
+                            {table.tableName}
+                          </option>
+                        ))}
                       </select>
+                      {isTablesLoading && <p className="text-sm text-gray-500">Loading tables...</p>}
+                      {isTablesError && <p className="text-sm text-red-500">Failed to load tables.</p>}
                     </div>
                   </div>
 
@@ -506,7 +503,7 @@ export default function AddOrderPage() {
                         formik.values.orderItems.length === 0 ||
                         fireMutation.isPending ||
                         draftMutation.isPending
-                      } // ✅ CHANGED: removed !draftOrder so Fire can create draft first
+                      } 
                     />
                   </div>
                 </div>
