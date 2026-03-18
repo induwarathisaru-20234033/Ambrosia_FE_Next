@@ -20,7 +20,7 @@ import {
 import {
   buildOrderQueryParams,
   mapBackendOrderToUI,
-} from "@/utils/orderUtils.ts"; // ✅ CHANGED: imported shared order utility functions
+} from "@/utils/orderUtils.ts";
 
 import { YellowButton, WhiteButton } from "../layout";
 import OrderDrawer from "@/components/OrderDrawer";
@@ -108,13 +108,13 @@ export default function OrderManagementPage() {
     { enabled: true, toastRef }
   );
 
-  // ✅ CHANGED: mapping now uses shared utility function
+  // mapping now uses shared utility function
   const ongoingOrders: IOrder[] = useMemo(() => {
     const orders = ongoingOrdersResponse?.data?.items ?? [];
     return orders.map((order) => mapBackendOrderToUI(order, "ongoing"));
   }, [ongoingOrdersResponse]);
 
-  // ✅ CHANGED: mapping now uses shared utility function
+  // mapping now uses shared utility function
   const completedOrders: IOrder[] = useMemo(() => {
     const orders = completedOrdersResponse?.data?.items ?? [];
     return orders.map((order) => mapBackendOrderToUI(order, "completed"));
