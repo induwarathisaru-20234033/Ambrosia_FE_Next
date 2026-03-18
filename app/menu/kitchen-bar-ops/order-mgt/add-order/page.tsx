@@ -180,7 +180,7 @@ const deleteDraftItemMutation = useDeleteQuery({
               toastRef?.current?.show({
                 severity: "success",
                 summary: "Success",
-                detail: "Draft updated successfully!",
+                detail: "Order Saved successfully!",
                 life: 3000,
               });
 
@@ -204,7 +204,7 @@ const deleteDraftItemMutation = useDeleteQuery({
                 toastRef?.current?.show({
                   severity: "success",
                   summary: "Success",
-                  detail: "Order saved as draft successfully!",
+                  detail: "Order saved successfully!",
                   life: 3000,
                 });
               }
@@ -580,7 +580,7 @@ const deleteDraftItemMutation = useDeleteQuery({
                   <div className="mt-4">
                     <div className="flex gap-2 mb-2">
                       <Button
-                        text="Draft"
+                        text="Save"
                         id="draft-btn"
                         className="bg-white !border !border-[#FFD166] font-bold text-[#FFD166] py-2 flex-1 rounded"
                         state={true}
