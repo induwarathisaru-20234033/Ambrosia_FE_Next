@@ -44,6 +44,9 @@ export default function OrderManagementPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<IOrder | null>(null);
 
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [orderToAssign, setOrderToAssign] = useState<IOrder | null>(null);
+
   const initialFilterFormValues: OrderFilterFormValues = {
     orderNumber: "",
     tableName: "",
@@ -74,7 +77,7 @@ export default function OrderManagementPage() {
     customerName: "",
     orderDateFrom: "",
     orderDateTo: "",
-    status: 1, // Draft
+    status: 1,
     sortField: "orderDate",
     sortOrder: -1,
     pageNumber: 1,
@@ -159,7 +162,53 @@ export default function OrderManagementPage() {
     return orders.map((order) => mapBackendOrderToUI(order, "completed"));
   }, [completedOrdersResponse]);
 
-  const unassignedOrders: IOrder[] = [];
+  // UI-only mock data for now until BE is connected
+  const unassignedOrders: IOrder[] = [
+    {
+      orderId: "1",
+      tableNo: "AMB-ATZ5PUDHT",
+      email: "induwara@gmail.com",
+      phone: "",
+      waiterName: "-",
+      customerName: "induwara@gmail.com",
+      orderDate: "",
+      status: "unassigned",
+      orderStatus: undefined,
+    },
+    {
+      orderId: "2",
+      tableNo: "AMB-ATZ5PUDHT",
+      email: "induwara@gmail.com",
+      phone: "",
+      waiterName: "-",
+      customerName: "induwara@gmail.com",
+      orderDate: "",
+      status: "unassigned",
+      orderStatus: undefined,
+    },
+    {
+      orderId: "3",
+      tableNo: "AMB-ATZ5PUDHT",
+      email: "induwara@gmail.com",
+      phone: "",
+      waiterName: "-",
+      customerName: "induwara@gmail.com",
+      orderDate: "",
+      status: "unassigned",
+      orderStatus: undefined,
+    },
+    {
+      orderId: "4",
+      tableNo: "AMB-ATZ5PUDHT",
+      email: "induwara@gmail.com",
+      phone: "",
+      waiterName: "-",
+      customerName: "induwara@gmail.com",
+      orderDate: "",
+      status: "unassigned",
+      orderStatus: undefined,
+    },
+  ];
 
   const getOrderStatusLabel = (status?: number) => {
     switch (status) {
@@ -242,6 +291,27 @@ export default function OrderManagementPage() {
         life: 5000,
       });
     }
+  };
+
+  const openAssignModal = (order: IOrder) => {
+    setOrderToAssign(order);
+    setShowAssignModal(true);
+  };
+
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setOrderToAssign(null);
+  };
+
+  const handleAssignCustomer = () => {
+    toastRef?.current?.show({
+      severity: "success",
+      summary: "Success",
+      detail: "Customer assigned successfully",
+      life: 3000,
+    });
+
+    closeAssignModal();
   };
 
   const onOngoingPage = (event: any) => {
@@ -790,10 +860,6 @@ export default function OrderManagementPage() {
         </TabPanel>
 
         <TabPanel header="Unassigned Customers">
-          <p className="mb-3 text-gray-500">
-            No backend endpoint is available yet for unassigned customers.
-          </p>
-
           <DataTable
             stripedRows
             value={unassignedOrders}
@@ -801,22 +867,14 @@ export default function OrderManagementPage() {
             rows={10}
             responsiveLayout="scroll"
           >
-            <Column field="orderId" header="Order ID" />
             <Column field="tableNo" header="Table" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
+            <Column field="customerName" header="Customer" />
             <Column
-              field="orderStatus"
-              header="Status"
-              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
-            />
-            <Column
-              header="Actions"
+              header=""
               body={(rowData: IOrder) => (
-                <div className="flex gap-2">
-                  <YellowButton onClick={() => handleViewOrder(rowData)}>
-                    View Order
+                <div className="flex justify-center">
+                  <YellowButton onClick={() => openAssignModal(rowData)}>
+                    Assign
                   </YellowButton>
                 </div>
               )}
@@ -865,6 +923,51 @@ export default function OrderManagementPage() {
                   type="button"
                   className="border border-[#F0A84B] text-[#6B7280] px-10 py-2 rounded-md font-medium bg-white hover:bg-gray-50"
                   onClick={closeCancelModal}
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAssignModal && orderToAssign && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="bg-white w-[720px] max-w-[90%] rounded shadow-xl overflow-hidden">
+            <div className="bg-[#F0A84B] px-6 py-4 flex justify-between items-center relative">
+              <div className="w-full text-center">
+                <h2 className="text-white text-2xl font-semibold">
+                  Assign Customer
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="text-white text-3xl leading-none absolute right-6 top-1/2 -translate-y-1/2"
+                onClick={closeAssignModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-8 text-center">
+              <p className="text-2xl text-gray-600 font-semibold mb-8">
+                Do you want to assign this customer to yourself?
+              </p>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  type="button"
+                  className="bg-[#F0A84B] text-white px-10 py-2 rounded-md font-medium hover:opacity-90"
+                  onClick={handleAssignCustomer}
+                >
+                  Confirm
+                </button>
+
+                <button
+                  type="button"
+                  className="border border-[#F0A84B] text-[#6B7280] px-10 py-2 rounded-md font-medium bg-white hover:bg-gray-50"
+                  onClick={closeAssignModal}
                 >
                   Decline
                 </button>
