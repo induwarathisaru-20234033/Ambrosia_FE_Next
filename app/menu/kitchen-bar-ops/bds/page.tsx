@@ -10,6 +10,8 @@ import {
   type UserProfile,
 } from "@/utils/auth/userProfile";
 import { useGetQuery } from "@/services/queries/getQuery";
+import axiosAuth from "@/utils/AxiosInstance";
+import { useToastRef } from "@/contexts/ToastContext";
 import {
   IBaseApiResponse,
   IPaginatedData,
@@ -28,6 +30,7 @@ interface BDSTab {
   id: number;
   tabName: string;
   orderNumber: string;
+  orderStatus: number;
   items: BDSItem[];
 }
 
@@ -43,7 +46,11 @@ const getInitials = (name: string) => {
 };
 
 export default function BDSPage() {
+  const toastRef = useToastRef();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
 
   useEffect(() => {
     const cached = getCachedUserProfile();
@@ -89,21 +96,35 @@ export default function BDSPage() {
     IBaseApiResponse<IPaginatedData<IBackendOrder>>,
     Record<string, any>
   >(
-    ["bds-orders"],
+    ["bds-orders", refreshKey],
     "/orders",
     {
-      Status: 2, // Sent to KDS
       PageNumber: 1,
-      PageSize: 50,
+      PageSize: 100,
       SortField: "createdDate",
       SortOrder: 1,
-    }
+    },
+    { enabled: true, toastRef }
   );
+
+  const getItemStatusFromOrderStatus = (
+    orderStatus: number
+  ): "new" | "preparing" | "ready" => {
+    switch (orderStatus) {
+      case 3:
+        return "preparing";
+      case 5:
+        return "ready";
+      default:
+        return "new";
+    }
+  };
 
   const bdsTabs: BDSTab[] = useMemo(() => {
     const orders = ordersResponse?.data?.items ?? [];
 
     return orders
+      .filter((order) => [2, 3, 5].includes(order.orderStatus))
       .map((order) => {
         const drinkItems = order.items.filter(
           (item) =>
@@ -114,17 +135,66 @@ export default function BDSPage() {
           id: order.id,
           tabName: `#${order.orderNumber}`,
           orderNumber: "",
+          orderStatus: order.orderStatus,
           items: drinkItems.map((item) => ({
             id: item.id,
             name: item.menuItemName,
             quantity: item.quantity,
-            status: "new" as const,
+            status: getItemStatusFromOrderStatus(order.orderStatus),
             tag: userInitials,
           })),
         };
       })
       .filter((tab) => tab.items.length > 0);
   }, [ordersResponse, userInitials]);
+
+  const updateOrderStatus = async (
+    orderId: number,
+    status: number,
+    successMessage: string
+  ) => {
+    try {
+      setUpdatingOrderId(orderId);
+
+      await axiosAuth.put(`/orders/${orderId}/status`, {
+        orderId,
+        status,
+        reason: "Updated from BDS",
+      });
+
+      toastRef?.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: successMessage,
+        life: 3000,
+      });
+
+      setRefreshKey((prev) => prev + 1);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.[0] ||
+        error?.message ||
+        "Failed to update order status";
+
+      toastRef?.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleStartOrder = async (orderId: number) => {
+    await updateOrderStatus(orderId, 3, "Order status changed to Preparing");
+  };
+
+  const handleReadyOrder = async (orderId: number) => {
+    await updateOrderStatus(orderId, 5, "Order status changed to Ready");
+  };
 
   return (
     <div className="p-8">
@@ -155,7 +225,7 @@ export default function BDSPage() {
         >
           {bdsTabs.length === 0 ? (
             <p className="text-gray-700">
-              No drink orders in Sent to KDS status.
+              No drink orders available for bar display.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -164,13 +234,14 @@ export default function BDSPage() {
                   key={tab.id}
                   tabName={tab.tabName}
                   orderNumber={tab.orderNumber}
+                  orderStatus={tab.orderStatus}
                   items={tab.items}
+                  isUpdating={updatingOrderId === tab.id}
                   onAddClick={() => {
                     console.log(`Add clicked for ${tab.tabName}`);
                   }}
-                  onBumpClick={() => {
-                    console.log(`Bump clicked for ${tab.tabName}`);
-                  }}
+                  onStartClick={() => handleStartOrder(tab.id)}
+                  onReadyClick={() => handleReadyOrder(tab.id)}
                 />
               ))}
             </div>

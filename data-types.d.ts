@@ -436,7 +436,7 @@ export interface SearchOrderRequest {
   waiterName: string;
   customerName: string;
   orderDateFrom: string;
-  orderDateTo: string;;
+  orderDateTo: string;
   sortField?: string;
   sortOrder?: SortOrder | 0 | null;
   pageNumber: number;
