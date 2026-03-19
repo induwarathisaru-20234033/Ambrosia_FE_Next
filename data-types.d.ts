@@ -408,6 +408,7 @@ export interface IBackendOrderItem {
   id: number;
   menuItemId: number;
   menuItemName: string;
+  category: string;
   specialInstructions: string | null;
   quantity: number;
   unitPrice: number;
@@ -435,7 +436,7 @@ export interface SearchOrderRequest {
   waiterName: string;
   customerName: string;
   orderDateFrom: string;
-  orderDateTo: string;
+  orderDateTo: string;;
   sortField?: string;
   sortOrder?: SortOrder | 0 | null;
   pageNumber: number;
