@@ -818,7 +818,7 @@ a {
 }
 
 .floor-map-editor-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  border-bottom-color: #ff7d73;
+  border-bottom-color: #ff7d73 !important;
   color: #323232;
 }
 

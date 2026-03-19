@@ -6,21 +6,11 @@ import { InputSwitch } from "primereact/inputswitch";
 import { Button } from "primereact/button";
 import { ICanvasShape, ITable } from "@/data-types";
 
-export const mockTables: ITable[] = [
-  { id: 1, tableName: "T-1", capacity: 2, isOnlineBookingEnabled: true },
-  { id: 2, tableName: "T-2", capacity: 4, isOnlineBookingEnabled: true },
-  { id: 3, tableName: "T-3", capacity: 6, isOnlineBookingEnabled: false },
-  { id: 4, tableName: "T-4", capacity: 4, isOnlineBookingEnabled: true },
-  { id: 5, tableName: "T-5", capacity: 8, isOnlineBookingEnabled: true },
-  { id: 6, tableName: "T-6", capacity: 2, isOnlineBookingEnabled: false },
-  { id: 7, tableName: "T-7", capacity: 10, isOnlineBookingEnabled: true },
-  { id: 8, tableName: "T-8", capacity: 4, isOnlineBookingEnabled: true },
-  { id: 9, tableName: "T-9", capacity: 6, isOnlineBookingEnabled: false },
-  { id: 10, tableName: "T-10", capacity: 12, isOnlineBookingEnabled: true },
-];
-
 interface TablePropertiesProps {
   selectedShape: ICanvasShape | null;
+  tables: ITable[];
+  isTablesLoading: boolean;
+  isEditing: boolean;
   assignedTableIds: string[];
   onAssignTable: (shapeId: string, tableId: string | undefined) => void;
   onChangeFill: (shapeId: string, color: string) => void;
@@ -37,6 +27,9 @@ const fillColors = [
 
 const TableProperties: React.FC<TablePropertiesProps> = ({
   selectedShape,
+  tables,
+  isTablesLoading,
+  isEditing,
   assignedTableIds,
   onAssignTable,
   onChangeFill,
@@ -63,12 +56,12 @@ const TableProperties: React.FC<TablePropertiesProps> = ({
 
   const assignDropdownId = `assign-table-${selectedShape.id}`;
   const assignedTable = selectedShape.assignedTableId
-    ? mockTables.find(
+    ? tables.find(
         (table) => table.id.toString() === selectedShape.assignedTableId,
       )
     : null;
 
-  const availableTables = mockTables.filter(
+  const availableTables = tables.filter(
     (table) =>
       !assignedTableIds.includes(table.id.toString()) ||
       table.id.toString() === selectedShape.assignedTableId,
@@ -95,6 +88,7 @@ const TableProperties: React.FC<TablePropertiesProps> = ({
           inputId={assignDropdownId}
           value={selectedShape.assignedTableId ?? "unassigned"}
           options={dropdownOptions}
+          disabled={!isEditing || isTablesLoading}
           onChange={(e) =>
             onAssignTable(
               selectedShape.id,
@@ -153,9 +147,10 @@ const TableProperties: React.FC<TablePropertiesProps> = ({
             <button
               key={color}
               type="button"
+              disabled={!isEditing}
               onClick={() => onChangeFill(selectedShape.id, color)}
               aria-label={`Apply fill color ${color}`}
-              className="h-9 w-9 rounded-[6px] border transition-all"
+              className="h-9 w-9 rounded-[6px] border transition-all disabled:cursor-not-allowed disabled:opacity-60"
               style={{
                 backgroundColor: color,
                 borderColor:
@@ -174,6 +169,7 @@ const TableProperties: React.FC<TablePropertiesProps> = ({
         label="Remove"
         severity="danger"
         outlined
+        disabled={!isEditing}
         className="floor-map-remove-button !mt-8 !w-full"
         onClick={() => onRemoveShape(selectedShape.id)}
       />

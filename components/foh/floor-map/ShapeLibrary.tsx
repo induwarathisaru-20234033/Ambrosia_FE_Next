@@ -7,6 +7,7 @@ interface ShapeLibraryProps {
   shapes: ICanvasShape[];
   selectedShapeId: string | null;
   onSelectShape: (id: string | null) => void;
+  disabled: boolean;
 }
 
 const shapeOptions: {
@@ -38,6 +39,7 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
   shapes,
   selectedShapeId,
   onSelectShape,
+  disabled,
 }) => {
   return (
     <div className="space-y-6">
@@ -55,8 +57,9 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
           <button
             key={type}
             type="button"
+            disabled={disabled}
             onClick={() => onAddShape(type)}
-            className="group flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-[16px] border border-[#ffd3cb] bg-[#fff8f6] p-4 text-center transition-all hover:-translate-y-0.5 hover:border-[#ff8d82] hover:bg-[#fff1ee] hover:shadow-[0_12px_24px_rgba(255,107,107,0.12)]"
+            className="group flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-[16px] border border-[#ffd3cb] bg-[#fff8f6] p-4 text-center transition-all hover:-translate-y-0.5 hover:border-[#ff8d82] hover:bg-[#fff1ee] hover:shadow-[0_12px_24px_rgba(255,107,107,0.12)] disabled:cursor-not-allowed disabled:border-[#ececec] disabled:bg-[#f8f8f8] disabled:shadow-none"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#ff7f76] shadow-[0_6px_14px_rgba(255,107,107,0.12)] transition-colors group-hover:bg-[#ff7f76] group-hover:text-white">
               <Icon className="h-5 w-5" />

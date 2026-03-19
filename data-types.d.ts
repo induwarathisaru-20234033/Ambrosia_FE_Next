@@ -329,3 +329,18 @@ export interface ICanvasShape {
   fill: string;
   assignedTableId?: string;
 }
+
+export interface IApiFloorMapShape {
+  type: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  fill: string;
+  assignedTableId: number | null;
+}
+
+export interface IFloorMapData {
+  shapes?: IApiFloorMapShape[] | null;
+}

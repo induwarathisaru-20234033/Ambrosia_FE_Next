@@ -18,6 +18,7 @@ interface MapCanvasProps {
   onSelectShape: (id: string | null) => void;
   onUpdateShape: (id: string, updates: Partial<ICanvasShape>) => void;
   isPanMode: boolean;
+  isEditing: boolean;
   stageScale: number;
   stagePosition: { x: number; y: number };
   onStageScaleChange: (scale: number) => void;
@@ -34,6 +35,7 @@ const getStrokeProps = (isSelected: boolean) => ({
 const getCommonShapeProps = (
   shape: ICanvasShape,
   isPanMode: boolean,
+  isEditing: boolean,
   onSelectShape: (id: string | null) => void,
   handleDragEnd: (id: string, e: Konva.KonvaEventObject<DragEvent>) => void,
   handleTransformEnd: (id: string, e: Konva.KonvaEventObject<Event>) => void,
@@ -42,7 +44,7 @@ const getCommonShapeProps = (
   x: shape.x,
   y: shape.y,
   rotation: shape.rotation,
-  draggable: !isPanMode,
+  draggable: isEditing && !isPanMode,
   onClick: () => onSelectShape(shape.id),
   onTap: () => onSelectShape(shape.id),
   onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) =>
@@ -75,6 +77,7 @@ const renderCanvasShape = (
   shape: ICanvasShape,
   selectedShapeId: string | null,
   isPanMode: boolean,
+  isEditing: boolean,
   onSelectShape: (id: string | null) => void,
   handleDragEnd: (id: string, e: Konva.KonvaEventObject<DragEvent>) => void,
   handleTransformEnd: (id: string, e: Konva.KonvaEventObject<Event>) => void,
@@ -83,6 +86,7 @@ const renderCanvasShape = (
   const commonProps = getCommonShapeProps(
     shape,
     isPanMode,
+    isEditing,
     onSelectShape,
     handleDragEnd,
     handleTransformEnd,
@@ -156,6 +160,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
   onSelectShape,
   onUpdateShape,
   isPanMode,
+  isEditing,
   stageScale,
   stagePosition,
   onStageScaleChange,
@@ -182,6 +187,12 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
 
   useEffect(() => {
     if (!transformerRef.current || !stageRef.current) return;
+    if (!isEditing) {
+      transformerRef.current.nodes([]);
+      transformerRef.current.getLayer()?.batchDraw();
+      return;
+    }
+
     if (selectedShapeId) {
       const node = stageRef.current.findOne(`#${selectedShapeId}`);
       if (node) {
@@ -192,7 +203,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
       transformerRef.current.nodes([]);
       transformerRef.current.getLayer()?.batchDraw();
     }
-  }, [selectedShapeId, shapes]);
+  }, [selectedShapeId, shapes, isEditing]);
 
   const handleWheel = useCallback(
     (e: Konva.KonvaEventObject<WheelEvent>) => {
@@ -226,10 +237,13 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
   };
 
   const handleDragEnd = (id: string, e: Konva.KonvaEventObject<DragEvent>) => {
+    if (!isEditing) return;
     onUpdateShape(id, { x: e.target.x(), y: e.target.y() });
   };
 
   const handleTransformEnd = (id: string, e: Konva.KonvaEventObject<Event>) => {
+    if (!isEditing) return;
+
     const node = e.target;
     onUpdateShape(id, {
       x: node.x(),
@@ -274,6 +288,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
                 shape,
                 selectedShapeId,
                 isPanMode,
+                isEditing,
                 onSelectShape,
                 handleDragEnd,
                 handleTransformEnd,
@@ -281,7 +296,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
             )}
             <Transformer
               ref={transformerRef}
-              rotateEnabled
+              rotateEnabled={isEditing}
               enabledAnchors={[
                 "top-left",
                 "top-right",
