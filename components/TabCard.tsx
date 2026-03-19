@@ -19,6 +19,7 @@ interface TabCardProps {
   isUpdating?: boolean;
   onAddClick?: () => void;
   onStartClick?: () => void;
+  onOnHoldClick?: () => void;
   onReadyClick?: () => void;
 }
 
@@ -28,6 +29,8 @@ const getOrderStatusLabel = (orderStatus: number) => {
       return "Sent to KDS";
     case 3:
       return "Preparing";
+    case 4:
+      return "On Hold";
     case 5:
       return "Ready to Serve";
     default:
@@ -44,6 +47,7 @@ export default function TabCard({
   onAddClick,
   onStartClick,
   onReadyClick,
+  onOnHoldClick,
 }: TabCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 min-h-[260px] flex flex-col">
@@ -82,19 +86,29 @@ export default function TabCard({
       </div>
 
       <div className="mt-4 flex gap-3">
-        <YellowButton
-          onClick={onStartClick}
-          disabled={isUpdating || orderStatus !== 2}
-        >
-          {isUpdating && orderStatus === 2 ? "Starting..." : "Start"}
-        </YellowButton>
+        {(orderStatus === 2 || orderStatus === 4) && (
+          <YellowButton onClick={onStartClick} disabled={isUpdating}>
+            {isUpdating ? "Starting..." : "Start"}
+          </YellowButton>
+        )}
 
-        <WhiteButton
-          onClick={onReadyClick}
-          disabled={isUpdating || orderStatus !== 3}
-        >
-          {isUpdating && orderStatus === 3 ? "Updating..." : "Ready"}
-        </WhiteButton>
+        {(orderStatus === 2 || orderStatus === 3) && (
+          <WhiteButton onClick={onOnHoldClick} disabled={isUpdating}>
+            {isUpdating ? "Updating..." : "On Hold"}
+          </WhiteButton>
+        )}
+
+        {(orderStatus === 3 || orderStatus === 4) && (
+          <WhiteButton onClick={onReadyClick} disabled={isUpdating}>
+            {isUpdating ? "Updating..." : "Ready"}
+          </WhiteButton>
+        )}
+
+        {orderStatus === 5 && (
+          <div className="w-full rounded-md bg-[#d7b0e5] text-black text-[18px] font-bold py-2 text-center">
+            Ready to Serve
+          </div>
+        )}
       </div>
     </div>
   );

@@ -155,19 +155,19 @@ export default function OrderManagementPage() {
     setSelectedOrder(null);
   };
 
-  // ✅ ADDED: open cancel modal
+  // open cancel modal
   const openCancelModal = (order: IOrder) => {
     setOrderToCancel(order);
     setShowCancelModal(true);
   };
 
-  // ✅ ADDED: close cancel modal
+  // close cancel modal
   const closeCancelModal = () => {
     setShowCancelModal(false);
     setOrderToCancel(null);
   };
 
-  // ✅ CHANGED: actual cancel now happens only from modal confirm button
+  // ✅ actual cancel now happens only from modal confirm button
   const handleCancelOrder = async () => {
     if (!orderToCancel?.backendId) return;
 
