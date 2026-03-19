@@ -34,7 +34,7 @@ export default function TabCard({
       <div className="flex items-start justify-between mb-5">
         <div className="flex-1 text-center">
           <h2 className="text-[24px] font-bold text-black">
-            {tabName} - {orderNumber}
+            {orderNumber ? `${tabName} - ${orderNumber}` : tabName}
           </h2>
         </div>
 

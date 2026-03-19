@@ -9,6 +9,12 @@ import {
   getCachedUserProfile,
   type UserProfile,
 } from "@/utils/auth/userProfile";
+import { useGetQuery } from "@/services/queries/getQuery";
+import {
+  IBaseApiResponse,
+  IPaginatedData,
+  IBackendOrder,
+} from "@/data-types";
 
 interface BDSItem {
   id: number;
@@ -63,106 +69,62 @@ export default function BDSPage() {
   }, []);
 
   const displayName = useMemo(() => {
-    if (!profile) {
-      return "User";
-    }
+    if (!profile) return "User";
 
-    if (profile.name) {
-      return profile.name;
-    }
+    if (profile.name) return profile.name;
 
     const parts = [profile.given_name, profile.family_name].filter(Boolean);
-    if (parts.length) {
-      return parts.join(" ");
-    }
+    if (parts.length) return parts.join(" ");
 
     return profile.email || "User";
   }, [profile]);
 
   const userInitials = useMemo(() => getInitials(displayName), [displayName]);
 
-  const mockTabs: BDSTab[] = useMemo(
-    () => [
-      {
-        id: 1,
-        tabName: "Tab 9",
-        orderNumber: "#2340",
-        items: [
-          {
-            id: 1,
-            name: "Johnnie Walker Black – Bottle (750ml)",
-            quantity: 1,
-            status: "new",
-            tag: "⊕",
-          },
-        ],
-      },
-      {
-        id: 2,
-        tabName: "Tab 2",
-        orderNumber: "#2341",
-        items: [
-          {
-            id: 1,
-            name: "Johnnie Walker Black – Bottle (750ml)",
-            quantity: 2,
-            status: "preparing",
-            tag: userInitials,
-          },
-          {
-            id: 2,
-            name: "Lime Mojito",
-            quantity: 2,
-            status: "preparing",
-            tag: userInitials,
-          },
-        ],
-      },
-      {
-        id: 3,
-        tabName: "Tab 1",
-        orderNumber: "#2339",
-        items: [
-          {
-            id: 1,
-            name: "Johnnie Walker Black – Bottle (750ml)",
-            quantity: 2,
-            status: "preparing",
-            tag: userInitials,
-          },
-          {
-            id: 2,
-            name: "Lime Mojito",
-            quantity: 2,
-            status: "preparing",
-            tag: userInitials,
-          },
-        ],
-      },
-      {
-        id: 4,
-        tabName: "Tab 6",
-        orderNumber: "#2334",
-        items: [
-          {
-            id: 1,
-            name: "Johnnie Walker Black – Bottle (750ml)",
-            quantity: 1,
-            status: "preparing",
-            tag: userInitials,
-          },
-          {
-            id: 2,
-            name: "Lime Mojito",
-            quantity: 2,
-            status: "preparing",
-            tag: userInitials,
-          },
-        ],
-      },
-    ],
-    [userInitials]
+  const {
+    data: ordersResponse,
+    isLoading,
+    isError,
+  } = useGetQuery<
+    IBaseApiResponse<IPaginatedData<IBackendOrder>>,
+    Record<string, any>
+  >(
+    ["bds-orders"],
+    "/orders",
+    {
+      Status: 2, // Sent to KDS
+      PageNumber: 1,
+      PageSize: 50,
+      SortField: "createdDate",
+      SortOrder: 1,
+    }
   );
+
+  const bdsTabs: BDSTab[] = useMemo(() => {
+    const orders = ordersResponse?.data?.items ?? [];
+
+    return orders
+      .map((order) => {
+        const drinkItems = order.items.filter(
+          (item) =>
+            item.category?.toLowerCase() === "drinks" && item.isAvailable
+        );
+
+        return {
+          id: order.id,
+          tabName: `#${order.orderNumber}`,
+          orderNumber: "",
+          items: drinkItems.map((item) => ({
+            id: item.id,
+            name: item.menuItemName,
+            quantity: item.quantity,
+            status: "new" as const,
+            tag: userInitials,
+          })),
+        };
+      })
+      .filter((tab) => tab.items.length > 0);
+  }, [ordersResponse, userInitials]);
 
   return (
     <div className="p-8">
@@ -181,27 +143,40 @@ export default function BDSPage() {
         </div>
       </div>
 
-      <div
-        className="w-full rounded-sm p-4"
-        style={{ backgroundColor: "#ded0bc" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {mockTabs.map((tab) => (
-            <TabCard
-              key={tab.id}
-              tabName={tab.tabName}
-              orderNumber={tab.orderNumber}
-              items={tab.items}
-              onAddClick={() => {
-                console.log(`Add clicked for ${tab.tabName}`);
-              }}
-              onBumpClick={() => {
-                console.log(`Bump clicked for ${tab.tabName}`);
-              }}
-            />
-          ))}
+      {isLoading && <p>Loading bar orders...</p>}
+      {isError && (
+        <p className="text-red-500">Failed to load bar display orders.</p>
+      )}
+
+      {!isLoading && !isError && (
+        <div
+          className="w-full rounded-sm p-4"
+          style={{ backgroundColor: "#ded0bc" }}
+        >
+          {bdsTabs.length === 0 ? (
+            <p className="text-gray-700">
+              No drink orders in Sent to KDS status.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {bdsTabs.map((tab) => (
+                <TabCard
+                  key={tab.id}
+                  tabName={tab.tabName}
+                  orderNumber={tab.orderNumber}
+                  items={tab.items}
+                  onAddClick={() => {
+                    console.log(`Add clicked for ${tab.tabName}`);
+                  }}
+                  onBumpClick={() => {
+                    console.log(`Bump clicked for ${tab.tabName}`);
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
