@@ -113,6 +113,8 @@ export default function BDSPage() {
     switch (orderStatus) {
       case 3:
         return "preparing";
+      case 4:
+        return "preparing"; 
       case 5:
         return "ready";
       default:
@@ -124,7 +126,7 @@ export default function BDSPage() {
     const orders = ordersResponse?.data?.items ?? [];
 
     return orders
-      .filter((order) => [2, 3, 5].includes(order.orderStatus))
+      .filter((order) => [2, 3, 4, 5].includes(order.orderStatus))
       .map((order) => {
         const drinkItems = order.items.filter(
           (item) =>
@@ -196,6 +198,10 @@ export default function BDSPage() {
     await updateOrderStatus(orderId, 5, "Order status changed to Ready");
   };
 
+  const handleOnHoldOrder = async (orderId: number) => {
+  await updateOrderStatus(orderId, 4, "Order status changed to On Hold");
+};
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -241,6 +247,7 @@ export default function BDSPage() {
                     console.log(`Add clicked for ${tab.tabName}`);
                   }}
                   onStartClick={() => handleStartOrder(tab.id)}
+                  onOnHoldClick={() => handleOnHoldOrder(tab.id)}
                   onReadyClick={() => handleReadyOrder(tab.id)}
                 />
               ))}
