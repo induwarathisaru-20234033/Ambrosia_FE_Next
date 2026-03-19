@@ -315,6 +315,47 @@ export interface IPurchaseRequestListParams {
   createdDateTo?: string;
 }
 
+export interface IGoodReceiptNoteItem {
+  id?: number;
+  lineItemNo?: number;
+  prItemId?: number;
+  purchaseRequestItem?: {
+    id?: number;
+    lineItemNo?: number;
+    requestedQuantity?: number;
+    price?: number;
+    inventoryItemId?: number;
+    inventoryItem?: IInventoryItem | null;
+  } | null;
+  receivedQuantity?: number;
+  acceptedQuantity?: number;
+  rejectedQuantity?: number;
+  totalPrice?: number;
+  remarks?: string;
+}
+
+export interface IGoodReceiptNote {
+  id?: number | string;
+  grnNumber?: string;
+  supplier?: string;
+  receivedDate?: string;
+  receivedBy?: string;
+  receivedFacility?: string;
+  purchaseRequestId?: number;
+  grnStatus?: number;
+  items?: IGoodReceiptNoteItem[];
+}
+
+export interface IGoodReceiptNoteListParams {
+  pageNumber: number;
+  pageSize: number;
+  gRNNumber?: string;
+  supplier?: string;
+  receivedBy?: string;
+  grnStatus?: number;
+  receivedDateFrom?: Date | string;
+  receivedDateTo?: Date | string;
+}
 export interface IOrderItem {
   name: string;
   quantity: number;

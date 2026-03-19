@@ -462,7 +462,7 @@ export default function AddPurchaseRequestsPage() {
               <div className="mt-6">
                 <DataTable
                   value={lineItems}
-                  emptyMessage="No items added yet"
+                  emptyMessage=""
                   stripedRows
                   size="small"
                   tableStyle={tableStyle}
