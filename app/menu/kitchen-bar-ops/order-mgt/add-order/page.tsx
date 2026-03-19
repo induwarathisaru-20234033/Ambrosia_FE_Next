@@ -44,6 +44,7 @@ export default function AddOrderPage() {
   const toastRef = useToastRef();
   const searchParams = useSearchParams();
   const draftOrderId = searchParams.get("id");
+  console.log("draftOrderId:", draftOrderId);
   const [searchText, setSearchText] = useState("");
   const [draftOrder, setDraftOrder] = useState<{
     id: number;
@@ -132,6 +133,8 @@ const deleteDraftItemMutation = useDeleteQuery({
       >
         {(formik) => {
           useEffect(() => {
+            console.log("existingDraftResponse:", existingDraftResponse);
+
             const existingOrder = existingDraftResponse?.data;
 
             if (!existingOrder || draftOrder) return; // prevent overwrite
@@ -383,6 +386,16 @@ const deleteDraftItemMutation = useDeleteQuery({
           };
 
           const removeItemFromForm = async (menuItemId: number) => {
+              const item = formik.values.orderItems.find(
+                (i) => i.menuItemId === menuItemId
+              );
+
+              const confirmDelete = confirm(
+                `Remove "${item?.name}" from order?`
+              );
+
+              if (!confirmDelete) return;
+              
             const updatedItems = formik.values.orderItems.filter(
               (i) => i.menuItemId !== menuItemId
             );
@@ -394,6 +407,7 @@ const deleteDraftItemMutation = useDeleteQuery({
             }
           };
 
+          let instructionTimeout: any;
           const updateInstructions = async (menuItemId: number, value: string) => {
             const updatedItems = formik.values.orderItems.map((i) =>
               i.menuItemId === menuItemId
@@ -401,8 +415,12 @@ const deleteDraftItemMutation = useDeleteQuery({
                 : i
             );
             formik.setFieldValue("orderItems", updatedItems);
+
             if (draftOrder) {
-              await syncDraftItems(updatedItems);
+              clearTimeout(instructionTimeout);
+              instructionTimeout = setTimeout(async () => {
+                await syncDraftItems(updatedItems);
+              }, 500); // wait 0.5s after typing
             }
           };
 
