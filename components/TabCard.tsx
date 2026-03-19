@@ -7,7 +7,7 @@ interface BDSItem {
   id: number;
   name: string;
   quantity: number;
-  status: "new" | "preparing" | "ready";
+  status: "new" | "preparing" | "ready" | "onhold";
   tag?: string;
 }
 
@@ -30,7 +30,7 @@ const getOrderStatusLabel = (orderStatus: number) => {
     case 3:
       return "Preparing";
     case 4:
-      return "On Hold";
+      return "OnHold";
     case 5:
       return "Ready to Serve";
     default:

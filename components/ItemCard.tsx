@@ -3,7 +3,7 @@
 interface ItemCardProps {
   name: string;
   quantity: number;
-  status: "new" | "preparing" | "ready";
+  status: "new" | "preparing" | "ready" | "onhold";
   tag?: string;
 }
 
@@ -21,6 +21,8 @@ export default function ItemCard({
         return "bg-[#8db4e6]";
       case "ready":
         return "bg-[#d9b3e6]";
+      case "onhold":
+        return "bg-[#f08a8a]";
       default:
         return "bg-[#d9d9d9]";
     }

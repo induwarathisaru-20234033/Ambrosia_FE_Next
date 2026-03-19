@@ -22,7 +22,7 @@ interface BDSItem {
   id: number;
   name: string;
   quantity: number;
-  status: "new" | "preparing" | "ready";
+  status: "new" | "preparing" | "ready" | "onhold";
   tag?: string;
 }
 
@@ -109,12 +109,12 @@ export default function BDSPage() {
 
   const getItemStatusFromOrderStatus = (
     orderStatus: number
-  ): "new" | "preparing" | "ready" => {
+  ): "new" | "preparing" | "ready" | "onhold" => {
     switch (orderStatus) {
       case 3:
         return "preparing";
       case 4:
-        return "preparing"; 
+        return "onhold"; 
       case 5:
         return "ready";
       default:
