@@ -1,7 +1,7 @@
 "use client";
 
 import ItemCard from "@/components/ItemCard";
-import BumpButton from "@/components/BumpButton";
+import { YellowButton, WhiteButton } from "@/app/menu/kitchen-bar-ops/layout";
 
 interface BDSItem {
   id: number;
@@ -14,21 +14,37 @@ interface BDSItem {
 interface TabCardProps {
   tabName: string;
   orderNumber: string;
+  orderStatus: number;
   items: BDSItem[];
+  isUpdating?: boolean;
   onAddClick?: () => void;
-  onBumpClick?: () => void;
+  onStartClick?: () => void;
+  onReadyClick?: () => void;
 }
+
+const getOrderStatusLabel = (orderStatus: number) => {
+  switch (orderStatus) {
+    case 2:
+      return "Sent to KDS";
+    case 3:
+      return "Preparing";
+    case 5:
+      return "Ready to Serve";
+    default:
+      return "-";
+  }
+};
 
 export default function TabCard({
   tabName,
   orderNumber,
+  orderStatus,
   items,
+  isUpdating = false,
   onAddClick,
-  onBumpClick,
+  onStartClick,
+  onReadyClick,
 }: TabCardProps) {
-  const readyItems = items.filter((item) => item.status === "ready");
-  const nonReadyItems = items.filter((item) => item.status !== "ready");
-
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 min-h-[260px] flex flex-col">
       <div className="flex items-start justify-between mb-5">
@@ -47,8 +63,14 @@ export default function TabCard({
         </button>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {nonReadyItems.map((item) => (
+      <div className="mb-4">
+        <div className="inline-block rounded-md bg-[#f3f4f6] px-3 py-2 text-sm font-semibold text-gray-700">
+          {getOrderStatusLabel(orderStatus)}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 flex-1">
+        {items.map((item) => (
           <ItemCard
             key={item.id}
             name={item.name}
@@ -59,11 +81,21 @@ export default function TabCard({
         ))}
       </div>
 
-      {readyItems.length > 0 && (
-        <div className="mt-4">
-          <BumpButton onClick={onBumpClick} />
-        </div>
-      )}
+      <div className="mt-4 flex gap-3">
+        <YellowButton
+          onClick={onStartClick}
+          disabled={isUpdating || orderStatus !== 2}
+        >
+          {isUpdating && orderStatus === 2 ? "Starting..." : "Start"}
+        </YellowButton>
+
+        <WhiteButton
+          onClick={onReadyClick}
+          disabled={isUpdating || orderStatus !== 3}
+        >
+          {isUpdating && orderStatus === 3 ? "Updating..." : "Ready"}
+        </WhiteButton>
+      </div>
     </div>
   );
 }
