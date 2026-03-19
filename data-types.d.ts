@@ -317,7 +317,6 @@ export interface IPurchaseRequestListParams {
   createdDateTo?: string;
 }
 
-
 export interface ICanvasShape {
   id: string;
   type: ShapeType;
@@ -344,3 +343,111 @@ export interface IApiFloorMapShape {
 export interface IFloorMapData {
   shapes?: IApiFloorMapShape[] | null;
 }
+export interface IGoodReceiptNoteItem {
+  id?: number;
+  lineItemNo?: number;
+  prItemId?: number;
+  purchaseRequestItem?: {
+    id?: number;
+    lineItemNo?: number;
+    requestedQuantity?: number;
+    price?: number;
+    inventoryItemId?: number;
+    inventoryItem?: IInventoryItem | null;
+  } | null;
+  receivedQuantity?: number;
+  acceptedQuantity?: number;
+  rejectedQuantity?: number;
+  totalPrice?: number;
+  remarks?: string;
+}
+
+export interface IGoodReceiptNote {
+  id?: number | string;
+  grnNumber?: string;
+  supplier?: string;
+  receivedDate?: string;
+  receivedBy?: string;
+  receivedFacility?: string;
+  purchaseRequestId?: number;
+  grnStatus?: number;
+  items?: IGoodReceiptNoteItem[];
+}
+
+export interface IGoodReceiptNoteListParams {
+  pageNumber: number;
+  pageSize: number;
+  gRNNumber?: string;
+  supplier?: string;
+  receivedBy?: string;
+  grnStatus?: number;
+  receivedDateFrom?: Date | string;
+  receivedDateTo?: Date | string;
+}
+export interface IOrderItem {
+  name: string;
+  quantity: number;
+  price: string;
+}
+
+export interface IOrder {
+  orderId: string;
+  tableNo: string;
+  email: string;
+  phone: string;
+  waiterName: string;
+  customerName: string;
+  orderDate: string;
+  status: "ongoing" | "completed" | "unassigned";
+  items?: IOrderItem[];
+  backendId?: number;
+  orderStatus?: number;
+}
+
+export interface IBackendOrderItem {
+  id: number;
+  menuItemId: number;
+  menuItemName: string;
+  specialInstructions: string | null;
+  quantity: number;
+  unitPrice: number;
+  subTotal: number;
+  isAvailable: boolean;
+  createdDate: string;
+  itemStatus: number | null;
+}
+
+export interface IBackendOrder {
+  id: number;
+  orderNumber: string;
+  tableId: number | null;
+  tableName: string | null;
+  orderStatus: number;
+  createdDate: string;
+  updatedDate: string | null;
+  items: IBackendOrderItem[];
+}
+
+export interface SearchOrderRequest {
+  category?: string;
+  orderNumber: string;
+  tableName: string;
+  waiterName: string;
+  customerName: string;
+  orderDateFrom: string;
+  orderDateTo: string;
+  sortField?: string;
+  sortOrder?: SortOrder | 0 | null;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface OrderFilterFormValues {
+  orderNumber: string;
+  tableName: string;
+  waiterName: string;
+  customerName: string;
+  orderDateFrom: string;
+  orderDateTo: string;
+}
+
