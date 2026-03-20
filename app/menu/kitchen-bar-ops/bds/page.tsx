@@ -411,6 +411,46 @@ export default function BDSPage() {
     }
   };
 
+  const handleIncreaseItem = (tabId: string | number, itemId: number) => {
+    updateManualTab(tabId, (tab) => ({
+      ...tab,
+      items: tab.items.map(item =>
+        item.id === itemId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    }));
+  };
+
+  const handleDecreaseItem = (tabId: string | number, itemId: number) => {
+    updateManualTab(tabId, (tab) => {
+      const item = tab.items.find(i => i.id === itemId);
+      if (item && item.quantity <= 1) {
+        // Remove item if quantity would become 0
+        return {
+          ...tab,
+          items: tab.items.filter(i => i.id !== itemId)
+        };
+      }
+      return {
+        ...tab,
+        items: tab.items.map(item =>
+          item.id === itemId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+      };
+    });
+  };
+
+  const handleRemoveItem = (tabId: string | number, itemId: number) => {
+    updateManualTab(tabId, (tab) => ({
+      ...tab,
+      items: tab.items.filter(i => i.id !== itemId)
+    }));
+  };
+
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -451,9 +491,7 @@ export default function BDSPage() {
                     items={tab.items}
                     isManual={!!tab.isManual}
                     isPlaced={!!tab.isPlaced}
-                    isUpdating={
-                      numericTabId !== null && updatingOrderId === numericTabId
-                    }
+                    isUpdating={numericTabId !== null && updatingOrderId === numericTabId}
                     isPlusDisabled={!tab.isManual || !!tab.isPlaced}
                     onAddClick={() => handleOpenItemDetailModal(tab)}
                     onPlaceOrder={
@@ -474,6 +512,21 @@ export default function BDSPage() {
                     onReadyClick={
                       numericTabId !== null
                         ? () => handleReadyOrder(numericTabId)
+                        : undefined
+                    }
+                    onIncreaseItem={
+                      tab.isManual && !tab.isPlaced
+                        ? (itemId: number) => handleIncreaseItem(tab.id, itemId)
+                        : undefined
+                    }
+                    onDecreaseItem={
+                      tab.isManual && !tab.isPlaced
+                        ? (itemId: number) => handleDecreaseItem(tab.id, itemId)
+                        : undefined
+                    }
+                    onRemoveItem={
+                      tab.isManual && !tab.isPlaced
+                        ? (itemId: number) => handleRemoveItem(tab.id, itemId)
                         : undefined
                     }
                   />
