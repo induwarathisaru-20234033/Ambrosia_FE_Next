@@ -63,6 +63,10 @@ export default function ItemDetailModal({
       price: selectedItem.price,
       quantity,
     });
+      // reset fields after adding item, while keeping modal open
+      setKeyword("");
+      setSelectedItemId(null);
+      setQuantity(1);
   };
 
   if (!isOpen) return null;
