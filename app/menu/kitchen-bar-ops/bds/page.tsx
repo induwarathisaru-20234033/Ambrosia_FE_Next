@@ -44,6 +44,7 @@ interface BDSTab {
   id: number | string;
   tabName: string;
   orderNumber: string;
+  tableName?: string | null;
   orderStatus: number;
   items: BDSItem[];
   isManual?: boolean;
@@ -191,6 +192,7 @@ export default function BDSPage() {
           tabName: `Tab ${index + 1}`,
           orderNumber: order.orderNumber,
           orderStatus: order.orderStatus,
+          tableName: order.tableName,
           isManual: false,
           isPlaced: true,
           items: drinkItems.map((item) => ({
@@ -282,6 +284,7 @@ export default function BDSPage() {
       id: `manual-${Date.now()}`,
       tabName: `Direct Tab ${nextNumber}`,
       orderNumber: "",
+      tableName: "",
       orderStatus: 1,
       items: [],
       isManual: true,
@@ -492,6 +495,7 @@ export default function BDSPage() {
                     key={tab.id}
                     tabName={tab.tabName}
                     orderNumber={tab.orderNumber}
+                    tableName={tab.tableName}
                     orderStatus={tab.orderStatus}
                     items={tab.items}
                     isManual={!!tab.isManual}

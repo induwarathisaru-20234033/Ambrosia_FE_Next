@@ -17,6 +17,7 @@ interface BDSItem {
 interface TabCardProps {
   tabName: string;
   orderNumber: string;
+  tableName?: string | null;
   orderStatus: number;
   items: BDSItem[];
   isManual?: boolean;
@@ -53,6 +54,7 @@ const getOrderStatusLabel = (orderStatus: number) => {
 export default function TabCard({
   tabName,
   orderNumber,
+  tableName,
   orderStatus,
   items,
   isManual = false,
@@ -82,7 +84,13 @@ export default function TabCard({
           <h2 className="text-[24px] font-bold text-black">
             {orderNumber ? `${tabName} - #${orderNumber}` : tabName}
           </h2>
+          {tableName && (
+            <div className="text-[12px] text-gray-400 mt-1">
+              {tableName}
+            </div>
+          )}
         </div>
+        
 
         <button
           type="button"
