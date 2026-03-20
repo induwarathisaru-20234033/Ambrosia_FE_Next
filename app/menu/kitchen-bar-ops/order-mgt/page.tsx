@@ -167,7 +167,7 @@ export default function OrderManagementPage() {
     setOrderToCancel(null);
   };
 
-  // ✅ actual cancel now happens only from modal confirm button
+  // actual cancel now happens only from modal confirm button
   const handleCancelOrder = async () => {
     if (!orderToCancel?.backendId) return;
 
