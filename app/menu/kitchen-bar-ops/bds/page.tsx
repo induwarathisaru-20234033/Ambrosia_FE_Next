@@ -443,6 +443,13 @@ const handleDecreaseItem = (tabId: string | number, itemId: number) => {
   });
 };
 
+const handleRemoveItem = (tabId: string | number, itemId: number) => {
+  updateManualTab(tabId, (tab) => ({
+    ...tab,
+    items: tab.items.filter(i => i.id !== itemId)
+  }));
+};
+
 
   return (
     <div className="p-8">
