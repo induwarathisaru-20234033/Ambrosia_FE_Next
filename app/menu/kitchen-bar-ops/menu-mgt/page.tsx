@@ -280,6 +280,16 @@ export default function MenuPage() {
         <Col>
           <h1 className="kbo-title">Menu Management</h1>
         </Col>
+
+        <Col xs="auto">
+          <YellowButton
+            onClick={() => {
+              window.location.href = "/menu/kitchen-bar-ops";
+            }}
+          >
+            Back
+          </YellowButton>
+        </Col>
       </Row>
 
       {/* Add Menu Item Form */}
