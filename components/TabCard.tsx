@@ -28,6 +28,9 @@ interface TabCardProps {
   onStartClick?: () => void;
   onOnHoldClick?: () => void;
   onReadyClick?: () => void;
+  onIncreaseItem?: (itemId: number) => void;
+  onDecreaseItem?: (itemId: number) => void;
+  onRemoveItem?: (itemId: number) => void;
 }
 
 const getOrderStatusLabel = (orderStatus: number) => {
@@ -61,8 +64,12 @@ export default function TabCard({
   onStartClick,
   onReadyClick,
   onOnHoldClick,
+  onIncreaseItem,
+  onDecreaseItem,
+  onRemoveItem,
 }: TabCardProps) {
   const isManualDraftCard = isManual && !isPlaced;
+  const allowItemModifications = isManualDraftCard;
 
   return (
     <div
@@ -108,6 +115,10 @@ export default function TabCard({
               quantity={item.quantity}
               status={item.status}
               tag={item.tag}
+              allowModifications={allowItemModifications}
+              onIncrease={allowItemModifications ? () => onIncreaseItem?.(item.id) : undefined}
+              onDecrease={allowItemModifications ? () => onDecreaseItem?.(item.id) : undefined}
+              onRemove={allowItemModifications ? () => onRemoveItem?.(item.id) : undefined}
             />
           ))
         ) : isManualDraftCard ? (
