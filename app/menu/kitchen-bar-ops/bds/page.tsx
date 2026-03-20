@@ -411,6 +411,17 @@ export default function BDSPage() {
     }
   };
 
+const handleIncreaseItem = (tabId: string | number, itemId: number) => {
+  updateManualTab(tabId, (tab) => ({
+    ...tab,
+    items: tab.items.map(item =>
+      item.id === itemId 
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    )
+  }));
+};
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
