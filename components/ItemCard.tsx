@@ -32,10 +32,11 @@ export default function ItemCard({
 
   return (
     <div
-      className={`rounded-md px-3 py-3 flex items-center justify-between ${getCardBg()}`}
+      className={`rounded-lg px-3 py-3 flex items-center justify-between border border-black/10 shadow-[0_4px_10px_rgba(0,0,0,0.12)] transition-all duration-150 
+        hover:-translate-y-[2px] hover:shadow-[0_8px_16px_rgba(0,0,0,0.16)] ${getCardBg()}`}
     >
       <div className="flex items-center gap-3 pr-3">
-        <div className="min-w-[28px] h-[28px] rounded-sm bg-[#153e75] text-white flex items-center justify-center text-sm font-bold">
+        <div className="min-w-[28px] h-[28px] rounded-md bg-[#153e75] text-white flex items-center justify-center text-sm font-bold shadow-[0_3px_6px_rgba(0,0,0,0.25)]">
           {quantity}
         </div>
 
@@ -46,12 +47,12 @@ export default function ItemCard({
 
       {tag && (
         <div
-          className={`min-w-[34px] h-[34px] rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0
-            ${
-              isUserInitialTag
-                ? "bg-[#ff6b5f] text-white border border-black"
-                : "bg-white text-black border border-dashed border-black"
-            }`}
+        className={`min-w-[34px] h-[34px] rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.18)]
+          ${
+            isUserInitialTag
+              ? "bg-[#ff6b5f] text-white border border-black/30"
+              : "bg-white text-black border border-dashed border-black/50"
+          }`}
         >
           {tag}
         </div>
