@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TabCard from "@/components/TabCard";
 import ItemDetailModal from "@/components/ItemDetailModal";
+import PlaceDirectOrderModal from "@/components/PlaceDirectOrderModal";
 import { YellowButton } from "../layout";
 import "../styles/kitchen-bar-ops.css";
 import {
@@ -17,9 +18,8 @@ import {
   IBaseApiResponse,
   IPaginatedData,
   IBackendOrder,
+  ITable,
 } from "@/data-types";
-
-const DIRECT_BAR_TABLE_ID = 1; // TODO: replace with real Direct Bar table id
 
 interface MenuItem {
   id: number;
@@ -42,7 +42,6 @@ interface BDSItem {
 
 interface BDSTab {
   id: number | string;
-  backendOrderId?: number;
   tabName: string;
   orderNumber: string;
   orderStatus: number;
@@ -78,7 +77,9 @@ export default function BDSPage() {
 
   const [manualTabs, setManualTabs] = useState<BDSTab[]>([]);
   const [selectedManualTab, setSelectedManualTab] = useState<BDSTab | null>(null);
+
   const [isItemDetailModalOpen, setIsItemDetailModalOpen] = useState(false);
+  const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
 
   useEffect(() => {
     const cached = getCachedUserProfile();
@@ -148,9 +149,16 @@ export default function BDSPage() {
     { enabled: true, toastRef }
   );
 
+  const { data: tablesResponse } = useGetQuery<
+    IBaseApiResponse<ITable[]>,
+    undefined
+  >(["bds-tables"], "/tables", undefined, { enabled: true, toastRef });
+
   const drinkMenuItems: MenuItem[] = Array.isArray(menuResponse)
     ? menuResponse
     : menuResponse?.data ?? [];
+
+  const tables: ITable[] = tablesResponse?.data ?? [];
 
   const getItemStatusFromOrderStatus = (
     orderStatus: number
@@ -180,7 +188,6 @@ export default function BDSPage() {
 
         return {
           id: order.id,
-          backendOrderId: order.id,
           tabName: `Tab ${index + 1}`,
           orderNumber: order.orderNumber,
           orderStatus: order.orderStatus,
@@ -256,16 +263,6 @@ export default function BDSPage() {
     );
   };
 
-  const buildDraftPayload = (items: BDSItem[]) => ({
-    tableId: DIRECT_BAR_TABLE_ID,
-    items: items.map((item) => ({
-      menuItemId: item.menuItemId,
-      quantity: item.quantity,
-      specialInstructions: item.specialInstructions ?? "",
-    })),
-    isDraft: true,
-  });
-
   const handleStartOrder = async (orderId: number) => {
     await updateOrderStatus(orderId, 3, "Order status changed to Preparing");
   };
@@ -276,53 +273,6 @@ export default function BDSPage() {
 
   const handleOnHoldOrder = async (orderId: number) => {
     await updateOrderStatus(orderId, 4, "Order status changed to On Hold");
-  };
-
-  const handlePlaceManualOrder = async (tab: BDSTab) => {
-    if (!tab.backendOrderId) {
-      toastRef?.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Add at least one item first",
-        life: 3000,
-      });
-      return;
-    }
-
-    try {
-      await axiosAuth.post(`/orders/${tab.backendOrderId}/send-to-kds`, {
-        orderId: tab.backendOrderId,
-        tableId: DIRECT_BAR_TABLE_ID,
-      });
-
-      updateManualTab(tab.id, (currentTab) => ({
-        ...currentTab,
-        isPlaced: true,
-        orderStatus: 2,
-      }));
-
-      toastRef?.current?.show({
-        severity: "success",
-        summary: "Success",
-        detail: "Direct bar order placed successfully",
-        life: 3000,
-      });
-
-      setRefreshKey((prev) => prev + 1);
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.errors?.[0] ||
-        error?.message ||
-        "Failed to place direct bar order";
-
-      toastRef?.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: errorMessage,
-        life: 5000,
-      });
-    }
   };
 
   const handleCreateNewTab = () => {
@@ -353,7 +303,19 @@ export default function BDSPage() {
     setIsItemDetailModalOpen(false);
   };
 
-  const handleEnterItemToManualTab = async (selectedItem: DirectBarModalItem) => {
+  const handleOpenPlaceOrderModal = (tab: BDSTab) => {
+    if (!tab.isManual || tab.isPlaced) return;
+
+    setSelectedManualTab(tab);
+    setIsPlaceOrderModalOpen(true);
+  };
+
+  const handleClosePlaceOrderModal = () => {
+    setSelectedManualTab(null);
+    setIsPlaceOrderModalOpen(false);
+  };
+
+  const handleEnterItemToManualTab = (selectedItem: DirectBarModalItem) => {
     if (!selectedManualTab) return;
 
     const currentTab = manualTabs.find((tab) => tab.id === selectedManualTab.id);
@@ -387,53 +349,58 @@ export default function BDSPage() {
       ];
     }
 
-    const previousItems = currentTab.items;
-
     updateManualTab(currentTab.id, (tab) => ({
       ...tab,
       items: updatedItems,
     }));
 
+    handleCloseItemDetailModal();
+  };
+
+  const handlePlaceManualOrder = async (tableId: number) => {
+    if (!selectedManualTab) return;
+
+    const currentTab = manualTabs.find((tab) => tab.id === selectedManualTab.id);
+    if (!currentTab) return;
+
+    if (currentTab.items.length === 0) {
+      toastRef?.current?.show({
+        severity: "warn",
+        summary: "Validation",
+        detail: "Add at least one item first",
+        life: 3000,
+      });
+      return;
+    }
+
     try {
-      if (!currentTab.backendOrderId) {
-        const response = await axiosAuth.post("/orders", buildDraftPayload(updatedItems));
-        const createdOrder = response.data?.data;
+      await axiosAuth.post("/orders", {
+        tableId,
+        items: currentTab.items.map((item) => ({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity,
+          specialInstructions: item.specialInstructions ?? "",
+        })),
+        isDraft: false,
+      });
 
-        if (!createdOrder?.id || !createdOrder?.orderNumber) {
-          throw new Error("Failed to create direct bar draft order");
-        }
+      setManualTabs((prev) => prev.filter((tab) => tab.id !== currentTab.id));
 
-        updateManualTab(currentTab.id, (tab) => ({
-          ...tab,
-          backendOrderId: createdOrder.id,
-          orderNumber: createdOrder.orderNumber,
-          tabName: `#${createdOrder.orderNumber}`,
-          orderStatus: 1,
-          items: updatedItems,
-        }));
-      } else {
-        await axiosAuth.put(`/orders/${currentTab.backendOrderId}/items`, {
-          orderId: currentTab.backendOrderId,
-          items: updatedItems.map((item) => ({
-            menuItemId: item.menuItemId,
-            quantity: item.quantity,
-            specialInstructions: item.specialInstructions ?? "",
-          })),
-        });
-      }
+      toastRef?.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: "Direct bar order placed successfully",
+        life: 3000,
+      });
 
-      handleCloseItemDetailModal();
+      handleClosePlaceOrderModal();
+      setRefreshKey((prev) => prev + 1);
     } catch (error: any) {
-      updateManualTab(currentTab.id, (tab) => ({
-        ...tab,
-        items: previousItems,
-      }));
-
       const errorMessage =
         error?.response?.data?.message ||
         error?.response?.data?.errors?.[0] ||
         error?.message ||
-        "Failed to update direct bar tab";
+        "Failed to place direct bar order";
 
       toastRef?.current?.show({
         severity: "error",
@@ -491,7 +458,7 @@ export default function BDSPage() {
                     onAddClick={() => handleOpenItemDetailModal(tab)}
                     onPlaceOrder={
                       tab.isManual && !tab.isPlaced
-                        ? () => handlePlaceManualOrder(tab)
+                        ? () => handleOpenPlaceOrderModal(tab)
                         : undefined
                     }
                     onStartClick={
@@ -523,6 +490,13 @@ export default function BDSPage() {
         tabName={selectedManualTab?.tabName ?? ""}
         drinkItems={drinkMenuItems}
         onEnter={handleEnterItemToManualTab}
+      />
+
+      <PlaceDirectOrderModal
+        isOpen={isPlaceOrderModalOpen}
+        onClose={handleClosePlaceOrderModal}
+        tables={tables}
+        onConfirm={handlePlaceManualOrder}
       />
     </div>
   );

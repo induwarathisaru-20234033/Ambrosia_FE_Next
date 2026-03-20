@@ -5,6 +5,8 @@ export type DateTimeFormatMode = "date" | "time" | "datetime";
 export type NullableNumberLike = number | string | null;
 export type NullableString = string | null;
 
+export type ShapeType = "round" | "square" | "rectangle" | "booth";
+
 export interface IBaseApiResponse<T> {
   succeeded: boolean;
   message: string;
@@ -315,6 +317,73 @@ export interface IPurchaseRequestListParams {
   createdDateTo?: string;
 }
 
+export interface ICanvasShape {
+  id: string;
+  type: ShapeType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  fill: string;
+  assignedTableId?: string;
+}
+
+export interface IApiFloorMapShape {
+  type: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  fill: string;
+  assignedTableId: number | null;
+}
+
+export interface IFloorMapData {
+  shapes?: IApiFloorMapShape[] | null;
+}
+export interface IGoodReceiptNoteItem {
+  id?: number;
+  lineItemNo?: number;
+  prItemId?: number;
+  purchaseRequestItem?: {
+    id?: number;
+    lineItemNo?: number;
+    requestedQuantity?: number;
+    price?: number;
+    inventoryItemId?: number;
+    inventoryItem?: IInventoryItem | null;
+  } | null;
+  receivedQuantity?: number;
+  acceptedQuantity?: number;
+  rejectedQuantity?: number;
+  totalPrice?: number;
+  remarks?: string;
+}
+
+export interface IGoodReceiptNote {
+  id?: number | string;
+  grnNumber?: string;
+  supplier?: string;
+  receivedDate?: string;
+  receivedBy?: string;
+  receivedFacility?: string;
+  purchaseRequestId?: number;
+  grnStatus?: number;
+  items?: IGoodReceiptNoteItem[];
+}
+
+export interface IGoodReceiptNoteListParams {
+  pageNumber: number;
+  pageSize: number;
+  gRNNumber?: string;
+  supplier?: string;
+  receivedBy?: string;
+  grnStatus?: number;
+  receivedDateFrom?: Date | string;
+  receivedDateTo?: Date | string;
+}
 export interface IOrderItem {
   name: string;
   quantity: number;
