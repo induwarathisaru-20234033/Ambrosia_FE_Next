@@ -354,7 +354,12 @@ export default function BDSPage() {
       items: updatedItems,
     }));
 
-    handleCloseItemDetailModal();
+      toastRef?.current?.show({
+      severity: "success",
+      summary: "Success",
+      detail: `${selectedItem.name} added to ${currentTab.tabName}`,
+      life: 2000,
+    });
   };
 
   const handlePlaceManualOrder = async (tableId: number) => {
