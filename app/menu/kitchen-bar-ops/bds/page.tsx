@@ -422,6 +422,28 @@ const handleIncreaseItem = (tabId: string | number, itemId: number) => {
   }));
 };
 
+const handleDecreaseItem = (tabId: string | number, itemId: number) => {
+  updateManualTab(tabId, (tab) => {
+    const item = tab.items.find(i => i.id === itemId);
+    if (item && item.quantity <= 1) {
+      // Remove item if quantity would become 0
+      return {
+        ...tab,
+        items: tab.items.filter(i => i.id !== itemId)
+      };
+    }
+    return {
+      ...tab,
+      items: tab.items.map(item =>
+        item.id === itemId 
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    };
+  });
+};
+
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
