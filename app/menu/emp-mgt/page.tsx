@@ -92,6 +92,8 @@ export default function ViewEmployeePage() {
     setFilters(updated);
   };
 
+  const [activeIndex, setActiveIndex] = useState(0);
+
   return (
     <Container fluid>
       <Row className="align-items-center mb-4">
@@ -103,17 +105,27 @@ export default function ViewEmployeePage() {
 
         <Col xs="auto">
           <Button
-            id="addEmployeeBtn"
-            text="Add Employee"
+            id="addBtn"
+            text={activeIndex === 0 ? "Add Employee" : "Add Custom Role"}
             type="button"
             className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
             state={true}
-            onClick={() => router.push("/menu/emp-mgt/employee/add")}
+            onClick={() =>
+              router.push(
+                activeIndex === 0
+                  ? "/menu/emp-mgt/employee/add"
+                  : "/menu/emp-mgt/roles/add-custom-role",
+              )
+            }
           />
         </Col>
       </Row>
 
-      <TabView className="custom-tabs mb-4">
+      <TabView
+          className="custom-tabs mb-4"
+          activeIndex={activeIndex}
+          onTabChange={(e) => setActiveIndex(e.index)}
+        >
         <TabPanel header="Employees">
           <Formik
             initialValues={filters}
