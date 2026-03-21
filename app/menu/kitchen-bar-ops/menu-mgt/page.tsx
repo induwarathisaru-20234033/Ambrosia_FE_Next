@@ -12,6 +12,7 @@ import "primeicons/primeicons.css";
 
 import { YellowButton } from "../layout";
 import "../styles/kitchen-bar-ops.css";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 interface MenuItem {
   id: number;
@@ -282,13 +283,7 @@ export default function MenuPage() {
         </Col>
 
         <Col xs="auto">
-          <YellowButton
-            onClick={() => {
-              window.location.href = "/menu/kitchen-bar-ops";
-            }}
-          >
-            Back
-          </YellowButton>
+          <OrderMgtBackButton />
         </Col>
       </Row>
 
