@@ -121,7 +121,7 @@ export default function KitchenCard({
             <button
               onClick={onHoldClick}
               disabled={isUpdating}
-              className="flex-1 py-2 rounded-xl bg-red-400 hover:bg-red-500 text-white font-bold disabled:opacity-50 transition-all active:scale-95"
+              className="flex-1 py-2 rounded-xl bg-orange-300 hover:bg-orange-400 text-white font-bold disabled:opacity-50 transition-all active:scale-95"
             >
               {isUpdating ? "..." : "Hold"}
             </button>
