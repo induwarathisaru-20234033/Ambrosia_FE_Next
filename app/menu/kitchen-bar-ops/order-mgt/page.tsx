@@ -577,48 +577,13 @@ export default function OrderManagementPage() {
             />
           </DataTable>
         </TabPanel>
-
-        <TabPanel header="Unassigned Customers">
-          <p className="mb-3 text-gray-500">
-            No backend endpoint is available yet for unassigned customers.
-          </p>
-
-          <DataTable
-            stripedRows
-            value={unassignedOrders}
-            paginator
-            rows={10}
-            responsiveLayout="scroll"
-          >
-            <Column field="orderId" header="Order ID" />
-            <Column field="tableNo" header="Table" />
-            <Column field="waiterName" header="Waiter Name" />
-            <Column field="customerName" header="Customer Name" />
-            <Column field="orderDate" header="Order Date" />
-            <Column
-              field="orderStatus"
-              header="Status"
-              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
-            />
-            <Column
-              header="Actions"
-              body={(rowData: IOrder) => (
-                <div className="flex gap-2">
-                  <YellowButton onClick={() => handleViewOrder(rowData)}>
-                    View Order
-                  </YellowButton>
-                </div>
-              )}
-            />
-          </DataTable>
-        </TabPanel>
       </TabView>
 
       {isDrawerOpen && selectedOrder && (
         <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />
       )}
 
-      {/* ✅ ADDED: Custom Cancel Order Modal */}
+      {/* Custom Cancel Order Modal */}
       {showCancelModal && orderToCancel && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
           <div className="bg-white w-[720px] max-w-[90%] rounded shadow-xl overflow-hidden">
