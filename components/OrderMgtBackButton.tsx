@@ -3,12 +3,30 @@
 import { useRouter } from "next/navigation";
 import { YellowButton } from "@/app/menu/kitchen-bar-ops/layout";
 
-export default function OrderMgtBackButton() {
+interface OrderMgtBackButtonProps {
+  text?: string;
+  fallbackPath?: string;
+  className?: string;
+}
+
+export default function OrderMgtBackButton({
+  text = "Back",
+  fallbackPath = "/menu/order-mgt",
+  className = "",
+}: OrderMgtBackButtonProps) {
   const router = useRouter();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallbackPath);
+    }
+  };
+
   return (
-    <YellowButton onClick={() => router.back()}>
-      Back
+    <YellowButton onClick={handleBack} className={className}>
+      {text}
     </YellowButton>
   );
 }
