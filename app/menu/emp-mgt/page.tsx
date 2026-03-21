@@ -348,7 +348,7 @@ export default function ViewEmployeePage() {
                       id="clearFilterEmployeeBtn"
                       text="Clear"
                       type="button"
-                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md"
+                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                       state={true}
                       onClick={() => {
                         resetForm({ values: initialEmployeeFilters });
@@ -448,7 +448,7 @@ export default function ViewEmployeePage() {
                       id="clearFilterRoleBtn"
                       text="Clear"
                       type="button"
-                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md"
+                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                       state={true}
                       onClick={() => {
                         resetForm({ values: initialRoleFilters });
@@ -516,7 +516,7 @@ export default function ViewEmployeePage() {
 
                   <button
                     type="button"
-                    className="bg-white border border-[#0086ED] text-[#0086ED] py-1 px-3 rounded-md hover:bg-[#E6F0FF]"
+                    className="bg-white border border-[#0086ED] text-[#0086ED] py-1 px-3 rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                     onClick={() => handleViewRole(rowData.id)}
                   >
                     View
