@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { TabView, TabPanel } from "primereact/tabview";
 import { useToastRef } from "@/contexts/ToastContext";
 import ViewRoleDrawer from "@/components/ViewRoleDrawer";
+import AssignRoleModal from "@/components/AssignRoleModal";
 import {
   IBaseApiResponse,
   IPaginatedApiResponse,
@@ -86,6 +87,8 @@ export default function ViewEmployeePage() {
   const [activeIndex, setActiveIndex] = useState(tabParam === "roles" ? 1 : 0);
   const [isViewRoleOpen, setIsViewRoleOpen] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [selectedRoleForAssign, setSelectedRoleForAssign] = useState<IRole | null>(null);
 
   const initialEmployeeFilters: SearchEmployeeRequest = {
     employeeId: "",
@@ -215,8 +218,14 @@ export default function ViewEmployeePage() {
     router.push(`/menu/emp-mgt/roles/${id}`);
   };
 
-  const handleAssignRole = (id: number) => {
-    router.push(`/menu/emp-mgt/roles/${id}/assign`);
+  const handleAssignRole = (role: IRole) => {
+    setSelectedRoleForAssign(role);
+    setAssignModalVisible(true);
+  };
+
+  const handleRoleAssigned = () => {
+    // Refresh the roles table
+    setRoleFilters(prev => ({ ...prev, pageNumber: 1 }));
   };
 
   const handleUnassignRole = (id: number) => {
@@ -348,7 +357,7 @@ export default function ViewEmployeePage() {
                       id="clearFilterEmployeeBtn"
                       text="Clear"
                       type="button"
-                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md"
+                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                       state={true}
                       onClick={() => {
                         resetForm({ values: initialEmployeeFilters });
@@ -448,7 +457,7 @@ export default function ViewEmployeePage() {
                       id="clearFilterRoleBtn"
                       text="Clear"
                       type="button"
-                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md"
+                      className="bg-white border border-[#0086ED] text-[#0086ED] flex-1 py-2 shadow-md rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                       state={true}
                       onClick={() => {
                         resetForm({ values: initialRoleFilters });
@@ -501,7 +510,7 @@ export default function ViewEmployeePage() {
                   <button
                     type="button"
                     className="bg-[#0086ED] text-white py-1 px-3 rounded-md hover:bg-blue-600"
-                    onClick={() => handleAssignRole(rowData.id)}
+                    onClick={() => handleAssignRole(rowData)}
                   >
                     Assign
                   </button>
@@ -516,7 +525,7 @@ export default function ViewEmployeePage() {
 
                   <button
                     type="button"
-                    className="bg-white border border-[#0086ED] text-[#0086ED] py-1 px-3 rounded-md hover:bg-[#E6F0FF]"
+                    className="bg-white border border-[#0086ED] text-[#0086ED] py-1 px-3 rounded-md hover:bg-[#E6F0FF] !border-[#0086ED]"
                     onClick={() => handleViewRole(rowData.id)}
                   >
                     View
@@ -539,7 +548,18 @@ export default function ViewEmployeePage() {
             onClose={handleCloseViewRoleDrawer}
           />
         </>
-      )}d
+      )}
+      {assignModalVisible && (
+        <AssignRoleModal
+          visible={assignModalVisible}
+          onHide={() => {
+            setAssignModalVisible(false);
+            setSelectedRoleForAssign(null);
+          }}
+          role={selectedRoleForAssign}
+          onAssigned={handleRoleAssigned}
+        />
+      )}
     </Container>
   );
 }
