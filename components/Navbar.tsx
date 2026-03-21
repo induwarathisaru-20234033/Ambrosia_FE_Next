@@ -76,6 +76,7 @@ export default function Navbar() {
             width={150}
             height={50}
             className="mr-2"
+            onClick={() => router.push("/menu")}
           />
         </div>
 
