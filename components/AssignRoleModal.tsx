@@ -72,7 +72,7 @@ export default function AssignRoleModal({
 
   // Fetch all active employees
   const { data: employeesResponse, isLoading } = useGetQuery<any, any>(
-    ["employees-for-assign", role?.id],
+    ["employees-for-assign", role?.id ?? "no-role"],
     "/employees",
     { PageNumber: 1, PageSize: 1000 },
     { enabled: !!role && visible, toastRef }
