@@ -92,7 +92,7 @@ const deleteDraftItemMutation = useDeleteQuery({
     <Container fluid className="relative">
       <Row className="align-items-center mb-4">
         <Col>
-          <h1 className="kbo-title">Order Management and History</h1>
+          <h1 className="kbo-title">Add Order</h1>
         </Col>
 
         <Col xs="auto" className="d-flex align-items-center gap-2">
