@@ -27,12 +27,25 @@ interface IRoleViewData {
   permissionGroups: IRolePermissionGroup[];
 }
 
+interface AssignedEmployee {
+  id: number;
+  employeeId: string;
+  fullName: string;
+}
+
 interface ViewRoleDrawerProps {
   role: IRoleViewData | null;
+  assignedEmployees: AssignedEmployee[];
+  loading: boolean;
   onClose: () => void;
 }
 
-const ViewRoleDrawer: React.FC<ViewRoleDrawerProps> = ({ role, onClose }) => {
+const ViewRoleDrawer: React.FC<ViewRoleDrawerProps> = ({
+  role,
+  assignedEmployees,
+  loading,
+  onClose,
+}) => {
   return (
     <div className="fixed top-0 right-0 h-full w-[45%] bg-white shadow-xl z-50 overflow-y-auto transition-transform duration-300">
       <div className="p-4 md:p-6">
@@ -63,13 +76,28 @@ const ViewRoleDrawer: React.FC<ViewRoleDrawerProps> = ({ role, onClose }) => {
                 <th className="text-left py-2 px-2">Name</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td colSpan={2} className="py-3 px-2 text-gray-500">
-                  No assigned users API available yet.
-                </td>
-              </tr>
-            </tbody>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={2} className="py-3 px-2 text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : assignedEmployees.length > 0 ? (
+                  assignedEmployees.map((emp) => (
+                    <tr key={emp.id} className="border-b">
+                      <td className="py-2 px-2">{emp.employeeId}</td>
+                      <td className="py-2 px-2">{emp.fullName}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={2} className="py-3 px-2 text-gray-500">
+                      No assigned users found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
           </table>
         </div>
 

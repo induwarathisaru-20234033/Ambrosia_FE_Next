@@ -77,6 +77,19 @@ interface IRoleViewData {
   permissionGroups: IRoleViewPermissionGroup[];
 }
 
+interface IAssignedEmployee {
+  id: number;
+  employeeId: string;
+  fullName: string;
+}
+
+interface IRoleAssignedEmployeesResponse {
+  roleId: number;
+  roleCode: string;
+  roleName: string;
+  isCustomRole: boolean;
+  assignedEmployees: IAssignedEmployee[];
+}
 export default function ViewEmployeePage() {
   const router = useRouter();
   const toastRef = useToastRef();
@@ -147,20 +160,37 @@ export default function ViewEmployeePage() {
   );
 
   const {
-    data: selectedRoleResponse,
-    isFetching: isFetchingSelectedRole,
-  } = useGetQuery<IBaseApiResponse<IRoleViewData>, any>(
-    ["role-view", selectedRoleId ?? 0],
-    `/roles/${selectedRoleId}`,
+    data: assignedEmployeesResponse,
+    isFetching: isFetchingAssignedEmployees,
+  } = useGetQuery<IBaseApiResponse<IRoleAssignedEmployeesResponse>, any>(
+    ["role-assigned-employees", selectedRoleId ?? 0],
+    `/roles/${selectedRoleId}/assigned-employees`,
     {
-      includePermissions: true,
-      includeFeatures: true,
+      isCustomRole: false, // change later if needed
     },
     {
       enabled: !!selectedRoleId && isViewRoleOpen,
       toastRef,
     },
   );
+  const assignedEmployees =
+    assignedEmployeesResponse?.data?.assignedEmployees || [];
+
+  const {
+  data: selectedRoleResponse,
+  isFetching: isFetchingSelectedRole,
+} = useGetQuery<IBaseApiResponse<IRoleViewData>, any>(
+  ["role-view", selectedRoleId ?? 0],
+  `/roles/${selectedRoleId}`,
+  {
+    includePermissions: true,
+    includeFeatures: true,
+  },
+  {
+    enabled: !!selectedRoleId && isViewRoleOpen,
+    toastRef,
+  },
+);
 
   const selectedRole = selectedRoleResponse?.data || null;
 
@@ -545,6 +575,8 @@ export default function ViewEmployeePage() {
           />
           <ViewRoleDrawer
             role={selectedRole}
+            assignedEmployees={assignedEmployees}
+            loading={isFetchingAssignedEmployees}
             onClose={handleCloseViewRoleDrawer}
           />
         </>
