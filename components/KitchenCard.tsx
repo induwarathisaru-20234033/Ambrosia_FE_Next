@@ -155,8 +155,8 @@ export default function KitchenCard({
         )}
 
         {orderStatus === 5 && (
-          <div className="w-full py-2 rounded-xl bg-green-100 border border-green-300 text-green-700 font-bold text-center">
-            ✓ Marked as Ready
+          <div className="w-full py-2 rounded-xl bg-green-500 border border-green-300 text-green-50 font-bold text-center animate-pulse">
+            Ready to Serve
           </div>
         )}
 

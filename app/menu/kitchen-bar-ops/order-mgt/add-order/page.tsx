@@ -14,6 +14,7 @@ import { IBaseApiResponse, ITable } from "@/data-types";
 import { usePutQuery } from "@/services/queries/putQuery";
 import { useDeleteQuery } from "@/services/queries/deleteQuery";
 import "../../styles/kitchen-bar-ops.css";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
@@ -93,14 +94,9 @@ const deleteDraftItemMutation = useDeleteQuery({
         <Col>
           <h1 className="kbo-title">Order Management and History</h1>
         </Col>
-        <Col xs="auto">
-          <YellowButton
-            onClick={() => {
-              window.location.href = "/menu/kitchen-bar-ops/order-mgt";
-            }}
-          >
-            Back
-          </YellowButton>
+
+        <Col xs="auto" className="d-flex align-items-center gap-2">
+          <OrderMgtBackButton />
         </Col>
       </Row>
 
@@ -584,7 +580,7 @@ const deleteDraftItemMutation = useDeleteQuery({
                         id="draft-btn"
                         className="bg-white !border !border-[#FFD166] font-bold text-[#FFD166] py-2 flex-1 rounded"
                         state={true}
-                        onClick={saveDraft} // Draft button now saves draft
+                        onClick={saveDraft}
                       />
                       <Button
                         text="Remove"

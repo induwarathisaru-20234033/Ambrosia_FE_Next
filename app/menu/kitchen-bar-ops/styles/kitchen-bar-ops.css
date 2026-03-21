@@ -51,3 +51,16 @@
 .custom-tabs-order-mgt .p-tabview-nav li.p-highlight {
   border-bottom: 3px solid #FFEE58;
 }
+
+.custom-tabs-order-mgt .p-paginator .p-paginator-page.p-highlight {
+  background-color: #F4A62A;
+  color: white;
+}
+
+.custom-tabs-order-mgt .p-paginator .p-paginator-page {
+  color: #F4A62A;
+}
+
+.custom-tabs-order-mgt .p-paginator .p-paginator-icon {
+  color: #F4A62A;
+}

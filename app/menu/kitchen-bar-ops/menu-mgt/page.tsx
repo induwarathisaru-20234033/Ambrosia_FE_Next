@@ -12,6 +12,7 @@ import "primeicons/primeicons.css";
 
 import { YellowButton } from "../layout";
 import "../styles/kitchen-bar-ops.css";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 interface MenuItem {
   id: number;
@@ -51,7 +52,15 @@ export default function MenuPage() {
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
+
   const [updateForm, setUpdateForm] = useState<UpdateMenuForm>({
+    id: null,
+    name: "",
+    price: 0,
+    isAvailable: true,
+  });
+
+  const [originalUpdateForm, setOriginalUpdateForm] = useState<UpdateMenuForm>({
     id: null,
     name: "",
     price: 0,
@@ -154,12 +163,15 @@ export default function MenuPage() {
   };
 
   const openUpdateModal = (row: MenuItem) => {
-    setUpdateForm({
+    const selectedItem: UpdateMenuForm = {
       id: row.id,
       name: row.name,
       price: row.price,
       isAvailable: row.isAvailable,
-    });
+    };
+
+    setUpdateForm(selectedItem);
+    setOriginalUpdateForm(selectedItem);
     setShowUpdateModal(true);
   };
 
@@ -171,10 +183,30 @@ export default function MenuPage() {
       price: 0,
       isAvailable: true,
     });
+    setOriginalUpdateForm({
+      id: null,
+      name: "",
+      price: 0,
+      isAvailable: true,
+    });
   };
 
   const handleUpdateSubmit = async () => {
     if (updateForm.id === null) return;
+
+    const isUnchanged =
+      updateForm.price === originalUpdateForm.price &&
+      updateForm.isAvailable === originalUpdateForm.isAvailable;
+
+    if (isUnchanged) {
+      toastRef?.current?.show({
+        severity: "warn",
+        summary: "No Changes",
+        detail: "No changes detected to update",
+        life: 3000,
+      });
+      return;
+    }
 
     setUpdateLoading(true);
 
@@ -242,17 +274,19 @@ export default function MenuPage() {
     row.isAvailable ? "Available" : "Unavailable";
 
   const actionBodyTemplate = (row: MenuItem) => (
-    <div className="flex gap-2">
+    <div className="flex justify-center">
       <YellowButton onClick={() => openUpdateModal(row)}>Update</YellowButton>
     </div>
   );
 
   const renderTable = (items: MenuItem[]) => (
     <DataTable
+      stripedRows
+      removableSort
       value={items}
       paginator
       rows={10}
-      className="p-datatable-gridlines"
+      className="p-datatable-gridlines custom-tabs-order-mgt"
       responsiveLayout="scroll"
       emptyMessage="No menu items found."
     >
@@ -270,9 +304,19 @@ export default function MenuPage() {
         body={availabilityBodyTemplate}
         sortable
       />
-      <Column header="Action" body={actionBodyTemplate} />
+      <Column
+        header=""
+        body={actionBodyTemplate}
+        headerStyle={{ textAlign: "center" }}
+        bodyStyle={{ textAlign: "center" }}
+      />
     </DataTable>
   );
+
+  const isUpdateDisabled =
+    updateLoading ||
+    updateForm.price === originalUpdateForm.price &&
+      updateForm.isAvailable === originalUpdateForm.isAvailable;
 
   return (
     <Container fluid className="relative">
@@ -282,17 +326,10 @@ export default function MenuPage() {
         </Col>
 
         <Col xs="auto">
-          <YellowButton
-            onClick={() => {
-              window.location.href = "/menu/kitchen-bar-ops";
-            }}
-          >
-            Back
-          </YellowButton>
+          <OrderMgtBackButton />
         </Col>
       </Row>
 
-      {/* Add Menu Item Form */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
         <form
           onSubmit={handleAddSubmit}
@@ -363,7 +400,6 @@ export default function MenuPage() {
         </form>
       </div>
 
-      {/* Tabs */}
       <TabView
         className="custom-tabs-order-mgt mb-4"
         activeIndex={activeTabIndex}
@@ -409,7 +445,6 @@ export default function MenuPage() {
         </TabPanel>
       </TabView>
 
-      {/* Update Modal */}
       {showUpdateModal && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
           <div className="bg-white w-[560px] max-w-[90%] rounded shadow-xl overflow-hidden">
@@ -421,10 +456,10 @@ export default function MenuPage() {
               </div>
               <button
                 type="button"
-                className="text-white text-3xl leading-none absolute right-6 top-1/2 -translate-y-1/2"
+                className="text-white text-xl leading-none absolute right-6 top-1/2 -translate-y-1/2"
                 onClick={closeUpdateModal}
               >
-                ×
+                <i className="pi pi-times"></i>
               </button>
             </div>
 
@@ -467,9 +502,9 @@ export default function MenuPage() {
               <div className="flex justify-center gap-4">
                 <button
                   type="button"
-                  className="bg-[#F0A84B] text-white px-10 py-2 rounded-md font-medium hover:opacity-90"
+                  className="bg-[#F0A84B] text-white px-10 py-2 rounded-md font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleUpdateSubmit}
-                  disabled={updateLoading}
+                  disabled={isUpdateDisabled}
                 >
                   {updateLoading ? "Updating..." : "Update"}
                 </button>
