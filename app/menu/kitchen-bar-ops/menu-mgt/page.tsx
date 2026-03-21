@@ -281,10 +281,12 @@ export default function MenuPage() {
 
   const renderTable = (items: MenuItem[]) => (
     <DataTable
+      stripedRows
+      removableSort
       value={items}
       paginator
       rows={10}
-      className="p-datatable-gridlines"
+      className="p-datatable-gridlines custom-tabs-order-mgt"
       responsiveLayout="scroll"
       emptyMessage="No menu items found."
     >

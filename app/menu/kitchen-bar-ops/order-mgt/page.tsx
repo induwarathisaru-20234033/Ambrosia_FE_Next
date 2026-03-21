@@ -461,6 +461,7 @@ export default function OrderManagementPage() {
             loading={isOngoingFetching}
             rowsPerPageOptions={[5, 10, 20, 50]}
             responsiveLayout="scroll"
+            className="p-datatable-gridlines custom-tabs-order-mgt"
           >
             <Column field="orderId" header="Order Name" sortable />
             <Column field="tableNo" header="Table" sortable />
