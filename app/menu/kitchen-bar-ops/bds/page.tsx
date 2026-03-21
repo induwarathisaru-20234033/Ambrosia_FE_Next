@@ -20,6 +20,7 @@ import {
   IBackendOrder,
   ITable,
 } from "@/data-types";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 interface MenuItem {
   id: number;
@@ -468,6 +469,7 @@ export default function BDSPage() {
           <YellowButton onClick={handleCreateNewTab}>
             Create New Tab
           </YellowButton>
+          <OrderMgtBackButton/>
         </div>
       </div>
 

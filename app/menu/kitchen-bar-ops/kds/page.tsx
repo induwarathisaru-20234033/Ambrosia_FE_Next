@@ -18,6 +18,7 @@ import {
   getCachedUserProfile,
   type UserProfile,
 } from "@/utils/auth/userProfile";  
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 interface KDSItem {
   id: number;
@@ -203,9 +204,10 @@ const userInitials = useMemo(() => {
             Kitchen Display System
           </h2>
           <div className="flex justify-end gap-3">
-            <AiButton className="px-3 py-2 text-sm bg-[#FBB365] text-black rounded-lg">
+            {/* <AiButton className="px-3 py-2 text-sm bg-[#FBB365] text-black rounded-lg">
               AI Recommendation
-            </AiButton>
+            </AiButton> */}
+            <OrderMgtBackButton />
           </div>
         </div>
 
