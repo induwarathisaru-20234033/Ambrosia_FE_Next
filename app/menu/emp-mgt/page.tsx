@@ -108,7 +108,7 @@ export default function ViewEmployeePage() {
             type="button"
             className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
             state={true}
-            onClick={() => router.push("/emp-mgt/employee/add")}
+            onClick={() => router.push("emp-mgt/employee/add")}
           />
         </Col>
       </Row>
