@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/utils/auth/authTokens";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import "../globals.css";
 
 export default function MenuLayoutClient({
@@ -13,6 +14,8 @@ export default function MenuLayoutClient({
 }>) {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
+
+  useOnlineStatus();
 
   useEffect(() => {
     const accessToken = getAccessToken();
