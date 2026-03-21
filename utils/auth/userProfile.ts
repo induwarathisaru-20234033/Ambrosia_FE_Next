@@ -6,9 +6,10 @@
 import { ensureFreshAccessToken } from "@/utils/auth/authTokens";
 
 /**
- * User profile shape from Auth0
+ * User profile shape from Auth0 combined with backend employee data
  */
 type UserProfile = {
+  id?: number; // Employee database ID (from backend)
   sub: string; // Auth0 user ID
   name?: string | null; // Full name
   given_name?: string | null; // First name
