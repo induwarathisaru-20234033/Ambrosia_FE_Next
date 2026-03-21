@@ -27,6 +27,7 @@ import OrderDrawer from "@/components/OrderDrawer";
 import { TabView, TabPanel } from "primereact/tabview";
 
 import "../styles/kitchen-bar-ops.css";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -289,6 +290,7 @@ export default function OrderManagementPage() {
         </Col>
 
         <Col xs="auto">
+        <div className="flex gap-2">
           <YellowButton
             onClick={() => {
               window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
@@ -296,7 +298,10 @@ export default function OrderManagementPage() {
           >
             Add Order
           </YellowButton>
+          <OrderMgtBackButton />
+          </div>
         </Col>
+
       </Row>
 
       <TabView className="custom-tabs-order-mgt mb-4">
