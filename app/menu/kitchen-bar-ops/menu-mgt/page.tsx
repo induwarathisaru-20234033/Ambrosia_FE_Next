@@ -274,7 +274,7 @@ export default function MenuPage() {
     row.isAvailable ? "Available" : "Unavailable";
 
   const actionBodyTemplate = (row: MenuItem) => (
-    <div className="flex gap-2">
+    <div className="flex justify-center">
       <YellowButton onClick={() => openUpdateModal(row)}>Update</YellowButton>
     </div>
   );
@@ -302,7 +302,12 @@ export default function MenuPage() {
         body={availabilityBodyTemplate}
         sortable
       />
-      <Column header="Action" body={actionBodyTemplate} />
+      <Column
+        header=""
+        body={actionBodyTemplate}
+        headerStyle={{ textAlign: "center" }}
+        bodyStyle={{ textAlign: "center" }}
+      />
     </DataTable>
   );
 

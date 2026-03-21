@@ -474,9 +474,9 @@ export default function OrderManagementPage() {
               body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
             />
             <Column
-              header="Actions"
+              header=""
               body={(rowData: IOrder) => (
-                <div className="flex gap-2">
+                <div className="flex justify-center gap-2">
                   <YellowButton onClick={() => handleViewOrder(rowData)}>
                     View Order
                   </YellowButton>
