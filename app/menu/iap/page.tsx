@@ -26,7 +26,7 @@ export default function InventoryAndProcurementPage() {
       image: GRNImage,
       borderColor: "border-gray-400",
       textColor: "text-black",
-      onClick: () => router.push("/menu/iap/goods-receipt-notes"),
+      onClick: () => router.push("/menu/iap/good-receipt-notes"),
     },
     {
       id: "gi",
@@ -34,7 +34,7 @@ export default function InventoryAndProcurementPage() {
       image: GIImage,
       borderColor: "border-gray-400",
       textColor: "text-black",
-      onClick: () => router.push("/menu/iap/goods-issue"),
+      onClick: () => router.push("/menu/iap/good-issue"),
     },
     {
       id: "pr",

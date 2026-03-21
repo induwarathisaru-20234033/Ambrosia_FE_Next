@@ -44,6 +44,10 @@ export interface IEmployeeUpdateRequest extends IEmployeeCreateRequest {
   status: number;
 }
 
+export interface IOnlineStatusRequest {
+  isOnline: boolean;
+}
+
 export interface ITimeSlot {
   id: string;
   startTime: string;
@@ -162,6 +166,8 @@ export interface IReservation {
   customerDetails: ICustomerDetail;
   bookingSlot: IBookingSlot;
   table: ITable;
+  assignedWaiterId?: number;
+  assignedWaiterName?: string | null;
 }
 
 export interface ISearchReservationsRequest {
@@ -175,6 +181,35 @@ export interface ISearchReservationsRequest {
   createdDateFrom?: Date | null;
   createdDateTo?: Date | null;
   timeSlot?: string;
+}
+
+export interface IWaiterAllocationReservation {
+  reservationId: number;
+  reservationCode: string;
+  reservationDate: string;
+  reservationStatus: number;
+  partySize: number;
+  tableId: number;
+  tableName: string;
+}
+
+export interface IWaiterAllocationTable {
+  tableId: number;
+  tableName: string;
+  capacity: number;
+}
+
+export interface IWaiterCurrentAllocation {
+  waiterId: number;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  isOnline: boolean;
+  allocatedReservationCount: number;
+  allocatedTableCount: number;
+  reservations: IWaiterAllocationReservation[];
+  tables: IWaiterAllocationTable[];
 }
 
 interface ICreateReservationRequest {
@@ -451,4 +486,3 @@ export interface OrderFilterFormValues {
   orderDateFrom: string;
   orderDateTo: string;
 }
-
