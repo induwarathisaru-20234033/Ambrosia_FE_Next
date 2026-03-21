@@ -20,6 +20,8 @@ import {
   IBackendOrder,
   ITable,
 } from "@/data-types";
+import { useRouter } from "next/navigation";
+import OrderMgtBackButton from "@/components/order-mgt/OrderMgtBackButton";
 
 interface MenuItem {
   id: number;
@@ -71,6 +73,7 @@ const getInitials = (name: string) => {
 
 export default function BDSPage() {
   const toastRef = useToastRef();
+  const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -465,9 +468,13 @@ export default function BDSPage() {
         <h1 className="kbo-title !mb-0">Bar Display System</h1>
 
         <div className="flex gap-3">
+
           <YellowButton onClick={handleCreateNewTab}>
             Create New Tab
           </YellowButton>
+
+          <OrderMgtBackButton />
+          
         </div>
       </div>
 
