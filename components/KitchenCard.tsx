@@ -28,12 +28,11 @@ const itemColors: Record<KDSItem["status"], string> = {
   done:      "bg-gray-200",
 };
 
-// Card background changes based on order status
 const cardBackground: Record<number, string> = {
-  2: "bg-[#f5ebe0]",   // new       → warm cream
-  3: "bg-[#f5ebe0]",   // preparing → warm cream
-  4: "bg-red-100",     // on hold   → red tint
-  5: "bg-green-50",    // ready     → green tint
+  2: "bg-[#f5ebe0]",   
+  3: "bg-[#f5ebe0]",   
+  4: "bg-red-100",     
+  5: "bg-green-50",    
 };
 
 const statusBadge: Record<number, { label: string; className: string }> = {
@@ -76,7 +75,6 @@ export default function KitchenCard({
         )}
       </div>
 
-      {/* Items */}
       <div className="flex flex-col gap-2 flex-1">
         {items.map((item) => (
           <div
@@ -105,10 +103,8 @@ export default function KitchenCard({
         ))}
       </div>
 
-      {/* ── Buttons — change based on orderStatus ── */}
       <div className="mt-4 flex flex-col gap-2">
-
-        {/* Status 2 (New) → Start + Hold */}
+  
         {orderStatus === 2 && (
           <div className="flex gap-2">
             <button
@@ -128,7 +124,7 @@ export default function KitchenCard({
           </div>
         )}
 
-        {/* Status 3 (Preparing) → Ready button only */}
+    
         {orderStatus === 3 && (
           <button
             onClick={onReadyClick}
@@ -139,7 +135,6 @@ export default function KitchenCard({
           </button>
         )}
 
-        {/* Status 4 (On Hold) → Start + Ready (card is red) */}
         {orderStatus === 4 && (
           <div className="flex gap-2">
             <button
@@ -159,7 +154,6 @@ export default function KitchenCard({
           </div>
         )}
 
-        {/* Status 5 (Ready) → show "Marked as Ready" — no action, stays on screen */}
         {orderStatus === 5 && (
           <div className="w-full py-2 rounded-xl bg-green-100 border border-green-300 text-green-700 font-bold text-center">
             ✓ Marked as Ready

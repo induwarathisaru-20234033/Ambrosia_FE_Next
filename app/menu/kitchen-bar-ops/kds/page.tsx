@@ -17,7 +17,8 @@ import {
   fetchUserProfile,
   getCachedUserProfile,
   type UserProfile,
-} from "@/utils/auth/userProfile";      
+} from "@/utils/auth/userProfile";  
+
 interface KDSItem {
   id: number;
   menuItemId: number;
@@ -184,7 +185,6 @@ const userInitials = useMemo(() => {
     }
   };
 
-  // status 2 = new, 3 = preparing, 4 = on hold, 5 = ready
   const handleStartOrder  = (orderId: number) =>
     updateOrderStatus(orderId, 3, "Order is now Preparing");
 
