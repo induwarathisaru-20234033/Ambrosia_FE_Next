@@ -12,9 +12,9 @@ import { usePatchQuery } from "@/services/queries/patchQuery";
 import EditEmployeeSkeleton from "@/components/skeletons/EditEmployeeSkeleton";
 import { Form, Formik } from "formik";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { InputSwitch } from "primereact/inputswitch";
-import { Container, Form as BootstrapForm } from "react-bootstrap";
+import { Container, Row, Form as BootstrapForm } from "react-bootstrap";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -40,6 +40,7 @@ interface InitialValues {
 export default function EditEmployeePage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const router = useRouter();
   const toastRef = useToastRef();
 
   const patchMutation = usePatchQuery({
@@ -115,16 +116,35 @@ export default function EditEmployeePage() {
           address: values.address,
           status: values.status ? 1 : 0,
         };
+
         patchMutation.mutate({ url: `/employees/${id}`, body });
       }}
     >
       {({ values, setFieldValue }) => (
         <ScrollPanel style={{ width: "100%", height: "100vh" }}>
+          <Container fluid>
+            <Row className="align-items-center mb-4">
+              <Col>
+                <h1 className="h1-custom text-[#0086ED] font-semibold">
+                  Edit Employee
+                </h1>
+              </Col>
+
+              <Col xs="auto">
+                <Button
+                  text="Back"
+                  type="button"
+                  className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
+                  state={true}
+                  onClick={() => router.push("/menu/emp-mgt?tab=employees")}
+                  id="back"
+                />
+              </Col>
+            </Row>
+          </Container>
+
           <Form className="form-container w-full xs:w-2/3 sm:w-1/2 lg:w-2/5 xl:w-1/3 mb-3">
             <div className="mt-4 main">
-              <h1 className="h1-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] font-semibold">
-                Edit Employee
-              </h1>
               <Container className="scrollable-container">
                 <div className="scrollable-content">
                   <LabelGroup
@@ -193,6 +213,7 @@ export default function EditEmployeePage() {
                     placeholder="Address"
                     disabled={false}
                   />
+
                   <div className="flex items-center justify-between m-2">
                     <BootstrapForm.Label>Status</BootstrapForm.Label>
                     <InputSwitch
@@ -203,6 +224,7 @@ export default function EditEmployeePage() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <Col className="btn-group w-full mr-2 p-0">
                     <Button

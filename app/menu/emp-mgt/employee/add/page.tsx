@@ -6,7 +6,8 @@ import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { Form, Formik } from "formik";
 import dynamic from "next/dynamic";
-import { Container } from "react-bootstrap";
+import { Container, Row } from "react-bootstrap";
+import { useRouter } from "next/navigation";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -29,6 +30,7 @@ interface InitialValues {
 }
 
 export default function AddEmployeePage() {
+  const router = useRouter();
   const toastRef = useToastRef();
   const mutation = usePostQuery({
     redirectPath: "/menu/emp-mgt",
@@ -66,11 +68,28 @@ export default function AddEmployeePage() {
     >
       {
         <ScrollPanel style={{ width: "100%", height: "100vh" }}>
+            <Container fluid>
+              <Row className="align-items-center mb-4">
+                <Col>
+                  <h1 className="h1-custom text-[#0086ED] font-semibold">
+                    Add Employee
+                  </h1>
+                </Col>
+
+                <Col xs="auto">
+                  <Button
+                    text="Back"
+                    type="button"
+                    className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
+                    state={true}
+                    onClick={() => router.back()}
+                    id="back"
+                  />
+                </Col>
+              </Row>
+            </Container>
           <Form className="form-container w-full xs:w-2/3 sm:w-1/2 lg:w-2/5 xl:w-1/3 mb-3">
             <div className="mt-4 main">
-              <h1 className="h1-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] font-semibold">
-                Add Employee
-              </h1>
               <Container className="scrollable-container">
                 <div className="scrollable-content">
                   <LabelGroup
