@@ -17,7 +17,7 @@ export default function ViewKitchenBarOpsPage() {
       image: Kitchen,
       borderColor: "border-gray-400",
       textColor: "text-black",
-      onClick: () => router.push("/menu/kitchen-bar-ops/kitchen"),
+      onClick: () => router.push("/menu/kitchen-bar-ops/kds"),
     },
     {
       id: "bar",
