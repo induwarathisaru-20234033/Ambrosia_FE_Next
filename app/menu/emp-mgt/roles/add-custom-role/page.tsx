@@ -1,20 +1,20 @@
 "use client";
 
-import { IEmployeeCreateRequest, IRoleCreateRequest } from "@/data-types";
+import { IRoleCreateRequest } from "@/data-types";
 import { addRoleSchema } from "@/schemas";
 import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { Form, Formik } from "formik";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Container } from "react-bootstrap";
-import Switch from '@mui/material/Switch';
+import { Container, Row, Col } from "react-bootstrap";
+import { useRouter } from "next/navigation";
+import Switch from "@mui/material/Switch";
 
-const LabelGroup = dynamic(() => import("@/components/LabelGroup"),{ ssr: false,});
-const Col = dynamic(() => import("react-bootstrap/Col"), { ssr: false });
+const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
+  ssr: false,
+});
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
-const ScrollPanel = dynamic(() =>import("primereact/scrollpanel").then((mod) => mod.ScrollPanel),);
-const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
 interface InitialValues {
   roleCode: string;
@@ -25,15 +25,33 @@ interface InitialValues {
 }
 
 export default function AddRolePage() {
+  const router = useRouter();
+  const toastRef = useToastRef();
+
   const [employeeOpen, setEmployeeOpen] = useState(true);
   const [userOpen, setUserOpen] = useState(true);
   const [deptOpen, setDeptOpen] = useState(true);
-  const toastRef = useToastRef();
+
   const mutation = usePostQuery({
     redirectPath: "/menu/emp-mgt",
     successMessage: "Role created successfully!",
-    toastRef: toastRef,
+    toastRef,
   });
+
+  const handlePermissionChange = (
+    checked: boolean,
+    permId: number,
+    permissionIds: number[] | undefined,
+    setFieldValue: (field: string, value: any) => void,
+  ) => {
+    const currentPermissions = permissionIds || [];
+
+    const newPermissions = checked
+      ? [...currentPermissions, permId]
+      : currentPermissions.filter((id) => id !== permId);
+
+    setFieldValue("permissionIds", newPermissions);
+  };
 
   return (
     <Formik<InitialValues>
@@ -53,234 +71,332 @@ export default function AddRolePage() {
           status: values.status,
           permissionIds: values.permissionIds,
         };
+
         mutation.mutate({ url: "/roles", body });
       }}
     >
-      {({ values, setFieldValue }) => (
-        <ScrollPanel style={{ width: "100%", height: "100vh" }}>
-          <Form className="form-container w-full lg:w-4/5 xl:w-3/4 2xl:w-2/3 mb-3">
-            <div className="mt-4 main">
-              <h1 className="h1-custom pb-4 flex justify-center xs:justify-start text-[#0086ED] font-semibold">
-                Add Role
-              </h1>
-              <Container className="scrollable-container">
-                <div className="flex gap-6">
-                  {/* Left Column - Role Details */}
-                  <div className="flex-1 scrollable-content">
-                    <h2 className="text-[#0086ED] font-semibold mb-4">Role</h2>
+      {({ values, setFieldValue, resetForm }) => (
+        <Form>
+          <Container fluid className="py-4 px-4">
+            {/* Header */}
+            <Row className="align-items-center mb-4">
+              <Col>
+                <h1 className="text-5xl my-2 text-[#0086ED] font-bold">
+                  Add Custom Role
+                </h1>
+              </Col>
+
+              <Col xs="auto">
+                <Button
+                  id="backBtn"
+                  text="Back"
+                  type="button"
+                  className="bg-[#0086ED] text-white px-4 py-2 rounded-xl shadow-md"
+                  state={true}
+                  onClick={() => router.push("/menu/emp-mgt")}
+                />
+              </Col>
+            </Row>
+
+            {/* Main Two Panel Layout */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+              <div className="flex flex-col lg:flex-row min-h-[70vh]">
+                {/* Left Panel */}
+                <div className="w-full lg:w-5/12 p-4 p-lg-5">
+                  <h2 className="text-[#0086ED] font-semibold text-xl mb-4">
+                    Role Details
+                  </h2>
+
+                  <div className="mb-3">
                     <LabelGroup
                       label="Role Code*"
                       name="roleCode"
                       type="text"
-                      placeholder="ID"
+                      placeholder="Enter role code"
                       id="formID"
                       disabled={false}
                     />
+                  </div>
+
+                  <div className="mb-3">
                     <LabelGroup
                       label="Title/Name*"
                       name="name"
                       type="text"
-                      placeholder="Role Name"
+                      placeholder="Enter role name"
                       id="formname"
                       disabled={false}
                     />
+                  </div>
+
+                  <div className="mb-3">
                     <LabelGroup
                       label="Description*"
                       name="description"
                       as="textarea"
-                      rows={5}
-                      placeholder="Description"
+                      rows={6}
+                      placeholder="Enter description"
                       id="formDescription"
                       disabled={false}
                       className="border border-gray-300 rounded p-2"
                     />
-                    <div className="mb-4 flex items-center gap-3">
-                      <label className="text-sm font-medium">Active</label>
-                      <Switch
-                        checked={values.status === 1}
-                        onChange={(e) => setFieldValue("status", e.target.checked ? 1 : 0)}
-                      />
-                    </div>
-                    <div className="mt-4">
-                      <Col className="btn-group w-full mr-2 p-0">
-                        <Button
-                          text="Reset"
-                          className="bg-[#696E79] text-white mr-2 p-[12px] rounded-xl box-shadow w-full"
-                          type="reset"
-                          state={true}
-                          disabled={mutation.isPending}
-                          id="reset"
-                        />
-                        <Button
-                          text="Save"
-                          className="bg-[#0086ED] text-white p-[12px] rounded-xl box-shadow w-full"
-                          type="submit"
-                          state={!mutation.isPending}
-                          disabled={mutation.isPending}
-                          id="submit"
-                        />
-                      </Col>
-                    </div>
                   </div>
-                  <div className="w-px bg-gray-300"></div>                 
-                  <div className="flex-1">
-                    <h2 className="text-[#0086ED] font-semibold mb-4">Permissions</h2>
-                    <div className="space-y-3">                  
-                      <div className="border border-gray-200 rounded p-3">
-                        <div
-                          className="flex items-center cursor-pointer"
-                          onClick={() => setEmployeeOpen((s) => !s)}
-                        >
-                          <i className={`pi pi-chevron-down mr-2 transform transition-transform ${employeeOpen ? "rotate-180" : ""}`}></i>
-                          <label className="font-medium cursor-pointer">Employee</label>
-                        </div>
-                        <div className={`mt-2 ml-4 space-y-2 ${employeeOpen ? "" : "hidden"}`}>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="1"
-                              checked={values.permissionIds?.includes(1)}
-                              onChange={(e) => {
-                                const permId = 1;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            View Employee
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="2"
-                              checked={values.permissionIds?.includes(2)}
-                              onChange={(e) => {
-                                const permId = 2;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            Add Employee
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="3"
-                              checked={values.permissionIds?.includes(3)}
-                              onChange={(e) => {
-                                const permId = 3;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            Edit Employee
-                          </label>
-                        </div>
+
+                  <div className="mb-4 flex items-center gap-3">
+                    <label className="text-sm font-medium mb-0">Active</label>
+                    <Switch
+                      checked={values.status === 1}
+                      onChange={(e) =>
+                        setFieldValue("status", e.target.checked ? 1 : 0)
+                      }
+                    />
+                  </div>
+
+                  <div className="d-flex gap-2 mt-4">
+                    <Button
+                      text="Reset"
+                      className="bg-[#696E79] text-white p-[12px] rounded-xl box-shadow w-full"
+                      type="button"
+                      state={true}
+                      disabled={mutation.isPending}
+                      id="reset"
+                      onClick={() =>
+                        resetForm({
+                          values: {
+                            roleCode: "",
+                            name: "",
+                            description: "",
+                            status: 1,
+                            permissionIds: [],
+                          },
+                        })
+                      }
+                    />
+
+                    <Button
+                      text="Save"
+                      className="bg-[#0086ED] text-white p-[12px] rounded-xl box-shadow w-full"
+                      type="submit"
+                      state={!mutation.isPending}
+                      disabled={mutation.isPending}
+                      id="submit"
+                    />
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="hidden lg:block w-px bg-gray-300"></div>
+                <div className="block lg:hidden h-px bg-gray-300 mx-4"></div>
+
+                {/* Right Panel */}
+                <div className="w-full lg:w-7/12 p-4 p-lg-5">
+                  <h2 className="text-[#0086ED] font-semibold text-xl mb-4">
+                    Permissions
+                  </h2>
+
+                  <div className="space-y-3">
+                    {/* Employee */}
+                    <div className="border border-gray-200 rounded p-3">
+                      <div
+                        className="flex items-center cursor-pointer"
+                        onClick={() => setEmployeeOpen((s) => !s)}
+                      >
+                        <i
+                          className={`pi pi-chevron-down mr-2 transform transition-transform ${
+                            employeeOpen ? "rotate-180" : ""
+                          }`}
+                        ></i>
+                        <label className="font-medium cursor-pointer mb-0">
+                          Employee
+                        </label>
                       </div>
-                      <div className="border border-gray-200 rounded p-3">
-                        <div className="flex items-center cursor-pointer" onClick={() => setUserOpen((s) => !s)}>
-                          <i className={`pi pi-chevron-down mr-2 transform transition-transform ${userOpen ? "rotate-180" : ""}`}></i>
-                          <label className="font-medium cursor-pointer">User</label>
-                        </div>
-                        <div className={`mt-2 ml-4 space-y-2 ${userOpen ? "" : "hidden"}`}>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="4"
-                              checked={values.permissionIds?.includes(4)}
-                              onChange={(e) => {
-                                const permId = 4;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            View User
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="5"
-                              checked={values.permissionIds?.includes(5)}
-                              onChange={(e) => {
-                                const permId = 5;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            Add User
-                          </label>
-                        </div>
+
+                      <div
+                        className={`mt-2 ml-4 space-y-2 ${
+                          employeeOpen ? "" : "hidden"
+                        }`}
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(1)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                1,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          View Employee
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(2)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                2,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          Add Employee
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(3)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                3,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          Edit Employee
+                        </label>
                       </div>
-                      <div className="border border-gray-200 rounded p-3">
-                        <div className="flex items-center cursor-pointer" onClick={() => setDeptOpen((s) => !s)}>
-                          <i className={`pi pi-chevron-down mr-2 transform transition-transform ${deptOpen ? "rotate-180" : ""}`}></i>
-                          <label className="font-medium cursor-pointer">Department</label>
-                        </div>
-                        <div className={`mt-2 ml-4 space-y-2 ${deptOpen ? "" : "hidden"}`}>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="6"
-                              checked={values.permissionIds?.includes(6)}
-                              onChange={(e) => {
-                                const permId = 6;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            View Department
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="7"
-                              checked={values.permissionIds?.includes(7)}
-                              onChange={(e) => {
-                                const permId = 7;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            Add Department
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value="8"
-                              checked={values.permissionIds?.includes(8)}
-                              onChange={(e) => {
-                                const permId = 8;
-                                const newPerms = e.target.checked
-                                  ? [...(values.permissionIds || []), permId]
-                                  : values.permissionIds?.filter(p => p !== permId) || [];
-                                setFieldValue("permissionIds", newPerms);
-                              }}
-                            />
-                            Edit Department
-                          </label>
-                        </div>
+                    </div>
+
+                    {/* User */}
+                    <div className="border border-gray-200 rounded p-3">
+                      <div
+                        className="flex items-center cursor-pointer"
+                        onClick={() => setUserOpen((s) => !s)}
+                      >
+                        <i
+                          className={`pi pi-chevron-down mr-2 transform transition-transform ${
+                            userOpen ? "rotate-180" : ""
+                          }`}
+                        ></i>
+                        <label className="font-medium cursor-pointer mb-0">
+                          User
+                        </label>
+                      </div>
+
+                      <div
+                        className={`mt-2 ml-4 space-y-2 ${
+                          userOpen ? "" : "hidden"
+                        }`}
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(4)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                4,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          View User
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(5)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                5,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          Add User
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Department */}
+                    <div className="border border-gray-200 rounded p-3">
+                      <div
+                        className="flex items-center cursor-pointer"
+                        onClick={() => setDeptOpen((s) => !s)}
+                      >
+                        <i
+                          className={`pi pi-chevron-down mr-2 transform transition-transform ${
+                            deptOpen ? "rotate-180" : ""
+                          }`}
+                        ></i>
+                        <label className="font-medium cursor-pointer mb-0">
+                          Department
+                        </label>
+                      </div>
+
+                      <div
+                        className={`mt-2 ml-4 space-y-2 ${
+                          deptOpen ? "" : "hidden"
+                        }`}
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(6)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                6,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          View Department
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(7)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                7,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          Add Department
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={values.permissionIds?.includes(8)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                e.target.checked,
+                                8,
+                                values.permissionIds,
+                                setFieldValue,
+                              )
+                            }
+                          />
+                          Edit Department
+                        </label>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-              </Container>
+              </div>
             </div>
-          </Form>
-        </ScrollPanel>
+          </Container>
+        </Form>
       )}
     </Formik>
   );
