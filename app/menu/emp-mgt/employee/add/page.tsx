@@ -68,9 +68,8 @@ export default function AddEmployeePage() {
     >
       {
         <ScrollPanel style={{ width: "100%", height: "100vh" }}>
-            {/* ✅ FULL WIDTH HEADER */}
             <Container fluid>
-              <Row className="align-items-center mb-4 px-3">
+              <Row className="align-items-center mb-4">
                 <Col>
                   <h1 className="h1-custom text-[#0086ED] font-semibold">
                     Add Employee
