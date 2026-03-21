@@ -52,7 +52,7 @@ export const WhiteButton: React.FC<SharedButtonProps> = ({
   ...props
 }) => (
   <button
-    className={`bg-white hover:bg-gray-100 border border-yellow-400 text-yellow-400 px-4 py-2 rounded font-bold ${className ?? ""}`}
+    className={`bg-white hover:bg-gray-100 !border !border-yellow-400 text-yellow-400 px-4 py-2 rounded font-bold ${className ?? ""}`}
     {...props}
   >
     {children}

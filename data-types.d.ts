@@ -408,6 +408,7 @@ export interface IBackendOrderItem {
   id: number;
   menuItemId: number;
   menuItemName: string;
+  category: string;
   specialInstructions: string | null;
   quantity: number;
   unitPrice: number;

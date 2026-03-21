@@ -155,13 +155,13 @@ export default function OrderManagementPage() {
     setSelectedOrder(null);
   };
 
-  // ✅ ADDED: open cancel modal
+  // open cancel modal
   const openCancelModal = (order: IOrder) => {
     setOrderToCancel(order);
     setShowCancelModal(true);
   };
 
-  // ✅ ADDED: close cancel modal
+  // close cancel modal
   const closeCancelModal = () => {
     setShowCancelModal(false);
     setOrderToCancel(null);
