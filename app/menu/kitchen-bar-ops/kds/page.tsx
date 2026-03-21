@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState,useEffect } from "react";
 import { AiButton } from "@/components/AiButton";
 import KitchenCard from "@/components/KitchenCard";
 import { YellowButton } from "../layout";
@@ -13,7 +13,11 @@ import {
   IPaginatedData,
   IBackendOrder,
 } from "@/data-types";
-
+import {
+  fetchUserProfile,
+  getCachedUserProfile,
+  type UserProfile,
+} from "@/utils/auth/userProfile";      
 interface KDSItem {
   id: number;
   menuItemId: number;
@@ -49,6 +53,42 @@ const getItemStatus = (
 
 export default function ViewKitchenBarOpsPage() {
   const toastRef = useToastRef();
+const [profile, setProfile] = useState<UserProfile | null>(null);
+
+useEffect(() => {
+  const cached = getCachedUserProfile();
+  if (cached) {
+    setProfile(cached);
+    return;
+  }
+
+  let isActive = true;
+  const loadProfile = async () => {
+    const freshProfile = await fetchUserProfile();
+    if (isActive && freshProfile) setProfile(freshProfile);
+  };
+  void loadProfile();
+  return () => { isActive = false; };
+}, []);
+
+const displayName = useMemo(() => {
+  if (!profile) return "User";
+  if (profile.name) return profile.name;
+  const parts = [profile.given_name, profile.family_name].filter(Boolean);
+  if (parts.length) return parts.join(" ");
+  return profile.email || "User";
+}, [profile]);
+
+const userInitials = useMemo(() => {
+  return displayName
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}, [displayName]);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -97,6 +137,7 @@ export default function ViewKitchenBarOpsPage() {
             specialInstructions: item.specialInstructions ?? "",
             status: getItemStatus(order.orderStatus),
             category: item.category,
+             tag: userInitials,
           })),
         };
       })

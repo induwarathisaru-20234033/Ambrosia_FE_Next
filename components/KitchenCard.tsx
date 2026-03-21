@@ -97,7 +97,7 @@ export default function KitchenCard({
               </div>
             </div>
             {item.tag && (
-              <span className="bg-red-400 text-white text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center">
+             <span className="bg-blue-500 text-white text-xs font-bold rounded px-2 py-0.5">
                 {item.tag}
               </span>
             )}
