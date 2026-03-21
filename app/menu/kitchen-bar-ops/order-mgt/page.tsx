@@ -6,6 +6,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import { Formik, Form } from "formik";
 import { DataTable, SortOrder } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { useRouter } from "next/navigation";
 import axiosAuth from "@/utils/AxiosInstance";
 import { useGetQuery } from "@/services/queries/getQuery";
 import { useToastRef } from "@/contexts/ToastContext";
@@ -25,23 +26,29 @@ import {
 import { YellowButton, WhiteButton } from "../layout";
 import OrderDrawer from "@/components/OrderDrawer";
 import { TabView, TabPanel } from "primereact/tabview";
+import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 import "../styles/kitchen-bar-ops.css";
-import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
 });
 
 export default function OrderManagementPage() {
+  const router = useRouter();
   const toastRef = useToastRef();
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
 
-  // ✅ ADDED: cancel modal state
+  // Cancel modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<IOrder | null>(null);
+
+  // Serve modal state
+  const [showServeModal, setShowServeModal] = useState(false);
+  const [orderToServe, setOrderToServe] = useState<IOrder | null>(null);
 
   const initialFilterFormValues: OrderFilterFormValues = {
     orderNumber: "",
@@ -123,8 +130,6 @@ export default function OrderManagementPage() {
     return orders.map((order) => mapBackendOrderToUI(order, "completed"));
   }, [completedOrdersResponse]);
 
-  const unassignedOrders: IOrder[] = [];
-
   const getOrderStatusLabel = (status?: number) => {
     switch (status) {
       case 1:
@@ -156,19 +161,26 @@ export default function OrderManagementPage() {
     setSelectedOrder(null);
   };
 
-  // open cancel modal
   const openCancelModal = (order: IOrder) => {
     setOrderToCancel(order);
     setShowCancelModal(true);
   };
 
-  // close cancel modal
   const closeCancelModal = () => {
     setShowCancelModal(false);
     setOrderToCancel(null);
   };
 
-  // actual cancel now happens only from modal confirm button
+  const openServeModal = (order: IOrder) => {
+    setOrderToServe(order);
+    setShowServeModal(true);
+  };
+
+  const closeServeModal = () => {
+    setShowServeModal(false);
+    setOrderToServe(null);
+  };
+
   const handleCancelOrder = async () => {
     if (!orderToCancel?.backendId) return;
 
@@ -194,6 +206,41 @@ export default function OrderManagementPage() {
         error?.response?.data?.error ||
         error?.message ||
         "Failed to cancel order";
+
+      toastRef?.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    }
+  };
+
+  const handleServeOrder = async () => {
+    if (!orderToServe?.backendId) return;
+
+    try {
+      await axiosAuth.put(`/orders/${orderToServe.backendId}/status`, {
+        orderId: orderToServe.backendId,
+        status: 6,
+        reason: "Served from Order Management page",
+      });
+
+      toastRef?.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: "Order marked as served successfully",
+        life: 3000,
+      });
+
+      setRefreshKey((prev) => prev + 1);
+      closeServeModal();
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update order status";
 
       toastRef?.current?.show({
         severity: "error",
@@ -290,18 +337,17 @@ export default function OrderManagementPage() {
         </Col>
 
         <Col xs="auto">
-        <div className="flex gap-2">
-          <YellowButton
-            onClick={() => {
-              window.location.href = "/menu/kitchen-bar-ops/order-mgt/add-order";
-            }}
-          >
-            Add Order
-          </YellowButton>
-          <OrderMgtBackButton />
+          <div className="flex gap-2">
+            <YellowButton
+              onClick={() =>
+                router.push("/menu/kitchen-bar-ops/order-mgt/add-order")
+              }
+            >
+              Add Order
+            </YellowButton>
+            <OrderMgtBackButton />
           </div>
         </Col>
-
       </Row>
 
       <TabView className="custom-tabs-order-mgt mb-4">
@@ -434,6 +480,13 @@ export default function OrderManagementPage() {
                   <YellowButton onClick={() => handleViewOrder(rowData)}>
                     View Order
                   </YellowButton>
+
+                  {rowData.orderStatus === 5 && (
+                    <YellowButton onClick={() => openServeModal(rowData)}>
+                      Serve
+                    </YellowButton>
+                  )}
+
                   <WhiteButton onClick={() => openCancelModal(rowData)}>
                     Cancel
                   </WhiteButton>
@@ -472,18 +525,18 @@ export default function OrderManagementPage() {
                 <Row className="mb-3 align-items-end">
                   <Col md={2}>
                     <LabelGroup
-                      label="Order ID"
+                      label="Order Number"
                       name="orderNumber"
                       type="text"
-                      placeholder="Order ID"
+                      placeholder="Order Number"
                     />
                   </Col>
                   <Col md={2}>
                     <LabelGroup
-                      label="Table No"
+                      label="Table"
                       name="tableName"
                       type="text"
-                      placeholder="Table No"
+                      placeholder="Table"
                     />
                   </Col>
                   <Col md={2}>
@@ -583,7 +636,6 @@ export default function OrderManagementPage() {
         <OrderDrawer order={selectedOrder} onClose={handleCloseDrawer} />
       )}
 
-      {/* Custom Cancel Order Modal */}
       {showCancelModal && orderToCancel && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
           <div className="bg-white w-[720px] max-w-[90%] rounded shadow-xl overflow-hidden">
@@ -620,6 +672,51 @@ export default function OrderManagementPage() {
                   type="button"
                   className="border border-[#F0A84B] text-[#6B7280] px-10 py-2 rounded-md font-medium bg-white hover:bg-gray-50"
                   onClick={closeCancelModal}
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showServeModal && orderToServe && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="bg-white w-[720px] max-w-[90%] rounded shadow-xl overflow-hidden">
+            <div className="bg-[#F0A84B] px-6 py-4 flex justify-between items-center relative">
+              <div className="w-full text-center">
+                <h2 className="text-white text-2xl font-semibold">
+                  Serve Order
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="text-white text-3xl leading-none absolute right-6 top-1/2 -translate-y-1/2"
+                onClick={closeServeModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-8 text-center">
+              <p className="text-2xl text-gray-600 font-semibold mb-8">
+                Do you want to mark order #{orderToServe.orderId} as served?
+              </p>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  type="button"
+                  className="bg-[#F0A84B] text-white px-10 py-2 rounded-md font-medium hover:opacity-90"
+                  onClick={handleServeOrder}
+                >
+                  Confirm
+                </button>
+
+                <button
+                  type="button"
+                  className="border border-[#F0A84B] text-[#6B7280] px-10 py-2 rounded-md font-medium bg-white hover:bg-gray-50"
+                  onClick={closeServeModal}
                 >
                   Decline
                 </button>
