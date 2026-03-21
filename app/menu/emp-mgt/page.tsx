@@ -10,7 +10,9 @@ import { Column } from "primereact/column";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TabView, TabPanel } from "primereact/tabview";
 import { useToastRef } from "@/contexts/ToastContext";
+import ViewRoleDrawer from "@/components/ViewRoleDrawer";
 import {
+  IBaseApiResponse,
   IPaginatedApiResponse,
   SearchEmployeeRequest,
   IEmployee,
@@ -49,6 +51,31 @@ interface SearchRoleRequest {
   sortOrder?: SortOrder;
 }
 
+interface IRoleViewPermission {
+  id: number;
+  permissionCode: string;
+  name: string;
+  description: string;
+  isSelected: boolean;
+}
+
+interface IRoleViewPermissionGroup {
+  featureId: number;
+  featureCode: string;
+  featureName: string;
+  permissions: IRoleViewPermission[];
+}
+
+interface IRoleViewData {
+  id: number;
+  roleCode: string;
+  name: string;
+  description: string;
+  status: number;
+  selectedPermissionIds: number[];
+  permissionGroups: IRoleViewPermissionGroup[];
+}
+
 export default function ViewEmployeePage() {
   const router = useRouter();
   const toastRef = useToastRef();
@@ -57,6 +84,8 @@ export default function ViewEmployeePage() {
   const tabParam = searchParams.get("tab");
 
   const [activeIndex, setActiveIndex] = useState(tabParam === "roles" ? 1 : 0);
+  const [isViewRoleOpen, setIsViewRoleOpen] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
 
   const initialEmployeeFilters: SearchEmployeeRequest = {
     employeeId: "",
@@ -113,6 +142,24 @@ export default function ViewEmployeePage() {
       toastRef,
     },
   );
+
+  const {
+    data: selectedRoleResponse,
+    isFetching: isFetchingSelectedRole,
+  } = useGetQuery<IBaseApiResponse<IRoleViewData>, any>(
+    ["role-view", selectedRoleId ?? 0],
+    `/roles/${selectedRoleId}`,
+    {
+      includePermissions: true,
+      includeFeatures: true,
+    },
+    {
+      enabled: !!selectedRoleId && isViewRoleOpen,
+      toastRef,
+    },
+  );
+
+  const selectedRole = selectedRoleResponse?.data || null;
 
   const handleEmployeeSubmit = (values: SearchEmployeeRequest) => {
     setEmployeeFilters({ ...values, pageNumber: 1 });
@@ -177,7 +224,13 @@ export default function ViewEmployeePage() {
   };
 
   const handleViewRole = (id: number) => {
-    router.push(`/menu/emp-mgt/roles/${id}/view`);
+    setSelectedRoleId(id);
+    setIsViewRoleOpen(true);
+  };
+
+  const handleCloseViewRoleDrawer = () => {
+    setIsViewRoleOpen(false);
+    setSelectedRoleId(null);
   };
 
   return (
@@ -474,6 +527,19 @@ export default function ViewEmployeePage() {
           </DataTable>
         </TabPanel>
       </TabView>
+
+      {isViewRoleOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/20 z-40"
+            onClick={handleCloseViewRoleDrawer}
+          />
+          <ViewRoleDrawer
+            role={selectedRole}
+            onClose={handleCloseViewRoleDrawer}
+          />
+        </>
+      )}
     </Container>
   );
 }
