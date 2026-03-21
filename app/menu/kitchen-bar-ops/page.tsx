@@ -4,6 +4,7 @@ import TileCard from "@/components/TileCard";
 import Kitchen from "@/public/images/kitchen.png";
 import Bar from "@/public/images/bar.png";
 import PurchaseInventory from "@/public/images/PurchaseInventory.png";
+import MenuManagement from "@/public/images/MenuManagement.png";
 import { useRouter } from "next/navigation";
 
 export default function ViewKitchenBarOpsPage() {
@@ -32,7 +33,15 @@ export default function ViewKitchenBarOpsPage() {
       image: PurchaseInventory,
       borderColor: "border-gray-400",
       textColor: "text-black",
-      onClick: () => router.push("/menu/kitchen-bar-ops/inventory"),
+      onClick: () => router.push("/menu/kitchen-bar-ops/order-mgt"),
+    },
+    {
+      id: "menu-mgt",
+      title: "Menu Management",
+      image: MenuManagement,
+      borderColor: "border-gray-400",
+      textColor: "text-black",
+      onClick: () => router.push("/menu/kitchen-bar-ops/menu-mgt"),
     },
   ];
 
@@ -76,18 +85,28 @@ export default function ViewKitchenBarOpsPage() {
                 />
               </div>
 
-              <div className="md:col-span-2 h-full flex justify-center">
-                <div className="w-full md:w-1/2">
-                  <TileCard
-                    title={features[2].title}
-                    image={features[2].image}
-                    borderColor={features[2].borderColor}
-                    textColor={features[2].textColor}
-                    onClick={features[2].onClick}
-                    span="w-full"
-                    mobileSpan="w-full"
-                  />
-                </div>
+              <div className="h-full">
+                <TileCard
+                  title={features[2].title}
+                  image={features[2].image}
+                  borderColor={features[2].borderColor}
+                  textColor={features[2].textColor}
+                  onClick={features[2].onClick}
+                  span="w-full"
+                  mobileSpan="w-full"
+                />
+              </div>
+
+              <div className="h-full">
+                <TileCard
+                  title={features[3].title}
+                  image={features[3].image}
+                  borderColor={features[3].borderColor}
+                  textColor={features[3].textColor}
+                  onClick={features[3].onClick}
+                  span="w-full"
+                  mobileSpan="w-full"
+                />
               </div>
             </div>
           </div>

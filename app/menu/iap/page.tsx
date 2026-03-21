@@ -42,7 +42,7 @@ export default function InventoryAndProcurementPage() {
       image: PRImage,
       borderColor: "border-gray-400",
       textColor: "text-black",
-      onClick: () => router.push("/menu/iap/purchase-requisitions"),
+      onClick: () => router.push("/menu/iap/purchase-requests"),
     },
     {
       id: "wastage",

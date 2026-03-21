@@ -6,6 +6,7 @@ import ServiceHoursAndRules from "@/components/foh/ServiceHoursAndRules";
 import TableInventory from "@/components/foh/TableInventory";
 import { Divider } from "primereact/divider";
 import CalenderExclusions from "@/components/foh/CalenderExclusions";
+import FloorMapEditor from "@/components/foh/floor-map/FloorMapEditor";
 
 export default function ConfigurationsPage() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -23,15 +24,7 @@ export default function ConfigurationsPage() {
             onTabChange={(e) => setActiveIndex(e.index)}
             className="custom-tabs"
           >
-            <TabPanel
-              header={
-                <div className="flex items-center justify-center w-96 h-full px-8 py-4">
-                  <span className="font-semibold text-gray-900">
-                    Reservation Availabilities
-                  </span>
-                </div>
-              }
-            >
+            <TabPanel header="Reservation Availabilities">
               <div className="pt-8">
                 <ServiceHoursAndRules />
                 <Divider />
@@ -41,17 +34,9 @@ export default function ConfigurationsPage() {
               </div>
             </TabPanel>
 
-            <TabPanel
-              header={
-                <div className="flex items-center justify-center w-96 h-full px-8 py-4">
-                  <span className="font-semibold text-gray-900">Floor Map</span>
-                </div>
-              }
-            >
+            <TabPanel header="Floor Map">
               <div className="p-8">
-                <div className="text-center py-12">
-                  <p className="text-gray-600">Floor Map content coming soon</p>
-                </div>
+                <FloorMapEditor />
               </div>
             </TabPanel>
           </TabView>

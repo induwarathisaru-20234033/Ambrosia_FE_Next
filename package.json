@@ -20,12 +20,15 @@
     "date-fns-tz": "^3.2.0",
     "formik": "^2.4.9",
     "jsbarcode": "^3.12.3",
+    "konva": "^10.2.3",
+    "lucide-react": "^0.577.0",
     "next": "16.1.4",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",
     "react": "19.2.3",
     "react-bootstrap": "^2.10.10",
     "react-dom": "19.2.3",
+    "react-konva": "^19.2.3",
     "yup": "^1.7.1"
   },
   "devDependencies": {
