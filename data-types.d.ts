@@ -500,6 +500,7 @@ export interface SearchOrderRequest {
   customerName: string;
   orderDateFrom: string;
   orderDateTo: string;
+  status?: number;
   sortField?: string;
   sortOrder?: SortOrder | 0 | null;
   pageNumber: number;
