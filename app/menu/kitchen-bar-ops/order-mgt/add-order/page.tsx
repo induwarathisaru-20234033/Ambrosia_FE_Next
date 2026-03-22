@@ -4,9 +4,9 @@ import { useToastRef } from "@/contexts/ToastContext";
 import { usePostQuery } from "@/services/queries/postQuery";
 import { useGetQuery } from "@/services/queries/getQuery";
 import dynamic from "next/dynamic";
-import { Form, Formik, FormikProps } from "formik";
+import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import "primeicons/primeicons.css";
 import { YellowButton } from "../../layout";
 import { Col, Container, Row } from "react-bootstrap";
@@ -15,8 +15,6 @@ import { usePutQuery } from "@/services/queries/putQuery";
 import { useDeleteQuery } from "@/services/queries/deleteQuery";
 import "../../styles/kitchen-bar-ops.css";
 import OrderMgtBackButton from "@/components/OrderMgtBackButton";
-import { useSearchParams } from "next/navigation";
-import axiosAuth from "@/utils/AxiosInstance";
 
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
@@ -43,14 +41,6 @@ interface InitialValues {
 
 export default function AddOrderPage() {
   const toastRef = useToastRef();
-  const searchParams = useSearchParams();
-  const draftId = searchParams.get("draftId");
-
-  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
-  const [draftLoaded, setDraftLoaded] = useState(false);
-
-  const formikRef = useRef<FormikProps<InitialValues>>(null);
-
   const [searchText, setSearchText] = useState("");
   const [draftOrder, setDraftOrder] = useState<{
     id: number;
@@ -98,66 +88,11 @@ const deleteDraftItemMutation = useDeleteQuery({
     orderItems: Yup.array().min(1, "Add at least one menu item"),
   });
 
-  useEffect(() => {
-    const loadDraftOrder = async () => {
-      if (!draftId || draftLoaded) return;
-
-      try {
-        setIsLoadingDraft(true);
-
-        const response = await axiosAuth.get(`/orders/${draftId}`);
-        const draft = response?.data?.data;
-
-        if (!draft) return;
-
-        setDraftOrder({
-          id: draft.id,
-          orderNumber: draft.orderNumber,
-        });
-
-        formikRef.current?.setFieldValue(
-          "table",
-          draft.tableId ? String(draft.tableId) : ""
-        );
-
-        formikRef.current?.setFieldValue(
-          "orderItems",
-          (draft.items || []).map((item: any) => ({
-            menuItemId: item.menuItemId,
-            name: item.menuItemName || item.name || "",
-            quantity: item.quantity,
-            specialInstructions: item.specialInstructions || "",
-            price: item.unitPrice || item.price || 0,
-          }))
-        );
-
-        setDraftLoaded(true);
-      } catch (error: any) {
-        toastRef?.current?.show({
-          severity: "error",
-          summary: "Error",
-          detail:
-            error?.response?.data?.message ||
-            error?.response?.data?.error ||
-            error?.message ||
-            "Failed to load draft order",
-          life: 4000,
-        });
-      } finally {
-        setIsLoadingDraft(false);
-      }
-    };
-
-    loadDraftOrder();
-  }, [draftId, draftLoaded, toastRef]);
-
   return (
     <Container fluid className="relative">
       <Row className="align-items-center mb-4">
         <Col>
-          <h1 className="kbo-title">
-              {draftId ? "Edit Draft Order" : "Add Order"}
-          </h1>
+          <h1 className="kbo-title">Add Order</h1>
         </Col>
 
         <Col xs="auto" className="d-flex align-items-center gap-2">
@@ -165,12 +100,7 @@ const deleteDraftItemMutation = useDeleteQuery({
         </Col>
       </Row>
 
-      {isLoadingDraft && (
-        <p className="text-sm text-gray-500 mb-3">Loading draft order...</p>
-      )}
-
       <Formik<InitialValues>
-        innerRef={formikRef}
         initialValues={{ table: "", orderItems: [] }}
         validationSchema={orderSchema}
         onSubmit={() => {}}
