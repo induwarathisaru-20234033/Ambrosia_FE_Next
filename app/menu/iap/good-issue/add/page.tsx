@@ -89,7 +89,9 @@ const resolveProfileName = (profile: UserProfile | null) => {
   return profile.email ?? "";
 };
 
-const createInitialValues = (issuedBy = ""): InitialValues => ({
+const createInitialValues: (issuedBy?: string) => InitialValues = (
+  issuedBy = "",
+) => ({
   issuedBy,
   issuedDate: new Date(),
   inventoryItemOption: null,
@@ -325,22 +327,19 @@ export default function AddGoodIssuePage() {
     }
 
     postMutation.mutate({
-      url: "/GoodIssues",
+      url: "/GoodsIssue",
       body: {
         issuedBy: values.issuedBy.trim(),
         issuedDate: values.issuedDate
           ? new Date(values.issuedDate).toISOString()
           : new Date().toISOString(),
-        issuedFrom: lineItems[0]?.issuedFrom ?? "",
-        issuedLocation: lineItems[0]?.issuedTo ?? "",
         items: lineItems.map((item) => ({
           lineItemNo: item.lineItemNo,
           inventoryItemId: item.inventoryItemId,
-          issuedFrom: item.issuedFrom,
-          issuedTo: item.issuedTo,
           requestedQuantity: item.requestedQuantity,
           issuedQuantity: item.issuedQuantity,
-          unitPrice: item.unitPrice,
+          issuedFrom: item.issuedFrom,
+          issuedTo: item.issuedTo,
           remarks: item.remarks,
         })),
       },
@@ -351,8 +350,8 @@ export default function AddGoodIssuePage() {
     <Formik<InitialValues>
       innerRef={formikRef}
       initialValues={createInitialValues(issuedByInitial)}
-      onSubmit={() => {
-        // Action buttons control submission.
+      onSubmit={(values) => {
+        handleSubmit(values);
       }}
     >
       {({ resetForm, values }) => (
