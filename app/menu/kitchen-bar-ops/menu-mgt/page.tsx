@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useToastRef } from "@/contexts/ToastContext";
+import { useGetQuery } from "@/services/queries/getQuery";
+import { usePostQuery } from "@/services/queries/postQuery";
+import { usePutQuery } from "@/services/queries/putQuery";
 import { Container, Row, Col } from "react-bootstrap";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { TabView, TabPanel } from "primereact/tabview";
-import "primereact/resources/themes/saga-blue/theme.css";
-import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 import { YellowButton } from "../layout";
 import "../styles/kitchen-bar-ops.css";
 import OrderMgtBackButton from "@/components/OrderMgtBackButton";
+import { IBaseApiResponse } from "@/data-types";
 
 interface MenuItem {
   id: number;
@@ -39,19 +41,16 @@ interface UpdateMenuForm {
 export default function MenuPage() {
   const toastRef = useToastRef();
 
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [form, setForm] = useState<MenuForm>({
     name: "",
     price: 0,
     category: "",
     isAvailable: true,
   });
-  const [loading, setLoading] = useState(false);
+
   const [search, setSearch] = useState("");
   const [activeTabIndex, setActiveTabIndex] = useState(0);
-
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
 
   const [updateForm, setUpdateForm] = useState<UpdateMenuForm>({
     id: null,
@@ -67,37 +66,39 @@ export default function MenuPage() {
     isAvailable: true,
   });
 
-  const fetchMenuItems = async (showErrorToast = false) => {
-    try {
-      const res = await fetch("https://localhost:44376/api/menu");
-      if (!res.ok) throw new Error("Failed to fetch menu items");
+  const {
+    data: menuItemsResponse,
+    isLoading: isMenuLoading,
+    isError: isMenuError,
+    refetch: refetchMenuItems,
+  } = useGetQuery<IBaseApiResponse<MenuItem[]> | MenuItem[], undefined>(
+    ["menuItems"],
+    "/menu"
+  );
 
-      const data = await res.json();
-      setMenuItems(data);
-    } catch (err) {
-      console.error("Error fetching menu items:", err);
+  const menuItems: MenuItem[] = Array.isArray(menuItemsResponse)
+    ? menuItemsResponse
+    : menuItemsResponse?.data ?? [];
 
-      if (showErrorToast) {
-        toastRef?.current?.show({
-          severity: "error",
-          summary: "Error",
-          detail: "Failed to load menu items",
-          life: 3000,
-        });
-      }
-    }
-  };
+  const addMenuMutation = usePostQuery({
+    toastRef,
+    successMessage: "Menu item added successfully!",
+  });
 
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
+  const updateMenuMutation = usePutQuery({
+    toastRef,
+    successMessage: "Item updated successfully!",
+  });
 
   const handleAddFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, type, value, checked } = e.target as HTMLInputElement;
+    const { name, type, value } = e.target;
+    const checked =
+      e.target instanceof HTMLInputElement ? e.target.checked : false;
 
     let val: string | number | boolean = value;
+
     if (type === "checkbox") val = checked;
     if (type === "number") val = value === "" ? 0 : parseFloat(value);
 
@@ -111,6 +112,7 @@ export default function MenuPage() {
     const { name, type, value, checked } = e.target;
 
     let val: string | number | boolean = value;
+
     if (type === "checkbox") val = checked;
     if (type === "number") val = value === "" ? 0 : parseFloat(value);
 
@@ -122,22 +124,25 @@ export default function MenuPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (!form.name.trim() || !form.category.trim() || form.price <= 0) {
+      toastRef?.current?.show({
+        severity: "warn",
+        summary: "Validation",
+        detail: "Please fill all fields correctly",
+        life: 3000,
+      });
+      return;
+    }
 
     try {
-      const res = await fetch("https://localhost:44376/api/menu", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) throw new Error("Failed to add menu item");
-
-      toastRef?.current?.show({
-        severity: "success",
-        summary: "Success",
-        detail: "Menu item added successfully!",
-        life: 3000,
+      await addMenuMutation.mutateAsync({
+        url: "/menu",
+        body: {
+          ...form,
+          name: form.name.trim(),
+          category: form.category.trim(),
+        },
       });
 
       setForm({
@@ -147,18 +152,9 @@ export default function MenuPage() {
         isAvailable: true,
       });
 
-      fetchMenuItems();
-    } catch (err) {
-      console.error("Error adding menu item:", err);
-
-      toastRef?.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Error adding menu item",
-        life: 3000,
-      });
-    } finally {
-      setLoading(false);
+      refetchMenuItems();
+    } catch (error) {
+      console.error("Error adding menu item:", error);
     }
   };
 
@@ -208,43 +204,29 @@ export default function MenuPage() {
       return;
     }
 
-    setUpdateLoading(true);
+    if (updateForm.price <= 0) {
+      toastRef?.current?.show({
+        severity: "warn",
+        summary: "Validation",
+        detail: "Price must be greater than 0",
+        life: 3000,
+      });
+      return;
+    }
 
     try {
-      const res = await fetch(
-        `https://localhost:44376/api/menu/${updateForm.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            price: updateForm.price,
-            isAvailable: updateForm.isAvailable,
-          }),
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to update menu item");
-
-      toastRef?.current?.show({
-        severity: "success",
-        summary: "Success",
-        detail: "Item updated successfully!",
-        life: 3000,
+      await updateMenuMutation.mutateAsync({
+        url: `/menu/${updateForm.id}`,
+        body: {
+          price: updateForm.price,
+          isAvailable: updateForm.isAvailable,
+        },
       });
 
       closeUpdateModal();
-      fetchMenuItems();
-    } catch (err) {
-      console.error("Error updating menu item:", err);
-
-      toastRef?.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Error updating menu item",
-        life: 3000,
-      });
-    } finally {
-      setUpdateLoading(false);
+      refetchMenuItems();
+    } catch (error) {
+      console.error("Error updating menu item:", error);
     }
   };
 
@@ -286,9 +268,10 @@ export default function MenuPage() {
       value={items}
       paginator
       rows={10}
+      loading={isMenuLoading}
       className="p-datatable-gridlines custom-tabs-order-mgt"
       responsiveLayout="scroll"
-      emptyMessage="No menu items found."
+      emptyMessage={isMenuError ? "Failed to load menu items." : "No menu items found."}
     >
       <Column field="category" header="Category" sortable />
       <Column field="name" header="Name" sortable />
@@ -314,9 +297,9 @@ export default function MenuPage() {
   );
 
   const isUpdateDisabled =
-    updateLoading ||
-    updateForm.price === originalUpdateForm.price &&
-      updateForm.isAvailable === originalUpdateForm.isAvailable;
+    updateMenuMutation.isPending ||
+    (updateForm.price === originalUpdateForm.price &&
+      updateForm.isAvailable === originalUpdateForm.isAvailable);
 
   return (
     <Container fluid className="relative">
@@ -325,7 +308,7 @@ export default function MenuPage() {
           <h1 className="kbo-title">Menu Management</h1>
         </Col>
 
-        <Col xs="auto">
+        <Col xs="auto" className="d-flex align-items-center gap-2">
           <OrderMgtBackButton />
         </Col>
       </Row>
@@ -346,7 +329,7 @@ export default function MenuPage() {
               value={form.name}
               onChange={handleAddFormChange}
               required
-              className="border p-2 rounded w-48"
+              className="border border-gray-300 p-2 rounded w-48 outline-none"
             />
           </div>
 
@@ -358,11 +341,12 @@ export default function MenuPage() {
               id="price"
               type="number"
               step="0.01"
+              min="0"
               name="price"
               value={form.price}
               onChange={handleAddFormChange}
               required
-              className="border p-2 rounded w-32"
+              className="border border-gray-300 p-2 rounded w-32 outline-none"
             />
           </div>
 
@@ -377,7 +361,7 @@ export default function MenuPage() {
               value={form.category}
               onChange={handleAddFormChange}
               required
-              className="border p-2 rounded w-48"
+              className="border border-gray-300 p-2 rounded w-48 outline-none"
             />
           </div>
 
@@ -395,7 +379,7 @@ export default function MenuPage() {
           </div>
 
           <YellowButton type="submit">
-            {loading ? "Adding..." : "Add"}
+            {addMenuMutation.isPending ? "Adding..." : "Add"}
           </YellowButton>
         </form>
       </div>
@@ -412,7 +396,7 @@ export default function MenuPage() {
               placeholder="Search by name or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border border-gray-300 p-2 rounded w-full outline-none"
             />
           </div>
           {renderTable(allItems)}
@@ -425,7 +409,7 @@ export default function MenuPage() {
               placeholder="Search by name or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border border-gray-300 p-2 rounded w-full outline-none"
             />
           </div>
           {renderTable(availableItems)}
@@ -438,7 +422,7 @@ export default function MenuPage() {
               placeholder="Search by name or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="border border-gray-300 p-2 rounded w-full outline-none"
             />
           </div>
           {renderTable(unavailableItems)}
@@ -470,7 +454,7 @@ export default function MenuPage() {
                   type="text"
                   value={updateForm.name}
                   disabled
-                  className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
+                  className="border border-gray-300 p-2 rounded w-full bg-gray-100 cursor-not-allowed"
                 />
               </div>
 
@@ -479,10 +463,11 @@ export default function MenuPage() {
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
                   name="price"
                   value={updateForm.price}
                   onChange={handleUpdateFormChange}
-                  className="border p-2 rounded w-full"
+                  className="border border-gray-300 p-2 rounded w-full outline-none"
                 />
               </div>
 
@@ -506,7 +491,7 @@ export default function MenuPage() {
                   onClick={handleUpdateSubmit}
                   disabled={isUpdateDisabled}
                 >
-                  {updateLoading ? "Updating..." : "Update"}
+                  {updateMenuMutation.isPending ? "Updating..." : "Update"}
                 </button>
 
                 <button
