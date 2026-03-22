@@ -97,7 +97,7 @@ export default function InventoryAndProcurementPage() {
               </div>
 
               {/* Row 2: GRN + GI + Wastage */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="h-full">
                   <TileCard
                     title={features[1].title}
@@ -120,7 +120,7 @@ export default function InventoryAndProcurementPage() {
                     mobileSpan="w-full"
                   />
                 </div>
-                <div className="h-full">
+                {/* <div className="h-full">
                   <TileCard
                     title={features[4].title}
                     image={features[4].image}
@@ -130,7 +130,7 @@ export default function InventoryAndProcurementPage() {
                     span="w-full"
                     mobileSpan="w-full"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
