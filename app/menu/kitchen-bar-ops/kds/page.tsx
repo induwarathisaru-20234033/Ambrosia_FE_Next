@@ -109,7 +109,7 @@ const userInitials = useMemo(() => {
       PageNumber: 1,
       PageSize: 100,
       SortField: "createdDate",
-      SortOrder: 1,
+      SortOrder: -1,
     },
     { enabled: true, toastRef }
   );
