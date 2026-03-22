@@ -315,7 +315,7 @@ export default function EditWastagePage() {
         <Form className="p-3 sm:p-6">
           <div className="max-w-7xl space-y-6">
             <h1 className="h1-custom pb-4 text-[#15B097] font-semibold">
-              Update Wastage Record
+              Edit Wastage Record
             </h1>
 
             <h2 className="text-base font-bold text-gray-800 mb-2">
