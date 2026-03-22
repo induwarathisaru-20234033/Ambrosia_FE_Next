@@ -117,10 +117,10 @@ export default function GoodIssueNotesTable() {
           <Form>
             <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
               <LabelGroup
-                label="GI Number"
+                label="Goods Issue Number"
                 name="giNumber"
                 type="text"
-                placeholder="GI Number"
+                placeholder="Goods Issue Number"
                 id="filterGiNumber"
                 disabled={false}
               />
