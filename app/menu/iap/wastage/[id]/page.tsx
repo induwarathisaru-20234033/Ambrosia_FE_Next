@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Field, Form, Formik, FormikProps } from "formik";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { useToastRef } from "@/contexts/ToastContext";
-import { IBaseApiResponse, IPaginatedApiResponse } from "@/data-types";
+import { IBaseApiResponse } from "@/data-types";
 import { useGetQuery } from "@/services/queries/getQuery";
-import { usePatchQuery } from "@/services/queries/patchQuery";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axiosAuth from "@/utils/AxiosInstance";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -22,33 +22,44 @@ const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface InventoryItem {
+interface InventoryItemDto {
   id: number;
   itemName: string;
   itemNumber: string;
-  uoM?: string;
-  uom?: string;
-  itemCategory?: string;
-  unitPrice?: number;
-  currency?: string;
+  uoM: string;
+  itemCategory: string;
+  unitPrice: number;
+  currency: string;
+}
+
+interface PaginatedResultDto<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+interface InventoryItemOptionValue {
+  inventoryItemId: number;
+  itemName: string;
+  uoM: string;
+  unitPrice: number;
+  currency: string;
+  itemCategory: string;
 }
 
 interface InventoryItemOption {
   label: string;
-  value: {
-    inventoryItemId: number;
-    itemName: string;
-  };
+  value: InventoryItemOptionValue;
 }
 
-interface WastageEntryItemDto {
-  id: number;
+interface WastageLineItem {
   itemNo: number;
+  inventoryItemId: number;
+  itemName: string;
   wastageType: string;
   quantity: number;
   reason: string;
-  inventoryItemId: number;
-  inventoryItemName: string;
 }
 
 interface WastageRecordDto {
@@ -57,27 +68,19 @@ interface WastageRecordDto {
   entryDate: string;
   recordedBy: string;
   generalNotes: string;
-  items: WastageEntryItemDto[];
-}
-
-interface EditableWastageItem {
-  itemNo: number;
-  inventoryItemId: number;
-  itemName: string;
-  wastageType: string;
-  quantity: number;
-  reason: string;
 }
 
 interface FormValues {
   entryDate: Date | null;
   recordedBy: string;
   generalNotes: string;
-  inventoryItemOption: InventoryItemOption["value"] | null;
+  inventoryItemOption: InventoryItemOptionValue | null;
   wastageType: string;
   quantity: number | "";
   reason: string;
 }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const WASTAGE_TYPE_OPTIONS = [
   { label: "Spoilage", value: "Spoilage" },
@@ -87,136 +90,88 @@ const WASTAGE_TYPE_OPTIONS = [
   { label: "Other", value: "Other" },
 ];
 
+const initialFormValues: FormValues = {
+  entryDate: new Date(),
+  recordedBy: "",
+  generalNotes: "",
+  inventoryItemOption: null,
+  wastageType: "",
+  quantity: "",
+  reason: "",
+};
+
 const tableStyle = { minWidth: "52rem" };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function EditWastagePage() {
-  const params = useParams<{ id: string }>();
+export default function AddWastagePage() {
   const toastRef = useToastRef();
   const formikRef = useRef<FormikProps<FormValues>>(null);
+  const queryClient = useQueryClient();
 
-  const requestId = useMemo(() => params?.id ?? "", [params?.id]);
-  const numericRequestId = useMemo(() => Number(requestId), [requestId]);
+  const [lineItems, setLineItems] = useState<WastageLineItem[]>([]);
+  const [savedEntryNumber, setSavedEntryNumber] = useState<string | null>(null);
 
-  const patchMutation = usePatchQuery({
-    redirectPath: "/menu/iap/wastage-management",
-    successMessage: "Wastage record updated successfully!",
-    toastRef,
+  // ── Mutation — direct axiosAuth so we can read wastageEntryNumber ─────────
+  const { mutate: createWastageRecord, isPending } = useMutation({
+    mutationFn: (body: object) =>
+      axiosAuth.post<IBaseApiResponse<WastageRecordDto>>("/WastageRecords", body),
+    onSuccess: (response) => {
+      const entryNumber = response?.data?.data?.wastageEntryNumber;
+      if (entryNumber) {
+        setSavedEntryNumber(entryNumber);
+      }
+      // Invalidate list so it refreshes when user goes back
+      queryClient.invalidateQueries({ queryKey: ["wastageRecords"] });
+      toastRef.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: "Wastage record created successfully!",
+        life: 3000,
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "An error occurred while processing your request";
+      toastRef.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    },
   });
 
-  // Fetch existing wastage record
-  const {
-    data: wastageResponse,
-    isLoading,
-    isFetching,
-  } = useGetQuery<IBaseApiResponse<WastageRecordDto>, undefined>(
-    ["wastageRecordById", requestId],
-    `/WastageRecords/${requestId}`,
-    undefined,
-    { enabled: !!requestId, toastRef },
-  );
-
-  const wastageRecord = wastageResponse?.data;
-
-  // Inventory items for add-line dropdown
-  const [inventorySearch, setInventorySearch] = useState("");
-  const [debouncedInventorySearch, setDebouncedInventorySearch] = useState("");
-
-  const handleInventorySearchChange = useCallback((value: string) => {
-    setInventorySearch(value);
-    const timeoutId = setTimeout(() => {
-      setDebouncedInventorySearch(value.trim());
-    }, 350);
-    return () => clearTimeout(timeoutId);
-  }, []);
-
+  // ── Fetch inventory items upfront ─────────────────────────────────────────
   const { data: inventoryItemsResponse } = useGetQuery<
-    IPaginatedApiResponse<InventoryItem>,
-    { pageNumber: number; pageSize: number; itemName?: string }
+    IBaseApiResponse<PaginatedResultDto<InventoryItemDto>>,
+    { pageNumber: number; pageSize: number }
   >(
-    ["inventoryItemsForWastageEdit", debouncedInventorySearch],
-    "/InventoryItems",
-    {
-      pageNumber: 1,
-      pageSize: 20,
-      itemName: debouncedInventorySearch || undefined,
-    },
+    ["inventoryItemsForWastage"],
+    "/Inventory/items",
+    { pageNumber: 1, pageSize: 100 },
     { enabled: true, toastRef },
   );
 
   const inventoryItemOptions: InventoryItemOption[] = useMemo(() => {
-    const items: InventoryItem[] =
-      (inventoryItemsResponse as IBaseApiResponse<{ items: InventoryItem[] }>)
-        ?.data?.items ?? [];
-
+    const items = inventoryItemsResponse?.data?.items ?? [];
     return items.map((item) => ({
       label: `${item.itemName} (${item.itemNumber})`,
       value: {
         inventoryItemId: item.id,
         itemName: item.itemName,
+        uoM: item.uoM ?? "-",
+        unitPrice: item.unitPrice ?? 0,
+        currency: item.currency ?? "-",
+        itemCategory: item.itemCategory ?? "-",
       },
     }));
   }, [inventoryItemsResponse]);
 
-  // Line items state — seeded from fetched record
-  const initialLineItems = useMemo<EditableWastageItem[]>(() => {
-    return (wastageRecord?.items ?? []).map((item) => ({
-      itemNo: item.itemNo,
-      inventoryItemId: item.inventoryItemId,
-      itemName: item.inventoryItemName,
-      wastageType: item.wastageType,
-      quantity: item.quantity,
-      reason: item.reason,
-    }));
-  }, [wastageRecord]);
-
-  const [lineItems, setLineItems] = useState<EditableWastageItem[]>([]);
-
-  useEffect(() => {
-    setLineItems(initialLineItems);
-  }, [initialLineItems]);
-
-  // Initial form values driven by fetched record
-  const initialValues: FormValues = {
-    entryDate: wastageRecord?.entryDate
-      ? new Date(wastageRecord.entryDate)
-      : null,
-    recordedBy: wastageRecord?.recordedBy ?? "",
-    generalNotes: wastageRecord?.generalNotes ?? "",
-    inventoryItemOption: null,
-    wastageType: "",
-    quantity: "",
-    reason: "",
-  };
-
-  // ── Inline editing helpers ──────────────────────────────────────────────────
-
-  const updateLineItemField = useCallback(
-    (
-      itemNo: number,
-      field: "wastageType" | "quantity" | "reason",
-      value: string,
-    ) => {
-      setLineItems((prev) =>
-        prev.map((item) => {
-          if (item.itemNo !== itemNo) return item;
-          if (field === "quantity") {
-            return { ...item, quantity: Math.max(0, Number(value) || 0) };
-          }
-          return { ...item, [field]: value };
-        }),
-      );
-    },
-    [],
-  );
-
-  const removeLineItem = useCallback((itemNo: number) => {
-    setLineItems((prev) => {
-      const filtered = prev.filter((i) => i.itemNo !== itemNo);
-      return filtered.map((i, idx) => ({ ...i, itemNo: idx + 1 }));
-    });
-  }, []);
+  // ── Line form helpers ──────────────────────────────────────────────────────
 
   const clearLineForm = useCallback(() => {
     if (!formikRef.current) return;
@@ -225,6 +180,25 @@ export default function EditWastagePage() {
     formikRef.current.setFieldValue("quantity", "", false);
     formikRef.current.setFieldValue("reason", "", false);
   }, []);
+
+  const removeLineItem = useCallback((itemNo: number) => {
+    setLineItems((prev) => {
+      const filtered = prev.filter((i) => i.itemNo !== itemNo);
+      return filtered.map((i, idx) => ({ ...i, itemNo: idx + 1 }));
+    });
+  }, []);
+
+  const renderRemoveAction = (row: WastageLineItem) => (
+    <button
+      type="button"
+      className="bg-white border-2 border-[#15B097] text-[#15B097] py-1 px-3 rounded-md"
+      onClick={() => removeLineItem(row.itemNo)}
+    >
+      Remove
+    </button>
+  );
+
+  // ── Add line validation & append ──────────────────────────────────────────
 
   const handleAddLineItem = (values: FormValues) => {
     if (!values.inventoryItemOption) {
@@ -258,7 +232,7 @@ export default function EditWastagePage() {
       return;
     }
 
-    const newItem: EditableWastageItem = {
+    const newItem: WastageLineItem = {
       itemNo: lineItems.length + 1,
       inventoryItemId: values.inventoryItemOption.inventoryItemId,
       itemName: values.inventoryItemOption.itemName,
@@ -271,71 +245,9 @@ export default function EditWastagePage() {
     clearLineForm();
   };
 
-  // ── Column renderers ────────────────────────────────────────────────────────
-
-  const renderWastageTypeInput = (row: EditableWastageItem) => (
-    <select
-      className="form-control !py-1 !text-sm w-32"
-      value={row.wastageType}
-      onChange={(e) =>
-        updateLineItemField(row.itemNo, "wastageType", e.target.value)
-      }
-    >
-      <option value="">Select</option>
-      {WASTAGE_TYPE_OPTIONS.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
-  );
-
-  const renderQuantityInput = (row: EditableWastageItem) => (
-    <input
-      type="number"
-      min={0}
-      className="form-control !py-1 !text-sm w-24"
-      value={row.quantity}
-      onChange={(e) =>
-        updateLineItemField(row.itemNo, "quantity", e.target.value)
-      }
-    />
-  );
-
-  const renderReasonInput = (row: EditableWastageItem) => (
-    <input
-      type="text"
-      className="form-control !py-1 !text-sm w-36"
-      value={row.reason}
-      onChange={(e) =>
-        updateLineItemField(row.itemNo, "reason", e.target.value)
-      }
-    />
-  );
-
-  const renderRemoveAction = (row: EditableWastageItem) => (
-    <button
-      type="button"
-      className="bg-white border-2 border-[#15B097] text-[#15B097] py-1 px-3 rounded-md"
-      onClick={() => removeLineItem(row.itemNo)}
-    >
-      Remove
-    </button>
-  );
-
-  // ── Submit ──────────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = (values: FormValues) => {
-    if (!requestId || Number.isNaN(numericRequestId)) {
-      toastRef.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Invalid wastage record ID.",
-        life: 3000,
-      });
-      return;
-    }
-
     if (!values.recordedBy.trim()) {
       toastRef.current?.show({
         severity: "warn",
@@ -356,40 +268,28 @@ export default function EditWastagePage() {
       return;
     }
 
-    patchMutation.mutate({
-      url: `/WastageRecords/${requestId}`,
-      body: {
-        id: numericRequestId,
-        entryDate: values.entryDate
-          ? new Date(values.entryDate).toISOString()
-          : new Date().toISOString(),
-        recordedBy: values.recordedBy.trim(),
-        generalNotes: values.generalNotes.trim(),
-        items: lineItems.map((item) => ({
-          itemNo: item.itemNo,
-          inventoryItemId: item.inventoryItemId,
-          wastageType: item.wastageType,
-          quantity: item.quantity,
-          reason: item.reason,
-        })),
-      },
+    createWastageRecord({
+      entryDate: values.entryDate
+        ? new Date(values.entryDate).toISOString()
+        : new Date().toISOString(),
+      recordedBy: values.recordedBy.trim(),
+      generalNotes: values.generalNotes.trim(),
+      items: lineItems.map((item) => ({
+        itemNo: item.itemNo,
+        inventoryItemId: item.inventoryItemId,
+        wastageType: item.wastageType,
+        quantity: item.quantity,
+        reason: item.reason,
+      })),
     });
   };
 
-  // ── Loading state ───────────────────────────────────────────────────────────
-
-  if ((isLoading || isFetching) && !wastageRecord) {
-    return (
-      <div className="p-6 text-sm text-gray-600">
-        Loading wastage record...
-      </div>
-    );
-  }
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <Formik<FormValues>
       innerRef={formikRef}
-      initialValues={initialValues}
+      initialValues={initialFormValues}
       enableReinitialize
       onSubmit={() => {
         // Button-driven submit
@@ -399,23 +299,30 @@ export default function EditWastagePage() {
         <Form className="p-3 sm:p-6">
           <div className="max-w-7xl space-y-6">
             <h1 className="h1-custom pb-4 text-[#15B097] font-semibold">
-              Update Wastage Record
+              Add Wastage Record
             </h1>
 
-            {/* ── Header Details ── */}
+            {/* ── Wastage Details ── */}
             <h2 className="text-base font-bold text-gray-800 mb-2">
               Wastage Details
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-              <LabelGroup
-                name="wastageEntryNumber"
-                id="wastageEntryNumber"
-                label="Entry Number"
-                type="text"
-                value={wastageRecord?.wastageEntryNumber ?? ""}
-                disabled
-              />
+              {/* Entry Number — Auto-generated until saved */}
+              <div className="mb-3 label text-xs xs:text-sm sm:text-base">
+                <label className="form-label" htmlFor="wastageEntryNumber">
+                  Entry Number
+                </label>
+                <input
+                  id="wastageEntryNumber"
+                  type="text"
+                  className="form-control bg-gray-100 cursor-not-allowed"
+                  value={savedEntryNumber ?? "Auto-generated"}
+                  disabled
+                  readOnly
+                />
+              </div>
+
               <DatePicker
                 name="entryDate"
                 id="entryDate"
@@ -429,25 +336,23 @@ export default function EditWastagePage() {
                 type="text"
                 placeholder="Enter name"
               />
-              <div className="md:col-span-1 lg:col-span-1">
-                <div className="mb-3 label text-xs xs:text-sm sm:text-base">
-                  <label className="form-label" htmlFor="generalNotes">
-                    General Notes
-                  </label>
-                  <Field
-                    as="textarea"
-                    id="generalNotes"
-                    name="generalNotes"
-                    className="form-control"
-                    placeholder="Enter general notes"
-                    rows={2}
-                  />
-                </div>
+              <div className="mb-3 label text-xs xs:text-sm sm:text-base">
+                <label className="form-label" htmlFor="generalNotes">
+                  General Notes
+                </label>
+                <Field
+                  as="textarea"
+                  id="generalNotes"
+                  name="generalNotes"
+                  className="form-control"
+                  placeholder="Enter general notes"
+                  rows={2}
+                />
               </div>
             </div>
 
-            {/* ── Add Line Section ── */}
-            <h2 className="text-base font-bold text-black">Add Line Item</h2>
+            {/* ── Line Details ── */}
+            <h2 className="text-base font-bold text-black">Line Details</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
               <Dropdown
@@ -458,11 +363,8 @@ export default function EditWastagePage() {
                 options={inventoryItemOptions}
                 isSearchable
                 showClearOption
-                onInputChange={(val: string) =>
-                  handleInventorySearchChange(val)
-                }
                 onChange={(event: {
-                  value?: InventoryItemOption["value"] | null;
+                  value?: InventoryItemOptionValue | null;
                 }) => {
                   if (!event.value) {
                     setFieldValue("inventoryItemOption", null, false);
@@ -472,7 +374,7 @@ export default function EditWastagePage() {
 
               <Dropdown
                 name="wastageType"
-                id="wastageTypeAdd"
+                id="wastageType"
                 label="Wastage Type*"
                 placeholder="Select type"
                 options={WASTAGE_TYPE_OPTIONS}
@@ -513,8 +415,8 @@ export default function EditWastagePage() {
                 text="Add Line"
                 type="button"
                 className="bg-[#15B097] text-white px-4 py-2 rounded-md"
-                state={!patchMutation.isPending}
-                disabled={patchMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => handleAddLineItem(values)}
               />
               <Button
@@ -522,16 +424,16 @@ export default function EditWastagePage() {
                 text="Clear"
                 type="button"
                 className="bg-white border-2 border-[#15B097] text-[#15B097] px-4 py-2 rounded-md"
-                state={!patchMutation.isPending}
-                disabled={patchMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={clearLineForm}
               />
             </div>
 
-            {/* ── Line Items Table (inline editable) ── */}
+            {/* ── Line Items Table ── */}
             <DataTable
               value={lineItems}
-              emptyMessage="No wastage items found"
+              emptyMessage="No wastage items added yet"
               stripedRows
               size="small"
               scrollable
@@ -539,15 +441,9 @@ export default function EditWastagePage() {
             >
               <Column field="itemNo" header="Item No" />
               <Column field="itemName" header="Item Name" />
-              <Column
-                header="Wastage Type"
-                body={renderWastageTypeInput}
-              />
-              <Column header="Quantity" body={renderQuantityInput} />
-              <Column
-                header="Reason for Wastage"
-                body={renderReasonInput}
-              />
+              <Column field="wastageType" header="Wastage Type" />
+              <Column field="quantity" header="Quantity" />
+              <Column field="reason" header="Reason for Wastage" />
               <Column
                 header="Actions"
                 body={renderRemoveAction}
@@ -560,24 +456,25 @@ export default function EditWastagePage() {
             {/* ── Footer Actions ── */}
             <div className="mt-8 flex items-center justify-end gap-3">
               <Button
-                id="resetWastageEditBtn"
+                id="resetWastageFormBtn"
                 text="Reset"
                 type="button"
                 className="bg-[#696E79] text-white mr-2 p-[12px] rounded-xl box-shadow w-full"
-                state={!patchMutation.isPending}
-                disabled={patchMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => {
-                  resetForm({ values: initialValues });
-                  setLineItems(initialLineItems);
+                  resetForm();
+                  setLineItems([]);
+                  setSavedEntryNumber(null);
                 }}
               />
               <Button
-                id="saveWastageEditBtn"
+                id="saveWastageBtn"
                 text="Save"
                 type="button"
                 className="bg-[#15B097] text-white p-[12px] rounded-xl box-shadow w-full"
-                state={!patchMutation.isPending}
-                disabled={patchMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => handleSubmit(values)}
               />
             </div>

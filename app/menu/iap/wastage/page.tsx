@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Column } from "primereact/column";
@@ -32,22 +32,6 @@ interface WastageRecordDto {
   items: WastageEntryItemDto[];
 }
 
-interface WastageRecordListParams {
-  pageNumber?: number;
-  pageSize?: number;
-  wastageEntryNumber?: string;
-  recordedBy?: string;
-  entryDateFrom?: string;
-  entryDateTo?: string;
-}
-
-interface IPaginatedData<T> {
-  items: T[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const tableStyle = { minWidth: "60rem" };
@@ -58,50 +42,62 @@ export default function WastageManagementPage() {
 
   const [wastageEntryNumber, setWastageEntryNumber] = useState("");
   const [recordedBy, setRecordedBy] = useState("");
-  const [entryDateFrom, setEntryDateFrom] = useState<Date | null>(null);
-  const [entryDateTo, setEntryDateTo] = useState<Date | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const pageSize = 10;
+  const [entryDateFrom, setEntryDateFrom] = useState("");
+  const [entryDateTo, setEntryDateTo] = useState("");
 
-  const queryParams: WastageRecordListParams = useMemo(
-    () => ({
-      pageNumber,
-      pageSize,
-      wastageEntryNumber: wastageEntryNumber.trim() || undefined,
-      recordedBy: recordedBy.trim() || undefined,
-      entryDateFrom: entryDateFrom ? entryDateFrom.toISOString() : undefined,
-      entryDateTo: entryDateTo ? entryDateTo.toISOString() : undefined,
-    }),
-    [pageNumber, wastageEntryNumber, recordedBy, entryDateFrom, entryDateTo],
-  );
-
+  // ── Fetch — plain array response ─────────────────────────────────────────
   const { data: wastageResponse, isLoading } = useGetQuery<
-    IBaseApiResponse<IPaginatedData<WastageRecordDto>>,
-    WastageRecordListParams
+    IBaseApiResponse<WastageRecordDto[]>,
+    undefined
   >(
-    [
-      "wastageRecords",
-      String(pageNumber),
-      wastageEntryNumber,
-      recordedBy,
-      entryDateFrom?.toISOString() ?? "",
-      entryDateTo?.toISOString() ?? "",
-    ],
+    ["wastageRecords"],
     "/WastageRecords",
-    queryParams,
+    undefined,
     { toastRef },
   );
 
-  const records = wastageResponse?.data?.items ?? [];
-  const totalCount = wastageResponse?.data?.totalCount ?? 0;
+  const allRecords = wastageResponse?.data ?? [];
+
+  // ── Client-side filtering ─────────────────────────────────────────────────
+  const filteredRecords = allRecords.filter((record) => {
+    const matchesEntryNumber = wastageEntryNumber.trim()
+      ? record.wastageEntryNumber
+          .toLowerCase()
+          .includes(wastageEntryNumber.trim().toLowerCase())
+      : true;
+
+    const matchesRecordedBy = recordedBy.trim()
+      ? record.recordedBy
+          .toLowerCase()
+          .includes(recordedBy.trim().toLowerCase())
+      : true;
+
+    const recordDate = new Date(record.entryDate);
+
+    const matchesDateFrom = entryDateFrom
+      ? recordDate >= new Date(entryDateFrom)
+      : true;
+
+    const matchesDateTo = entryDateTo
+      ? recordDate <= new Date(new Date(entryDateTo).setHours(23, 59, 59, 999))
+      : true;
+
+    return (
+      matchesEntryNumber &&
+      matchesRecordedBy &&
+      matchesDateFrom &&
+      matchesDateTo
+    );
+  });
 
   const handleReset = () => {
     setWastageEntryNumber("");
     setRecordedBy("");
-    setEntryDateFrom(null);
-    setEntryDateTo(null);
-    setPageNumber(1);
+    setEntryDateFrom("");
+    setEntryDateTo("");
   };
+
+  // ── Column renderers ──────────────────────────────────────────────────────
 
   const renderActions = (row: WastageRecordDto) => (
     <button
@@ -117,6 +113,8 @@ export default function WastageManagementPage() {
     row.entryDate ? new Date(row.entryDate).toLocaleDateString() : "-";
 
   const renderItemCount = (row: WastageRecordDto) => row.items?.length ?? 0;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-3 sm:p-6">
@@ -174,16 +172,8 @@ export default function WastageManagementPage() {
               id="entryDateFrom"
               type="date"
               className="form-control"
-              value={
-                entryDateFrom
-                  ? entryDateFrom.toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                setEntryDateFrom(
-                  e.target.value ? new Date(e.target.value) : null,
-                )
-              }
+              value={entryDateFrom}
+              onChange={(e) => setEntryDateFrom(e.target.value)}
             />
           </div>
 
@@ -195,14 +185,8 @@ export default function WastageManagementPage() {
               id="entryDateTo"
               type="date"
               className="form-control"
-              value={
-                entryDateTo ? entryDateTo.toISOString().split("T")[0] : ""
-              }
-              onChange={(e) =>
-                setEntryDateTo(
-                  e.target.value ? new Date(e.target.value) : null,
-                )
-              }
+              value={entryDateTo}
+              onChange={(e) => setEntryDateTo(e.target.value)}
             />
           </div>
         </div>
@@ -220,19 +204,15 @@ export default function WastageManagementPage() {
 
         {/* ── Table ── */}
         <DataTable
-          value={records}
+          value={filteredRecords}
           loading={isLoading}
           emptyMessage="No wastage records found"
           stripedRows
           size="small"
           scrollable
           tableStyle={tableStyle}
-          lazy
           paginator
-          rows={pageSize}
-          totalRecords={totalCount}
-          first={(pageNumber - 1) * pageSize}
-          onPage={(e) => setPageNumber((e.first ?? 0) / pageSize + 1)}
+          rows={10}
         >
           <Column field="wastageEntryNumber" header="Entry Number" />
           <Column header="Entry Date" body={renderEntryDate} />

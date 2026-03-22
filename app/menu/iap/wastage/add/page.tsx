@@ -8,7 +8,8 @@ import { DataTable } from "primereact/datatable";
 import { useToastRef } from "@/contexts/ToastContext";
 import { IBaseApiResponse } from "@/data-types";
 import { useGetQuery } from "@/services/queries/getQuery";
-import { usePostQuery } from "@/services/queries/postQuery";
+import { useMutation } from "@tanstack/react-query";
+import axiosAuth from "@/utils/AxiosInstance";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -61,6 +62,14 @@ interface WastageLineItem {
   reason: string;
 }
 
+interface WastageRecordDto {
+  id: number;
+  wastageEntryNumber: string;
+  entryDate: string;
+  recordedBy: string;
+  generalNotes: string;
+}
+
 interface FormValues {
   entryDate: Date | null;
   recordedBy: string;
@@ -99,15 +108,41 @@ export default function AddWastagePage() {
   const toastRef = useToastRef();
   const formikRef = useRef<FormikProps<FormValues>>(null);
 
-  const postMutation = usePostQuery({
-    redirectPath: "/menu/iap/wastage",
-    successMessage: "Wastage record created successfully!",
-    toastRef,
+  const [lineItems, setLineItems] = useState<WastageLineItem[]>([]);
+  const [savedEntryNumber, setSavedEntryNumber] = useState<string | null>(null);
+
+  // ── Direct mutation using axiosAuth so we can read the response ──────────
+  const { mutate: createWastageRecord, isPending } = useMutation({
+    mutationFn: (body: object) =>
+      axiosAuth.post<IBaseApiResponse<WastageRecordDto>>("/WastageRecords", body),
+    onSuccess: (response) => {
+      const entryNumber = response?.data?.data?.wastageEntryNumber;
+      if (entryNumber) {
+        setSavedEntryNumber(entryNumber);
+      }
+      toastRef.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: "Wastage record created successfully!",
+        life: 3000,
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "An error occurred while processing your request";
+      toastRef.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+        life: 5000,
+      });
+    },
   });
 
-  const [lineItems, setLineItems] = useState<WastageLineItem[]>([]);
-
-  // ── Fetch inventory items (load all upfront, Dropdown handles client search) ──
+  // ── Fetch inventory items upfront ─────────────────────────────────────────
   const { data: inventoryItemsResponse } = useGetQuery<
     IBaseApiResponse<PaginatedResultDto<InventoryItemDto>>,
     { pageNumber: number; pageSize: number }
@@ -230,22 +265,19 @@ export default function AddWastagePage() {
       return;
     }
 
-    postMutation.mutate({
-      url: "/WastageRecords",
-      body: {
-        entryDate: values.entryDate
-          ? new Date(values.entryDate).toISOString()
-          : new Date().toISOString(),
-        recordedBy: values.recordedBy.trim(),
-        generalNotes: values.generalNotes.trim(),
-        items: lineItems.map((item) => ({
-          itemNo: item.itemNo,
-          inventoryItemId: item.inventoryItemId,
-          wastageType: item.wastageType,
-          quantity: item.quantity,
-          reason: item.reason,
-        })),
-      },
+    createWastageRecord({
+      entryDate: values.entryDate
+        ? new Date(values.entryDate).toISOString()
+        : new Date().toISOString(),
+      recordedBy: values.recordedBy.trim(),
+      generalNotes: values.generalNotes.trim(),
+      items: lineItems.map((item) => ({
+        itemNo: item.itemNo,
+        inventoryItemId: item.inventoryItemId,
+        wastageType: item.wastageType,
+        quantity: item.quantity,
+        reason: item.reason,
+      })),
     });
   };
 
@@ -273,6 +305,22 @@ export default function AddWastagePage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+
+              {/* Entry Number — shows "Auto-generated" until saved, then real number */}
+              <div className="mb-3 label text-xs xs:text-sm sm:text-base">
+                <label className="form-label" htmlFor="wastageEntryNumber">
+                  Entry Number
+                </label>
+                <input
+                  id="wastageEntryNumber"
+                  type="text"
+                  className="form-control bg-gray-100 cursor-not-allowed"
+                  value={savedEntryNumber ?? "Auto-generated"}
+                  disabled
+                  readOnly
+                />
+              </div>
+
               <DatePicker
                 name="entryDate"
                 id="entryDate"
@@ -286,20 +334,18 @@ export default function AddWastagePage() {
                 type="text"
                 placeholder="Enter name"
               />
-              <div className="md:col-span-2 lg:col-span-2">
-                <div className="mb-3 label text-xs xs:text-sm sm:text-base">
-                  <label className="form-label" htmlFor="generalNotes">
-                    General Notes
-                  </label>
-                  <Field
-                    as="textarea"
-                    id="generalNotes"
-                    name="generalNotes"
-                    className="form-control"
-                    placeholder="Enter general notes"
-                    rows={2}
-                  />
-                </div>
+              <div className="mb-3 label text-xs xs:text-sm sm:text-base">
+                <label className="form-label" htmlFor="generalNotes">
+                  General Notes
+                </label>
+                <Field
+                  as="textarea"
+                  id="generalNotes"
+                  name="generalNotes"
+                  className="form-control"
+                  placeholder="Enter general notes"
+                  rows={2}
+                />
               </div>
             </div>
 
@@ -367,8 +413,8 @@ export default function AddWastagePage() {
                 text="Add Line"
                 type="button"
                 className="bg-[#15B097] text-white px-4 py-2 rounded-md"
-                state={!postMutation.isPending}
-                disabled={postMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => handleAddLineItem(values)}
               />
               <Button
@@ -376,8 +422,8 @@ export default function AddWastagePage() {
                 text="Clear"
                 type="button"
                 className="bg-white border-2 border-[#15B097] text-[#15B097] px-4 py-2 rounded-md"
-                state={!postMutation.isPending}
-                disabled={postMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={clearLineForm}
               />
             </div>
@@ -412,11 +458,12 @@ export default function AddWastagePage() {
                 text="Reset"
                 type="button"
                 className="bg-[#696E79] text-white mr-2 p-[12px] rounded-xl box-shadow w-full"
-                state={!postMutation.isPending}
-                disabled={postMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => {
                   resetForm();
                   setLineItems([]);
+                  setSavedEntryNumber(null);
                 }}
               />
               <Button
@@ -424,8 +471,8 @@ export default function AddWastagePage() {
                 text="Save"
                 type="button"
                 className="bg-[#15B097] text-white p-[12px] rounded-xl box-shadow w-full"
-                state={!postMutation.isPending}
-                disabled={postMutation.isPending}
+                state={!isPending}
+                disabled={isPending}
                 onClick={() => handleSubmit(values)}
               />
             </div>
