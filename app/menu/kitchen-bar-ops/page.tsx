@@ -29,7 +29,7 @@ export default function ViewKitchenBarOpsPage() {
     },
     {
       id: "inventory",
-      title: "Order History and Management",
+      title: "Order Management and History",
       image: PurchaseInventory,
       borderColor: "border-gray-400",
       textColor: "text-black",
