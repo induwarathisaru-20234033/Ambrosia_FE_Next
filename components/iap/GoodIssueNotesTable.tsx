@@ -181,7 +181,7 @@ export default function GoodIssueNotesTable() {
         rowsPerPageOptions={[10, 20, 50]}
         emptyMessage="No goods issue notes found"
       >
-        <Column field="giNumber" header="GI Number" />
+        <Column field="giNumber" header="Goods Issue Number" />
         <Column field="issuedBy" header="Issued By" />
         <Column
           header="Issued Date"
