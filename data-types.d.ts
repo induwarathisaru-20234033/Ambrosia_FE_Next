@@ -1,3 +1,31 @@
+export interface IGoodsIssueNoteItem {
+  id: number;
+  lineItemNo: number;
+  inventoryItemId: number;
+  inventoryItem: IInventoryItem;
+  requestedQuantity: number;
+  issuedQuantity: number;
+  issuedFrom: string;
+  issuedTo: string;
+  remarks: string;
+}
+
+export interface IGoodsIssueNote {
+  id: number;
+  giNumber: string;
+  issuedBy: string;
+  issuedDate: string;
+  items: IGoodsIssueNoteItem[];
+}
+
+export interface IGoodsIssueNoteListParams {
+  pageNumber: number;
+  pageSize: number;
+  giNumber?: string;
+  issuedBy?: string;
+  issuedDateFrom?: string | Date;
+  issuedDateTo?: string | Date;
+}
 import { Day } from "./enums/day";
 import { SortOrder } from "primereact/datatable";
 
