@@ -52,6 +52,14 @@ export default function MenuPage() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
+      minimumFractionDigits: 2,
+    }).format(price);
+  };
+
   const [updateForm, setUpdateForm] = useState<UpdateMenuForm>({
     id: null,
     name: "",
@@ -288,7 +296,7 @@ const handleAddFormChange = (
       <Column
         field="price"
         header="Price (Rs)"
-        body={(row: MenuItem) => `Rs. ${row.price.toFixed(2)}`}
+        body={(row: MenuItem) => formatPrice(row.price)}
         sortable
       />
       <Column
