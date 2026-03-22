@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/components/Button";
+import GoodIssueNotesTable from "@/components/iap/GoodIssueNotesTable";
 import { useRouter } from "next/navigation";
 
 export default function ViewGoodIssuePage() {
@@ -26,6 +27,7 @@ export default function ViewGoodIssuePage() {
             onClick={handleCreateGoodIssueNote}
           />
         </div>
+        <GoodIssueNotesTable />
       </div>
     </main>
   );
