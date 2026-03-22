@@ -49,6 +49,7 @@ export const buildOrderQueryParams = (filters: SearchOrderRequest) => ({
   OrderDateTo: filters.orderDateTo
     ? toEndOfDayIso(filters.orderDateTo)
     : undefined,
+  Status: filters.status || undefined,
   SortField: mapOrderSortFieldToBackend(filters.sortField),
   SortOrder: filters.sortOrder || undefined,
   PageNumber: filters.pageNumber,
