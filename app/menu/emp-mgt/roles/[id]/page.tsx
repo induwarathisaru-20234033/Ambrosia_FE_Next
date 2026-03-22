@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Formik, Form } from "formik";
 import { Container, Row, Col } from "react-bootstrap";
@@ -18,13 +18,19 @@ const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
 });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
 
-interface IPermission {
+interface IPermissionItem {
   id: number;
   permissionCode: string;
   name: string;
+  description?: string;
+  isSelected: boolean;
+}
+
+interface IPermissionGroup {
   featureId: number;
   featureCode: string;
   featureName: string;
+  permissions: IPermissionItem[];
 }
 
 interface IRoleDetails {
@@ -33,8 +39,10 @@ interface IRoleDetails {
   name: string;
   description: string;
   status: number;
+  selectedPermissionIds: number[];
+  permissionGroups: IPermissionGroup[];
   createdDate?: string;
-  permissions: IPermission[];
+  updatedDate?: string;
 }
 
 interface EditRoleFormValues {
@@ -46,75 +54,21 @@ interface EditRoleFormValues {
   permissionIds: number[];
 }
 
-const permissionGroups = [
-  {
-    title: "Employee",
-    items: [
-      { id: 1, label: "View Employee" },
-      { id: 2, label: "Add Employee" },
-      { id: 3, label: "Edit Employee" },
-    ],
-  },
-  {
-    title: "Inventory Management",
-    items: [
-      { id: 4, label: "View Inventory" },
-      { id: 5, label: "Add Inventory Item" },
-    ],
-  },
-  {
-    title: "Purchase Request",
-    items: [
-      { id: 6, label: "View Purchase Request" },
-      { id: 7, label: "Add Purchase Request" },
-      { id: 8, label: "Edit Purchase Request" },
-    ],
-  },
-  {
-    title: "Menu Management",
-    items: [
-      { id: 9, label: "View Menu" },
-      { id: 10, label: "Add Menu Item" },
-      { id: 11, label: "Edit Menu Item" },
-    ],
-  },
-  {
-    title: "Customer Reservations",
-    items: [
-      { id: 12, label: "View Reservations" },
-      { id: 13, label: "Add Reservations" },
-      { id: 14, label: "Edit Reservations" },
-    ],
-  },
-  {
-    title: "Order Management",
-    items: [
-      { id: 15, label: "View Orders" },
-      { id: 16, label: "Add Orders" },
-      { id: 17, label: "Edit Orders" },
-    ],
-  },
-];
-
 export default function EditRolePage() {
   const params = useParams<{ id: string }>();
   const id = Number(params?.id);
   const router = useRouter();
   const toastRef = useToastRef();
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    Employee: true,
-    "Inventory Management": true,
-    "Purchase Request": true,
-    "Menu Management": false,
-    "Customer Reservations": false,
-    "Order Management": false,
-  });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  const { data, isFetching } = useGetQuery<IBaseApiResponse<IRoleDetails>, void>(
+  const { data, isFetching } = useGetQuery<IBaseApiResponse<IRoleDetails>, any>(
     ["role-details", id],
     `/roles/${id}`,
-    undefined,
+    {
+      includePermissions: true,
+      includeFeatures: true,
+    },
     {
       enabled: !!id,
       toastRef,
@@ -136,10 +90,29 @@ export default function EditRolePage() {
       name: roleData?.name ?? "",
       description: roleData?.description ?? "",
       status: roleData?.status ?? 1,
-      permissionIds: roleData?.permissions?.map((p) => p.id) ?? [],
+      permissionIds:
+        roleData?.selectedPermissionIds ??
+        roleData?.permissionGroups
+          ?.flatMap((group) =>
+            group.permissions
+              .filter((permission) => permission.isSelected)
+              .map((permission) => permission.id),
+          ) ??
+        [],
     }),
     [roleData, id],
   );
+
+  useEffect(() => {
+    if (!roleData?.permissionGroups?.length) return;
+
+    const initialOpenState: Record<string, boolean> = {};
+    roleData.permissionGroups.forEach((group, index) => {
+      initialOpenState[group.featureName] = index < 3;
+    });
+
+    setOpenGroups(initialOpenState);
+  }, [roleData]);
 
   const toggleGroup = (groupName: string) => {
     setOpenGroups((prev) => ({
@@ -155,11 +128,21 @@ export default function EditRolePage() {
     setFieldValue: (field: string, value: any) => void,
   ) => {
     const updated = checked
-      ? [...permissionIds, permissionId]
+      ? permissionIds.includes(permissionId)
+        ? permissionIds
+        : [...permissionIds, permissionId]
       : permissionIds.filter((id) => id !== permissionId);
 
     setFieldValue("permissionIds", updated);
   };
+
+  if (isFetching && !roleData) {
+    return (
+      <Container fluid className="py-4 px-4">
+        <div className="text-gray-500">Loading role details...</div>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className="py-4 px-4">
@@ -254,65 +237,58 @@ export default function EditRolePage() {
                     />
                   </div>
 
-                  <div className="d-flex gap-2 mt-5">
+                  <div className="flex gap-2 mt-4">
                     <Button
+                      id="resetBtn"
                       text="Reset"
-                      className="bg-[#696E79] text-white p-[12px] rounded-xl box-shadow w-full"
                       type="button"
+                      className="bg-gray-400 text-white px-4 py-2 rounded-xl shadow-md w-full"
                       state={true}
-                      disabled={updateMutation.isPending || isFetching}
-                      id="reset"
                       onClick={() => resetForm()}
                     />
-
                     <Button
-                      text="Save"
-                      className="bg-[#0086ED] text-white p-[12px] rounded-xl box-shadow w-full"
+                      id="saveBtn"
+                      text={updateMutation.isPending ? "Saving..." : "Save"}
                       type="submit"
+                      className="bg-[#5AA9E6] text-white px-4 py-2 rounded-xl shadow-md w-full"
                       state={!updateMutation.isPending}
-                      disabled={updateMutation.isPending || isFetching}
-                      id="submit"
                     />
                   </div>
                 </div>
 
-                <div className="hidden lg:block w-px bg-gray-300"></div>
-                <div className="block lg:hidden h-px bg-gray-300 mx-4"></div>
+                <div className="hidden lg:block w-px bg-gray-300" />
 
                 <div className="w-full lg:w-7/12 p-4 p-lg-5">
                   <h2 className="text-[#0086ED] font-semibold text-xl mb-4">
                     Permissions
                   </h2>
 
-                  <div
-                    className="pr-2"
-                    style={{ maxHeight: "65vh", overflowY: "auto" }}
-                  >
-                    <div className="space-y-3">
-                      {permissionGroups.map((group) => (
+                  <div className="space-y-3 max-h-[62vh] overflow-y-auto pr-2">
+                    {roleData?.permissionGroups?.length ? (
+                      roleData.permissionGroups.map((group) => (
                         <div
-                          key={group.title}
+                          key={group.featureId}
                           className="border border-gray-200 rounded p-3"
                         >
                           <div
                             className="flex items-center cursor-pointer"
-                            onClick={() => toggleGroup(group.title)}
+                            onClick={() => toggleGroup(group.featureName)}
                           >
                             <i
                               className={`pi mr-2 ${
-                                openGroups[group.title]
+                                openGroups[group.featureName]
                                   ? "pi-chevron-down"
                                   : "pi-chevron-right"
                               }`}
                             />
                             <label className="font-medium cursor-pointer mb-0">
-                              {group.title}
+                              {group.featureName}
                             </label>
                           </div>
 
-                          {openGroups[group.title] && (
+                          {openGroups[group.featureName] && (
                             <div className="mt-2 ml-4 space-y-2">
-                              {group.items.map((permission) => (
+                              {group.permissions.map((permission) => (
                                 <label
                                   key={permission.id}
                                   className="flex items-center gap-2 cursor-pointer"
@@ -331,14 +307,18 @@ export default function EditRolePage() {
                                       )
                                     }
                                   />
-                                  {permission.label}
+                                  {permission.name}
                                 </label>
                               ))}
                             </div>
                           )}
                         </div>
-                      ))}
-                    </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-500">
+                        No permissions available.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

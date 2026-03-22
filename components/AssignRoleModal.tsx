@@ -33,6 +33,12 @@ interface AssignRoleModalProps {
   onAssigned: () => void;
 }
 
+interface AssignedEmployee {
+  id: number;
+  employeeId: string;
+  fullName: string;
+}
+
 const searchByOptions = [
   { label: "Select Option", value: "all" },
   { label: "Employee ID", value: "employeeId" },
@@ -52,6 +58,7 @@ export default function AssignRoleModal({
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [alreadyAssignedEmployees, setAlreadyAssignedEmployees] = useState<number[]>([]);
 
   // Debounce search input (300ms delay)
   useEffect(() => {
@@ -65,8 +72,10 @@ export default function AssignRoleModal({
   useEffect(() => {
     if (!visible) {
       setSelectedEmployees([]);
+      setAlreadyAssignedEmployees([]);
       setSearchTerm("");
       setDebouncedSearchTerm("");
+      setSearchBy("all");
     }
   }, [visible]);
 
@@ -78,6 +87,17 @@ export default function AssignRoleModal({
     { enabled: !!role && visible, toastRef }
   );
 
+    const { data: assignedEmployeesResponse } = useGetQuery<any, any>(
+    ["assigned-employees", role?.id ?? 0],
+    `/roles/${role?.id}/assigned-employees`,
+    { isCustomRole: false },
+    {
+      enabled: !!role && visible,
+      toastRef,
+    },
+  );
+
+
   // Process employees with full name
   const allEmployees = useMemo(() => {
     const raw = employeesResponse?.data?.items || employeesResponse?.data || [];
@@ -88,6 +108,18 @@ export default function AssignRoleModal({
         fullName: `${emp.firstName} ${emp.lastName}`.trim(),
       }));
   }, [employeesResponse]);
+
+    useEffect(() => {
+    if (!visible) return;
+
+    const assigned: AssignedEmployee[] =
+      assignedEmployeesResponse?.data?.assignedEmployees || [];
+
+    const assignedIds = assigned.map((emp) => emp.id);
+
+    setAlreadyAssignedEmployees(assignedIds);
+    setSelectedEmployees(assignedIds);
+  }, [assignedEmployeesResponse, visible]);
 
   // Filter employees based on search
   const filteredEmployees = useMemo(() => {
@@ -120,57 +152,83 @@ export default function AssignRoleModal({
 
   // Handle individual employee selection
   const handleEmployeeToggle = (employeeId: number, isChecked: boolean) => {
+    if (alreadyAssignedEmployees.includes(employeeId)) return;
+
     if (isChecked) {
-      setSelectedEmployees(prev => [...prev, employeeId]);
+      setSelectedEmployees((prev) =>
+        prev.includes(employeeId) ? prev : [...prev, employeeId],
+      );
     } else {
-      setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
+      setSelectedEmployees((prev) => prev.filter((id) => id !== employeeId));
     }
   };
 
   // Select/Deselect all employees
   const handleSelectAll = (isChecked: boolean) => {
+    const selectableEmployeeIds = filteredEmployees
+      .filter((emp: Employee) => !alreadyAssignedEmployees.includes(emp.id))
+      .map((emp: Employee) => emp.id);
+
     if (isChecked) {
-      setSelectedEmployees(filteredEmployees.map((emp: Employee) => emp.id));
+      setSelectedEmployees([
+        ...alreadyAssignedEmployees,
+        ...selectableEmployeeIds.filter(
+          (id: number) => !alreadyAssignedEmployees.includes(id),
+        ),
+      ]);
     } else {
-      setSelectedEmployees([]);
+      setSelectedEmployees([...alreadyAssignedEmployees]);
     }
   };
 
+  const selectableFilteredEmployees = filteredEmployees.filter(
+    (emp: Employee) => !alreadyAssignedEmployees.includes(emp.id),
+  );
+
+  const selectedSelectableCount = selectableFilteredEmployees.filter((emp: Employee) =>
+    selectedEmployees.includes(emp.id),
+  ).length;
+
   // Check if all filtered employees are selected
-  const isAllSelected = filteredEmployees.length > 0 && 
-    selectedEmployees.length === filteredEmployees.length;
+  const isAllSelected =
+    selectableFilteredEmployees.length > 0 &&
+    selectedSelectableCount === selectableFilteredEmployees.length;
 
   const assignMutation = usePatchQuery({
     invalidateKey: ["roles", "employees"],
-    toastRef: toastRef,
+    toastRef,
   });
 
   const handleAssign = async () => {
-    if (selectedEmployees.length === 0) {
+    if (!role) return;
+
+    const newEmployees = selectedEmployees.filter(
+      (id) => !alreadyAssignedEmployees.includes(id),
+    );
+
+    if (newEmployees.length === 0) {
       toastRef.current?.show({
         severity: "warn",
         summary: "Warning",
-        detail: "Please select at least one employee to assign.",
+        detail: "Please select at least one new employee to assign.",
         life: 3000,
       });
       return;
     }
 
-    if (!role) return;
-
     setIsSubmitting(true);
     let successCount = 0;
     let errorCount = 0;
 
-    try {
-      for (const employeeId of selectedEmployees) {
+     try {
+      for (const employeeId of newEmployees) {
         try {
           await assignMutation.mutateAsync({
             url: `/employees/assign-roles`,
-            body: { 
-              employeeId, 
-              roleIds: [role.id], 
-              customRoleIds: [] 
+            body: {
+              employeeId,
+              roleIds: [role.id],
+              customRoleIds: [],
             },
           });
           successCount++;
@@ -184,7 +242,9 @@ export default function AssignRoleModal({
         toastRef.current?.show({
           severity: "success",
           summary: "Success",
-          detail: `Successfully assigned "${role.name}" to ${successCount} employee(s).${errorCount > 0 ? ` Failed for ${errorCount} employee(s).` : ""}`,
+          detail: `Successfully assigned "${role.name}" to ${successCount} employee(s).${
+            errorCount > 0 ? ` Failed for ${errorCount} employee(s).` : ""
+          }`,
           life: 5000,
         });
       }
@@ -200,8 +260,10 @@ export default function AssignRoleModal({
 
       if (successCount > 0) {
         setSelectedEmployees([]);
+        setAlreadyAssignedEmployees([]);
         setSearchTerm("");
         setDebouncedSearchTerm("");
+        setSearchBy("all");
         onAssigned();
         onHide();
       }
@@ -209,7 +271,9 @@ export default function AssignRoleModal({
       toastRef.current?.show({
         severity: "error",
         summary: "Error",
-        detail: error?.response?.data?.message || "Failed to assign role. Please try again.",
+        detail:
+          error?.response?.data?.message ||
+          "Failed to assign role. Please try again.",
         life: 5000,
       });
     } finally {
@@ -219,7 +283,7 @@ export default function AssignRoleModal({
 
   if (!role) return null;
 
-  return (
+   return (
     <Dialog
       visible={visible}
       onHide={onHide}
@@ -229,21 +293,36 @@ export default function AssignRoleModal({
       breakpoints={{ "960px": "75vw", "641px": "100vw" }}
     >
       <div className="bg-[#0086ED] p-4 flex justify-center items-center relative">
-        <h2 className="text-white text-xl font-semibold">Assign Employees to Role</h2>
-        <button 
+        <h2 className="text-white text-xl font-semibold">
+          Assign Employees to Role
+        </h2>
+        <button
           onClick={onHide}
           className="absolute right-4 text-white hover:opacity-80 transition-opacity"
+          type="button"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
 
       <div className="p-6 bg-white">
         <p className="text-center text-gray-700 mb-6">
-          Select one or more users to assign to the role <span className="font-bold">"{role.name}"</span>
+          Select one or more users to assign to the role{" "}
+          <span className="font-bold">"{role.name}"</span>
         </p>
+
         <div className="flex gap-2 mb-6 justify-center">
           <Dropdown
             value={searchBy}
@@ -259,71 +338,107 @@ export default function AssignRoleModal({
             className="w-64 h-10"
             disabled={isSubmitting}
           />
-          <button 
+          <button
+            type="button"
             className="bg-[#60A5FA] text-white px-4 rounded-md flex items-center justify-center hover:bg-blue-500 transition-colors"
             disabled={isSubmitting}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </button>
         </div>
 
         <div className="max-h-[350px] overflow-y-auto px-2 custom-scrollbar">
-          {filteredEmployees.length > 0 && (
+          {selectableFilteredEmployees.length > 0 && (
             <div className="flex items-center justify-between p-3 mb-2 border-b border-gray-200 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Select All</span>
-              <div className="p-1"> 
+              <span className="text-sm font-medium text-gray-700">
+                Select All
+              </span>
+              <div className="p-1">
                 <Checkbox
                   onChange={(e) => handleSelectAll(e.checked || false)}
                   checked={isAllSelected}
                   disabled={isSubmitting}
                   pt={{
                     root: {
-                      className: "w-5 h-5 border-2 border-gray-500 rounded"
+                      className: "w-5 h-5 border-2 border-gray-500 rounded",
                     },
                     icon: {
-                      className: "text-[#0086ED] text-sm"
-                    }
+                      className: "text-[#0086ED] text-sm",
+                    },
                   }}
                 />
               </div>
             </div>
           )}
+
           {isLoading ? (
-            <div className="text-center py-10 text-gray-500">Loading employees...</div>
+            <div className="text-center py-10 text-gray-500">
+              Loading employees...
+            </div>
           ) : filteredEmployees.length > 0 ? (
-            filteredEmployees.map((emp: Employee) => (
-              <div 
-                key={emp.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white mb-2 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="bg-gray-100 border border-gray-300 text-xs font-medium px-2 py-1 rounded text-gray-700 min-w-[70px] text-center">
-                    {emp.employeeId}
-                  </span>
-                  <span className="text-sm text-gray-700">{emp.fullName}</span>
-                </div>
-                <div className="p-1"> 
-                  <Checkbox
-                    onChange={(e) => handleEmployeeToggle(emp.id, e.checked || false)}
-                    checked={selectedEmployees.includes(emp.id)}
-                    disabled={isSubmitting}
-                    pt={{
-                      root: {
-                        className: "w-5 h-5 border-2 border-gray-500 rounded"
-                      },
-                      icon: {
-                        className: "text-[#0086ED] text-sm"
+            filteredEmployees.map((emp: Employee) => {
+              const isAlreadyAssigned = alreadyAssignedEmployees.includes(emp.id);
+
+              return (
+                <div
+                  key={emp.id}
+                  className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg mb-2 transition-colors ${
+                    isAlreadyAssigned
+                      ? "bg-gray-100 opacity-80"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="bg-gray-100 border border-gray-300 text-xs font-medium px-2 py-1 rounded text-gray-700 min-w-[70px] text-center">
+                      {emp.employeeId}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-700">{emp.fullName}</span>
+                      {isAlreadyAssigned && (
+                        <span className="text-xs text-gray-500">
+                          Already assigned
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-1">
+                    <Checkbox
+                      onChange={(e) =>
+                        handleEmployeeToggle(emp.id, e.checked || false)
                       }
-                    }}
-                  />
+                      checked={selectedEmployees.includes(emp.id)}
+                      disabled={isSubmitting || isAlreadyAssigned}
+                      pt={{
+                        root: {
+                          className: "w-5 h-5 border-2 border-gray-500 rounded",
+                        },
+                        icon: {
+                          className: "text-[#0086ED] text-sm",
+                        },
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="text-center py-10 text-gray-500">
-              {searchTerm ? "No employees found matching your search." : "No active employees available."}
+              {searchTerm
+                ? "No employees found matching your search."
+                : "No active employees available."}
             </div>
           )}
         </div>
@@ -332,13 +447,19 @@ export default function AssignRoleModal({
           <Button
             text={isSubmitting ? "Assigning..." : "Assign"}
             className={`px-12 py-2 rounded-md text-white font-semibold ${
-              selectedEmployees.length === 0 || isSubmitting
+              selectedEmployees.filter(
+                (id) => !alreadyAssignedEmployees.includes(id),
+              ).length === 0 || isSubmitting
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#0086ED] hover:bg-blue-600"
             }`}
             type="button"
             state={!isSubmitting}
-            disabled={selectedEmployees.length === 0 || isSubmitting}
+            disabled={
+              selectedEmployees.filter(
+                (id) => !alreadyAssignedEmployees.includes(id),
+              ).length === 0 || isSubmitting
+            }
             id="assign-button"
             onClick={handleAssign}
           />
