@@ -58,6 +58,10 @@ const mapFiltersToQueryParams = (filters: IGoodsIssueNoteListParams) => {
 
 export default function GoodIssueNotesTable() {
   const toastRef = useToastRef();
+  const router = useRouter();
+  const handleUpdate = (id: number) => {
+    router.push(`/menu/iap/good-issue/${id}`);
+  };
 
   const initialFilters: IGoodsIssueNoteListParams = {
     pageNumber: 1,
@@ -192,6 +196,19 @@ export default function GoodIssueNotesTable() {
         <Column
           header="Line Items"
           body={(rowData: IGoodsIssueNote) => rowData.items?.length ?? 0}
+        />
+        <Column
+          header="Actions"
+          body={(rowData: IGoodsIssueNote) => (
+            <Button
+              id={`update-gi-btn-${rowData.giNumber}`}
+              text="Update"
+              type="button"
+              className="bg-[#15B097] text-white px-3 py-1 rounded-md"
+              state={true}
+              onClick={() => handleUpdate(rowData.id)}
+            />
+          )}
         />
       </DataTable>
     </div>
