@@ -73,20 +73,6 @@ export default function OrderManagementPage() {
     pageSize: 10,
   };
 
-    const initialDraftFilters: SearchOrderRequest = {
-    orderNumber: "",
-    tableName: "",
-    waiterName: "",
-    customerName: "",
-    orderDateFrom: "",
-    orderDateTo: "",
-    status: 1, // Draft
-    sortField: "orderDate",
-    sortOrder: -1,
-    pageNumber: 1,
-    pageSize: 10,
-  };
-
   const initialCompletedFilters: SearchOrderRequest = {
     category: "completed",
     orderNumber: "",
@@ -106,9 +92,6 @@ export default function OrderManagementPage() {
   const [completedFilters, setCompletedFilters] =
     useState<SearchOrderRequest>(initialCompletedFilters);
 
-  const [draftFilters, setDraftFilters] =
-  useState<SearchOrderRequest>(initialDraftFilters);
-
   const {
     data: ongoingOrdersResponse,
     isFetching: isOngoingFetching,
@@ -120,20 +103,6 @@ export default function OrderManagementPage() {
     ["orders", "ongoing", JSON.stringify(ongoingFilters), refreshKey],
     "/orders",
     buildOrderQueryParams(ongoingFilters),
-    { enabled: true, toastRef }
-  );
-
-  const {
-    data: draftOrdersResponse,
-    isFetching: isDraftFetching,
-    isError: isDraftError,
-  } = useGetQuery<
-    IBaseApiResponse<IPaginatedData<IBackendOrder>>,
-    Record<string, any>
-  >(
-    ["orders", "draft", JSON.stringify(draftFilters), refreshKey],
-    "/orders",
-    buildOrderQueryParams(draftFilters),
     { enabled: true, toastRef }
   );
 
@@ -155,11 +124,6 @@ export default function OrderManagementPage() {
     const orders = ongoingOrdersResponse?.data?.items ?? [];
     return orders.map((order) => mapBackendOrderToUI(order, "ongoing"));
   }, [ongoingOrdersResponse]);
-
-  const draftOrders: IOrder[] = useMemo(() => {
-  const orders = draftOrdersResponse?.data?.items ?? [];
-  return orders.map((order) => mapBackendOrderToUI(order, "ongoing"));
-  }, [draftOrdersResponse]);
 
   const completedOrders: IOrder[] = useMemo(() => {
     const orders = completedOrdersResponse?.data?.items ?? [];
@@ -195,13 +159,6 @@ export default function OrderManagementPage() {
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
     setSelectedOrder(null);
-  };
-
-  const handleEditDraft = (order: IOrder) => {
-  if (!order.backendId) return;
-    router.push(
-      `/menu/kitchen-bar-ops/order-mgt/add-order?draftId=${order.backendId}`
-    );
   };
 
   const openCancelModal = (order: IOrder) => {
@@ -330,43 +287,6 @@ export default function OrderManagementPage() {
       pageNumber: 1,
     }));
   };
-
-  const onDraftPage = (event: any) => {
-    const nextPageNumber = event.page + 1;
-    const nextPageSize = event.rows;
-
-    if (
-      draftFilters.pageNumber === nextPageNumber &&
-      draftFilters.pageSize === nextPageSize
-    ) {
-      return;
-    }
-
-    setDraftFilters((prev) => ({
-      ...prev,
-      pageNumber: nextPageNumber,
-      pageSize: nextPageSize,
-    }));
-  };
-
-  const onDraftSort = (event: any) => {
-  const nextSortField = event.sortField;
-  const nextSortOrder = event.sortOrder as SortOrder;
-
-  if (
-    draftFilters.sortField === nextSortField &&
-    draftFilters.sortOrder === nextSortOrder
-  ) {
-    return;
-  }
-
-  setDraftFilters((prev) => ({
-    ...prev,
-    sortField: nextSortField,
-    sortOrder: nextSortOrder,
-    pageNumber: 1,
-  }));
-};
 
   const onCompletedPage = (event: any) => {
     const nextPageNumber = event.page + 1;
@@ -570,145 +490,6 @@ export default function OrderManagementPage() {
 
                   <WhiteButton onClick={() => openCancelModal(rowData)}>
                     Cancel
-                  </WhiteButton>
-                </div>
-              )}
-            />
-          </DataTable>
-        </TabPanel>
-
-        <TabPanel header="Draft Orders">
-          <Formik<OrderFilterFormValues>
-            initialValues={{
-              orderNumber: draftFilters.orderNumber,
-              tableName: draftFilters.tableName,
-              waiterName: draftFilters.waiterName,
-              customerName: draftFilters.customerName,
-              orderDateFrom: draftFilters.orderDateFrom,
-              orderDateTo: draftFilters.orderDateTo,
-            }}
-            enableReinitialize
-            onSubmit={(values) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                orderNumber: values.orderNumber,
-                tableName: values.tableName,
-                waiterName: values.waiterName,
-                customerName: values.customerName,
-                orderDateFrom: values.orderDateFrom,
-                orderDateTo: values.orderDateTo,
-                pageNumber: 1,
-              }))
-            }
-          >
-            {({ resetForm }) => (
-              <Form>
-                <Row className="mb-3 align-items-end">
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Order Number"
-                      name="orderNumber"
-                      type="text"
-                      placeholder="Order Number"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Table"
-                      name="tableName"
-                      type="text"
-                      placeholder="Table"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Waiter Name"
-                      name="waiterName"
-                      type="text"
-                      placeholder="Waiter Name"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Customer Name"
-                      name="customerName"
-                      type="text"
-                      placeholder="Customer Name"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Order Date From"
-                      name="orderDateFrom"
-                      type="date"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <LabelGroup
-                      label="Order Date To"
-                      name="orderDateTo"
-                      type="date"
-                    />
-                  </Col>
-                  <Col md={2} className="d-flex gap-2 mt-2">
-                    <YellowButton type="submit">Filter</YellowButton>
-                    <WhiteButton
-                      type="button"
-                      onClick={() => {
-                        resetForm({ values: initialFilterFormValues });
-                        setDraftFilters(initialDraftFilters);
-                      }}
-                    >
-                      Clear
-                    </WhiteButton>
-                  </Col>
-                </Row>
-              </Form>
-            )}
-          </Formik>
-
-          {isDraftError && (
-            <p className="text-red-500">Failed to load draft orders.</p>
-          )}
-
-          <DataTable
-            stripedRows
-            removableSort
-            value={draftOrders}
-            lazy
-            paginator
-            first={(draftFilters.pageNumber - 1) * draftFilters.pageSize}
-            rows={draftFilters.pageSize}
-            totalRecords={draftOrdersResponse?.data?.totalItemCount || 0}
-            onPage={onDraftPage}
-            onSort={onDraftSort}
-            sortField={draftFilters.sortField}
-            sortOrder={draftFilters.sortOrder ?? 0}
-            loading={isDraftFetching}
-            rowsPerPageOptions={[5, 10, 20, 50]}
-            responsiveLayout="scroll"
-            className="p-datatable-gridlines custom-tabs-order-mgt"
-          >
-            <Column field="orderId" header="Order Number" sortable />
-            <Column field="tableNo" header="Table" sortable />
-            <Column field="waiterName" header="Waiter Name" sortable />
-            <Column field="customerName" header="Customer Name" sortable />
-            <Column field="orderDate" header="Order Date" sortable />
-            <Column
-              field="orderStatus"
-              header="Status"
-              sortable
-              body={(rowData: IOrder) => getOrderStatusLabel(rowData.orderStatus)}
-            />
-            <Column
-              header="Actions"
-              body={(rowData: IOrder) => (
-                <div className="flex gap-2">
-                  <YellowButton onClick={() => handleEditDraft(rowData)}>
-                    Edit
-                  </YellowButton>
-                  <WhiteButton onClick={() => handleViewOrder(rowData)}>
-                    View
                   </WhiteButton>
                 </div>
               )}
