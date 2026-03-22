@@ -26,7 +26,7 @@ interface MenuItem {
 
 interface MenuForm {
   name: string;
-  price: number;
+  price: number | "";
   category: string;
   isAvailable: boolean;
 }
@@ -43,7 +43,7 @@ export default function MenuPage() {
 
   const [form, setForm] = useState<MenuForm>({
     name: "",
-    price: 0,
+    price: "",
     category: "",
     isAvailable: true,
   });
@@ -90,23 +90,28 @@ export default function MenuPage() {
     successMessage: "Item updated successfully!",
   });
 
-  const handleAddFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, type, value } = e.target;
-    const checked =
-      e.target instanceof HTMLInputElement ? e.target.checked : false;
+const handleAddFormChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+  const { name, type, value } = e.target;
+  const checked =
+    e.target instanceof HTMLInputElement ? e.target.checked : false;
 
-    let val: string | number | boolean = value;
+  let val: string | number | boolean = value;
 
-    if (type === "checkbox") val = checked;
-    if (type === "number") val = value === "" ? 0 : parseFloat(value);
+  if (type === "checkbox") {
+    val = checked;
+  }
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: val,
-    }));
-  };
+  if (type === "number") {
+    val = value === "" ? "" : parseFloat(value);
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: val,
+  }));
+};
 
   const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
@@ -125,7 +130,12 @@ export default function MenuPage() {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.category.trim() || form.price <= 0) {
+      if (
+        !form.name.trim() ||
+        !form.category.trim() ||
+        form.price === "" ||
+        form.price <= 0
+      ) {
       toastRef?.current?.show({
         severity: "warn",
         summary: "Validation",
@@ -145,14 +155,14 @@ export default function MenuPage() {
         },
       });
 
+      await refetchMenuItems();
+
       setForm({
         name: "",
-        price: 0,
+        price: "",
         category: "",
         isAvailable: true,
       });
-
-      refetchMenuItems();
     } catch (error) {
       console.error("Error adding menu item:", error);
     }
@@ -224,7 +234,7 @@ export default function MenuPage() {
       });
 
       closeUpdateModal();
-      refetchMenuItems();
+      await refetchMenuItems();
     } catch (error) {
       console.error("Error updating menu item:", error);
     }
