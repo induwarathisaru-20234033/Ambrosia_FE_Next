@@ -8,7 +8,7 @@ import { DataTable } from "primereact/datatable";
 import { useToastRef } from "@/contexts/ToastContext";
 import { IBaseApiResponse } from "@/data-types";
 import { useGetQuery } from "@/services/queries/getQuery";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosAuth from "@/utils/AxiosInstance";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
@@ -19,8 +19,6 @@ const DatePicker = dynamic(() => import("@/components/DatePicker"), {
 });
 const Dropdown = dynamic(() => import("@/components/Dropdown"), { ssr: false });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface InventoryItemDto {
   id: number;
@@ -80,8 +78,6 @@ interface FormValues {
   reason: string;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const WASTAGE_TYPE_OPTIONS = [
   { label: "Spoilage", value: "Spoilage" },
   { label: "Breakage", value: "Breakage" },
@@ -102,24 +98,21 @@ const initialFormValues: FormValues = {
 
 const tableStyle = { minWidth: "52rem" };
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function AddWastagePage() {
   const toastRef = useToastRef();
   const formikRef = useRef<FormikProps<FormValues>>(null);
+  const queryClient = useQueryClient();
 
   const [lineItems, setLineItems] = useState<WastageLineItem[]>([]);
   const [savedEntryNumber, setSavedEntryNumber] = useState<string | null>(null);
 
-  // ── Direct mutation using axiosAuth so we can read the response ──────────
   const { mutate: createWastageRecord, isPending } = useMutation({
     mutationFn: (body: object) =>
       axiosAuth.post<IBaseApiResponse<WastageRecordDto>>("/WastageRecords", body),
     onSuccess: (response) => {
       const entryNumber = response?.data?.data?.wastageEntryNumber;
-      if (entryNumber) {
-        setSavedEntryNumber(entryNumber);
-      }
+      if (entryNumber) setSavedEntryNumber(entryNumber);
+      queryClient.invalidateQueries({ queryKey: ["wastageRecords"] });
       toastRef.current?.show({
         severity: "success",
         summary: "Success",
@@ -142,7 +135,6 @@ export default function AddWastagePage() {
     },
   });
 
-  // ── Fetch inventory items upfront ─────────────────────────────────────────
   const { data: inventoryItemsResponse } = useGetQuery<
     IBaseApiResponse<PaginatedResultDto<InventoryItemDto>>,
     { pageNumber: number; pageSize: number }
@@ -167,8 +159,6 @@ export default function AddWastagePage() {
       },
     }));
   }, [inventoryItemsResponse]);
-
-  // ── Line form helpers ──────────────────────────────────────────────────────
 
   const clearLineForm = useCallback(() => {
     if (!formikRef.current) return;
@@ -195,80 +185,47 @@ export default function AddWastagePage() {
     </button>
   );
 
-  // ── Add line validation & append ──────────────────────────────────────────
 
   const handleAddLineItem = (values: FormValues) => {
     if (!values.inventoryItemOption) {
-      toastRef.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Please select an inventory item.",
-        life: 3000,
-      });
+      toastRef.current?.show({ severity: "warn", summary: "Validation", detail: "Please select an inventory item.", life: 3000 });
       return;
     }
-
     if (!values.wastageType) {
-      toastRef.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Please select a wastage type.",
-        life: 3000,
-      });
+      toastRef.current?.show({ severity: "warn", summary: "Validation", detail: "Please select a wastage type.", life: 3000 });
       return;
     }
-
     const quantity = Number(values.quantity ?? 0);
     if (quantity <= 0) {
-      toastRef.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Quantity must be greater than zero.",
-        life: 3000,
-      });
+      toastRef.current?.show({ severity: "warn", summary: "Validation", detail: "Quantity must be greater than zero.", life: 3000 });
       return;
     }
-
-    const newItem: WastageLineItem = {
-      itemNo: lineItems.length + 1,
-      inventoryItemId: values.inventoryItemOption.inventoryItemId,
-      itemName: values.inventoryItemOption.itemName,
-      wastageType: values.wastageType,
-      quantity,
-      reason: values.reason?.trim() || "",
-    };
-
-    setLineItems((prev) => [...prev, newItem]);
+    setLineItems((prev) => [
+      ...prev,
+      {
+        itemNo: prev.length + 1,
+        inventoryItemId: values.inventoryItemOption!.inventoryItemId,
+        itemName: values.inventoryItemOption!.itemName,
+        wastageType: values.wastageType,
+        quantity,
+        reason: values.reason?.trim() || "",
+      },
+    ]);
     clearLineForm();
   };
 
-  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = (values: FormValues) => {
     if (!values.recordedBy.trim()) {
-      toastRef.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Recorded By is required.",
-        life: 3000,
-      });
+      toastRef.current?.show({ severity: "warn", summary: "Validation", detail: "Recorded By is required.", life: 3000 });
       return;
     }
-
     if (lineItems.length === 0) {
-      toastRef.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "At least one wastage item is required.",
-        life: 3000,
-      });
+      toastRef.current?.show({ severity: "warn", summary: "Validation", detail: "At least one wastage item is required.", life: 3000 });
       return;
     }
-
     createWastageRecord({
-      entryDate: values.entryDate
-        ? new Date(values.entryDate).toISOString()
-        : new Date().toISOString(),
+      entryDate: values.entryDate ? new Date(values.entryDate).toISOString() : new Date().toISOString(),
       recordedBy: values.recordedBy.trim(),
       generalNotes: values.generalNotes.trim(),
       items: lineItems.map((item) => ({
@@ -281,16 +238,12 @@ export default function AddWastagePage() {
     });
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <Formik<FormValues>
       innerRef={formikRef}
       initialValues={initialFormValues}
       enableReinitialize
-      onSubmit={() => {
-        // Button-driven submit
-      }}
+      onSubmit={() => {}}
     >
       {({ values, setFieldValue, resetForm }) => (
         <Form className="p-3 sm:p-6">
@@ -299,14 +252,11 @@ export default function AddWastagePage() {
               Add Wastage Record
             </h1>
 
-            {/* ── Wastage Details ── */}
             <h2 className="text-base font-bold text-gray-800 mb-2">
               Wastage Details
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-
-              {/* Entry Number — shows "Auto-generated" until saved, then real number */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
               <div className="mb-3 label text-xs xs:text-sm sm:text-base">
                 <label className="form-label" htmlFor="wastageEntryNumber">
                   Entry Number
@@ -349,10 +299,9 @@ export default function AddWastagePage() {
               </div>
             </div>
 
-            {/* ── Line Details ── */}
             <h2 className="text-base font-bold text-black">Line Details</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
               <Dropdown
                 name="inventoryItemOption"
                 id="inventoryItemOption"
@@ -361,15 +310,10 @@ export default function AddWastagePage() {
                 options={inventoryItemOptions}
                 isSearchable
                 showClearOption
-                onChange={(event: {
-                  value?: InventoryItemOptionValue | null;
-                }) => {
-                  if (!event.value) {
-                    setFieldValue("inventoryItemOption", null, false);
-                  }
+                onChange={(event: { value?: InventoryItemOptionValue | null }) => {
+                  if (!event.value) setFieldValue("inventoryItemOption", null, false);
                 }}
               />
-
               <Dropdown
                 name="wastageType"
                 id="wastageType"
@@ -378,7 +322,6 @@ export default function AddWastagePage() {
                 options={WASTAGE_TYPE_OPTIONS}
                 showClearOption
               />
-
               <LabelGroup
                 name="quantity"
                 id="quantity"
@@ -387,7 +330,6 @@ export default function AddWastagePage() {
                 min={0}
                 placeholder="Enter quantity"
               />
-
               <div className="md:col-span-2 lg:col-span-2">
                 <div className="mb-3 label text-xs xs:text-sm sm:text-base">
                   <label className="form-label" htmlFor="reason">
@@ -398,9 +340,7 @@ export default function AddWastagePage() {
                     className="form-control"
                     rows={2}
                     value={values.reason}
-                    onChange={(e) =>
-                      setFieldValue("reason", e.target.value, false)
-                    }
+                    onChange={(e) => setFieldValue("reason", e.target.value, false)}
                     placeholder="Enter reason"
                   />
                 </div>
@@ -428,7 +368,6 @@ export default function AddWastagePage() {
               />
             </div>
 
-            {/* ── Line Items Table ── */}
             <DataTable
               value={lineItems}
               emptyMessage="No wastage items added yet"
@@ -451,7 +390,6 @@ export default function AddWastagePage() {
               />
             </DataTable>
 
-            {/* ── Footer Actions ── */}
             <div className="mt-8 flex items-center justify-end gap-3">
               <Button
                 id="resetWastageFormBtn"
