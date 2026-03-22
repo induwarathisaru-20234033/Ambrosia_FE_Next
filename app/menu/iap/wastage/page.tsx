@@ -107,7 +107,7 @@ export default function WastageManagementPage() {
     <button
       type="button"
       className="bg-white border-2 border-[#15B097] text-[#15B097] py-1 px-3 rounded-md text-sm"
-      onClick={() => router.push(`/menu/iap/wastage-management/${row.id}`)}
+      onClick={() => router.push(`/menu/iap/wastage/${row.id}`)}
     >
       Edit
     </button>
@@ -132,7 +132,7 @@ export default function WastageManagementPage() {
             type="button"
             className="bg-[#15B097] text-white px-4 py-2 rounded-md"
             state={true}
-            onClick={() => router.push("/menu/iap/wastage-management/add")}
+            onClick={() => router.push("/menu/iap/wastage/add")}
           />
         </div>
 
