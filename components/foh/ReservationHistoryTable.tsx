@@ -62,11 +62,16 @@ export default function ReservationHistoryTable({
   const { data: reservationData, isLoading } = useGetQuery<
     IPaginatedApiResponse<IReservation>,
     ISearchReservationsRequest
-  >(["getReservations", refreshTrigger], "Reservations", filterParams, {
-    enabled: true,
-    toastRef,
-    showErrorToast: true,
-  });
+  >(
+    ["getReservations", refreshTrigger, JSON.stringify(filterParams)],
+    "Reservations",
+    filterParams,
+    {
+      enabled: true,
+      toastRef,
+      showErrorToast: true,
+    },
+  );
 
   const handleFilter = (values: ISearchReservationsRequest) => {
     const cleanedParams: ISearchReservationsRequest = {};
@@ -404,27 +409,27 @@ export default function ReservationHistoryTable({
       <div className="inline-flex flex-nowrap items-center gap-2 whitespace-nowrap min-w-max">
         <Button
           label="Mark as Arrived"
-          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-[#FF6B6B] !border !border-[#FF6B6B] !text-white !shrink-0 !whitespace-nowrap"
+          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-[#FF6B6B] !border !border-[#FF6B6B] !text-white !shrink-0 !whitespace-nowrap !bg-opacity-100"
           size="small"
           onClick={() => handleMarkArrived(rowData)}
           disabled={!isBooked}
         />
         <Button
           label="No Show"
-          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-[#FF6B6B] !border !border-[#FF6B6B] !text-white !shrink-0 !whitespace-nowrap"
+          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-[#FF6B6B] !border !border-[#FF6B6B] !text-white !shrink-0 !whitespace-nowrap !bg-opacity-100"
           size="small"
           onClick={() => handleMarkNoShow(rowData)}
           disabled={!isBooked}
         />
         <Button
           label="View More"
-          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-white !text-[#FF6B6B] !border !border-[#FF6B6B] !shrink-0 !whitespace-nowrap"
+          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-white !text-[#FF6B6B] !border !border-[#FF6B6B] !shrink-0 !whitespace-nowrap !bg-opacity-100"
           size="small"
           onClick={() => handleViewMore(rowData)}
         />
         <Button
           label="Cancel"
-          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-white !text-[#FF6B6B] !border !border-[#FF6B6B] !shrink-0 !whitespace-nowrap"
+          className="!h-8 !px-3 !text-xs !font-medium !rounded-md !bg-white !text-[#FF6B6B] !border !border-[#FF6B6B] !shrink-0 !whitespace-nowrap !bg-opacity-100"
           size="small"
           onClick={() => handleCancel(rowData)}
           disabled={!isBooked}
@@ -534,58 +539,62 @@ export default function ReservationHistoryTable({
         initialValues={{
           reservationCode: "",
           customerName: "",
+          customerEmail: "",
           customerPhone: "",
-          tableName: "",
-          startTimeFrom: null,
-          startTimeTo: null,
-          status: "",
+          tableNo: "",
+          reservationDateFrom: null,
+          reservationDateTo: null,
+          createdDateFrom: null,
+          createdDateTo: null,
+          timeSlot: "",
         }}
         onSubmit={(values) => handleFilter(values)}
       >
         {({ resetForm }) => (
           <Form className="">
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end lg:grid-cols-4 lg:items-end">
-              {/* Reservation Code */}
               <LabelGroup
                 name="reservationCode"
                 label="Reservation Code"
                 type="text"
                 placeholder="Enter Reservation Code"
               />
-
-              {/* Guest Name */}
               <LabelGroup
                 name="customerName"
                 label="Guest Name"
                 type="text"
                 placeholder="Enter Guest Name"
               />
-
-              {/* Contact */}
+              <LabelGroup
+                name="customerEmail"
+                label="Guest Email"
+                type="text"
+                placeholder="Enter Guest Email"
+              />
               <LabelGroup
                 name="customerPhone"
                 label="Contact Number"
                 type="text"
                 placeholder="Enter Phone Number"
               />
-
-              {/* Table Name */}
               <LabelGroup
-                name="tableName"
-                label="Table"
+                name="tableNo"
+                label="Table No."
                 type="text"
-                placeholder="Enter Table Name"
+                placeholder="Enter Table No."
               />
-
-              {/* Status */}
               <LabelGroup
-                name="status"
-                label="Status"
-                type="text"
-                placeholder="Filter by Status"
+                name="reservationDateFrom"
+                label="Reservation Date From"
+                type="date"
+                placeholder="From"
               />
-
-              {/* Action Buttons */}
+              <LabelGroup
+                name="reservationDateTo"
+                label="Reservation Date To"
+                type="date"
+                placeholder="To"
+              />
               <div className="mb-3 flex h-full items-end gap-2">
                 <Button
                   type="submit"
@@ -669,9 +678,7 @@ export default function ReservationHistoryTable({
             style={{
               width: "200px",
               minWidth: "200px",
-              position: "sticky",
-              right: 0,
-              zIndex: 10,
+              opacity: 1,
             }}
             frozen
             alignFrozen="right"
