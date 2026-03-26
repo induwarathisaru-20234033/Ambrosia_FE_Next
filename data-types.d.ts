@@ -1,31 +1,3 @@
-export interface IGoodsIssueNoteItem {
-  id: number;
-  lineItemNo: number;
-  inventoryItemId: number;
-  inventoryItem: IInventoryItem;
-  requestedQuantity: number;
-  issuedQuantity: number;
-  issuedFrom: string;
-  issuedTo: string;
-  remarks: string;
-}
-
-export interface IGoodsIssueNote {
-  id: number;
-  giNumber: string;
-  issuedBy: string;
-  issuedDate: string;
-  items: IGoodsIssueNoteItem[];
-}
-
-export interface IGoodsIssueNoteListParams {
-  pageNumber: number;
-  pageSize: number;
-  giNumber?: string;
-  issuedBy?: string;
-  issuedDateFrom?: string | Date;
-  issuedDateTo?: string | Date;
-}
 import { Day } from "./enums/day";
 import { SortOrder } from "primereact/datatable";
 
@@ -56,6 +28,17 @@ export interface IPaginatedData<T> extends IPaginationMetaData {
 export interface IPaginatedApiResponse<T> extends IBaseApiResponse<
   IPaginatedData<T>
 > {}
+
+export interface NavItem {
+  label: string;
+  href: string;
+  icon?: string;
+}
+
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
 
 export interface IEmployeeCreateRequest {
   employeeId: string;
@@ -514,4 +497,33 @@ export interface OrderFilterFormValues {
   customerName: string;
   orderDateFrom: string;
   orderDateTo: string;
+}
+
+export interface IGoodsIssueNoteItem {
+  id: number;
+  lineItemNo: number;
+  inventoryItemId: number;
+  inventoryItem: IInventoryItem;
+  requestedQuantity: number;
+  issuedQuantity: number;
+  issuedFrom: string;
+  issuedTo: string;
+  remarks: string;
+}
+
+export interface IGoodsIssueNote {
+  id: number;
+  giNumber: string;
+  issuedBy: string;
+  issuedDate: string;
+  items: IGoodsIssueNoteItem[];
+}
+
+export interface IGoodsIssueNoteListParams {
+  pageNumber: number;
+  pageSize: number;
+  giNumber?: string;
+  issuedBy?: string;
+  issuedDateFrom?: string | Date;
+  issuedDateTo?: string | Date;
 }

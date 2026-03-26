@@ -11,6 +11,170 @@ import {
 import { OverlayPanel } from "primereact/overlaypanel";
 import { useRouter } from "next/navigation";
 import { performLogout } from "@/utils/auth/logout";
+import { NavGroup } from "@/data-types";
+
+const navbarGroups: NavGroup[] = [
+  {
+    label: "Front-of-House Operations",
+    items: [
+      {
+        label: "Reservation Management",
+        href: "/menu/foh/reservations",
+        icon: "pi-calendar",
+      },
+      {
+        label: "Restaurant Configurations",
+        href: "/menu/foh/configurations",
+        icon: "pi-cog",
+      },
+    ],
+  },
+  {
+    label: "Kitchen and Bar Operations",
+    items: [
+      {
+        label: "Kitchen Display System",
+        href: "/menu/kitchen-bar-ops/kds",
+        icon: "pi-check-circle",
+      },
+      {
+        label: "Bar Display System",
+        href: "/menu/kitchen-bar-ops/bds",
+        icon: "pi-check-square",
+      },
+      {
+        label: "Order Management",
+        href: "/menu/kitchen-bar-ops/order-mgt",
+        icon: "pi-list",
+      },
+      {
+        label: "Menu Management",
+        href: "/menu/kitchen-bar-ops/menu-mgt",
+        icon: "pi-book",
+      },
+    ],
+  },
+  {
+    label: "Inventory and Procurement",
+    items: [
+      {
+        label: "Inventory Management",
+        href: "/menu/iap/inventory/items",
+        icon: "pi-box",
+      },
+      {
+        label: "Good Receipt Notes",
+        href: "/menu/iap/good-receipt-notes",
+        icon: "pi-file-check",
+      },
+      {
+        label: "Goods Issue Notes",
+        href: "/menu/iap/good-issue", 
+        icon: "pi-file-export",
+      },
+      {
+        label: "Purchase Requests",
+        href: "/menu/iap/purchase-requests",
+        icon: "pi-shopping-cart",
+      },
+      {
+        label: "Wastage Management",
+        href: "/menu/iap/wastage",
+        icon: "pi-trash",
+      },
+    ],
+  },
+];
+
+function DesktopDropdown({
+  group,
+  router,
+}: Readonly<{
+  group: NavGroup;
+  router: ReturnType<typeof useRouter>;
+}>) {
+  const panelRef = useRef<OverlayPanel>(null);
+
+  return (
+    <div className="relative">
+      <button
+        className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors"
+        onClick={(e) => panelRef.current?.toggle(e)}
+        aria-haspopup="true"
+      >
+        <span>{group.label}</span>
+        <i className="pi pi-chevron-down text-xs" />
+      </button>
+
+      <OverlayPanel
+        ref={panelRef}
+        className="!bg-white !border !border-gray-200 !shadow-xl !rounded-lg !p-1"
+        style={{ minWidth: "220px" }}
+      >
+        <ul className="flex flex-col py-1">
+          {group.items.map((item) => (
+            <li key={item.href}>
+              <button
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                onClick={() => {
+                  router.push(item.href);
+                  panelRef.current?.hide();
+                }}
+              >
+                {item.icon && (
+                  <i className={`pi ${item.icon} text-gray-500 text-base`} />
+                )}
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </OverlayPanel>
+    </div>
+  );
+}
+
+function MobileAccordion({
+  group,
+  router,
+}: Readonly<{
+  group: NavGroup;
+  router: ReturnType<typeof useRouter>;
+}>) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <button
+        className="flex items-center justify-between w-full text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors py-1"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span>{group.label}</span>
+        <i
+          className={`pi ${open ? "pi-chevron-up" : "pi-chevron-down"} text-xs`}
+        />
+      </button>
+
+      {open && (
+        <ul className="flex flex-col mt-1 ml-2 border-l border-gray-300 pl-3 gap-1">
+          {group.items.map((item) => (
+            <li key={item.href}>
+              <button
+                className="flex items-center gap-2 w-full text-sm text-gray-600 hover:text-gray-900 py-1 transition-colors"
+                onClick={() => router.push(item.href)}
+              >
+                {item.icon && (
+                  <i className={`pi ${item.icon} text-xs text-gray-500`} />
+                )}
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,19 +205,10 @@ export default function Navbar() {
   }, []);
 
   const displayName = useMemo(() => {
-    if (!profile) {
-      return "User";
-    }
-
-    if (profile.name) {
-      return profile.name;
-    }
-
+    if (!profile) return "User";
+    if (profile.name) return profile.name;
     const parts = [profile.given_name, profile.family_name].filter(Boolean);
-    if (parts.length) {
-      return parts.join(" ");
-    }
-
+    if (parts.length) return parts.join(" ");
     return profile.email || "User";
   }, [profile]);
 
@@ -61,7 +216,7 @@ export default function Navbar() {
     setIsLoggingOut(true);
     userMenuRef.current?.hide();
     await performLogout((logoutUrl) => {
-      window.location.href = logoutUrl;
+      globalThis.location.href = logoutUrl;
     });
   };
 
@@ -75,48 +230,27 @@ export default function Navbar() {
             alt="Ambrosia Logo"
             width={150}
             height={50}
-            className="mr-2"
+            className="mr-2 cursor-pointer"
             onClick={() => router.push("/menu")}
           />
         </div>
 
         {/* Center Navigation (Desktop) */}
         <nav className="hidden lg:flex items-center justify-center gap-8 flex-1">
-          {/* Front-of-House Operations */}
-          <div className="relative group">
-            <button className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors">
-              <span>Front-of-House Operations</span>
-            </button>
-          </div>
+          {navbarGroups.map((group) => (
+            <DesktopDropdown key={group.label} group={group} router={router} />
+          ))}
 
-          {/* Kitchen and Bar Operations */}
-          <div className="relative group">
-            <button className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors">
-              <span>Kitchen and Bar Operations</span>
-            </button>
-          </div>
-
-          {/* Inventory and Supply Chain */}
-          <div className="relative group">
-            <button className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors">
-              <span>Purchasing and Inventory</span>
-            </button>
-          </div>
-
-          {/* Employee Management */}
-          <div className="relative group">
-            <button className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors">
-              <span>Employee Management</span>
-            </button>
-          </div>
-
-          {/* Analytics
-          <button className="text-gray-800 font-medium text-sm hover:text-gray-900 transition-colors">
-            Analytics
-          </button> */}
+          {/* Employee Management — direct link */}
+          <button
+            className="text-gray-800 font-medium text-sm hover:text-gray-900 flex items-center gap-1 transition-colors"
+            onClick={() => router.push("/menu/emp-mgt")}
+          >
+            <span>User Management</span>
+          </button>
         </nav>
 
-        {/* Right Side - User Profile (Desktop) */}
+        {/* Right Side — User Profile (Desktop) */}
         <div className="hidden lg:flex items-center gap-2 ml-auto">
           <button className="text-gray-800 hover:text-gray-900 transition-colors">
             {profile?.picture ? (
@@ -128,9 +262,10 @@ export default function Navbar() {
                 className="h-8 w-8 rounded-full object-cover"
               />
             ) : (
-              <i className="pi pi-user text-lg"></i>
+              <i className="pi pi-user text-lg" />
             )}
           </button>
+
           <div className="relative">
             <button
               className="flex items-center gap-1 text-gray-800 font-medium text-sm hover:text-gray-900 transition-colors"
@@ -138,7 +273,7 @@ export default function Navbar() {
               aria-haspopup="true"
             >
               <span>{displayName}</span>
-              <i className="pi pi-chevron-down text-xs"></i>
+              <i className="pi pi-chevron-down text-xs" />
             </button>
             <OverlayPanel
               ref={userMenuRef}
@@ -163,27 +298,23 @@ export default function Navbar() {
           aria-expanded={isMenuOpen}
           onClick={() => setIsMenuOpen((open) => !open)}
         >
-          <i className="pi pi-bars text-xl"></i>
+          <i className="pi pi-bars text-xl" />
         </button>
       </div>
 
       {/* Mobile Menu */}
       <div className={`lg:hidden px-6 pb-4 ${isMenuOpen ? "block" : "hidden"}`}>
         <nav className="flex flex-col gap-3">
-          <button className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors">
-            Front-of-House Operations
-          </button>
-          <button className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors">
-            Kitchen and Bar Operations
-          </button>
-          <button className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors">
-            Purchasing and Inventory
-          </button>
-          <button className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors">
-            Employee Management
-          </button>
-          <button className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors">
-            Analytics
+          {navbarGroups.map((group) => (
+            <MobileAccordion key={group.label} group={group} router={router} />
+          ))}
+
+          {/* Employee Management */}
+          <button
+            className="text-gray-800 font-medium text-sm text-left hover:text-gray-900 transition-colors py-1"
+            onClick={() => router.push("/menu/emp-mgt")}
+          >
+            User Management
           </button>
         </nav>
 
@@ -198,16 +329,17 @@ export default function Navbar() {
                 className="h-7 w-7 rounded-full object-cover"
               />
             ) : (
-              <i className="pi pi-user text-lg"></i>
+              <i className="pi pi-user text-lg" />
             )}
             <span className="text-sm font-medium">{displayName}</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="text-gray-700 hover:text-gray-900 text-sm">
-              Profile
-            </button>
-            <button className="text-gray-700 hover:text-gray-900 text-sm">
-              Logout
+            <button
+              className="text-gray-700 hover:text-gray-900 text-sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
         </div>

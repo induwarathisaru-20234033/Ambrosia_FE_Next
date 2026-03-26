@@ -26,6 +26,10 @@ const DatePicker = dynamic(() => import("@/components/DatePicker"), {
   ssr: false,
 });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
+const TableSkeleton = dynamic(
+  () => import("@/components/skeletons/TableSkeleton"),
+  { ssr: false },
+);
 
 const resolveStatusLabel = (status: number | null | undefined) => {
   if (status === PurchaseRequestStatus.ApprovalPending) {
@@ -597,31 +601,34 @@ export default function PurchaseRequestTable() {
         )}
       </Formik>
 
-      <DataTable
-        value={rows}
-        stripedRows
-        paginator
-        lazy
-        loading={isLoading}
-        first={(filters.pageNumber - 1) * filters.pageSize}
-        rows={filters.pageSize}
-        totalRecords={totalRecords}
-        onPage={onPage}
-        rowsPerPageOptions={[10, 20, 50]}
-        emptyMessage="No purchase requests found"
-      >
-        <Column field="purchaseRequestCode" header="Requision Number" />
-        <Column field="description" header="Description" />
-        <Column field="requestedBy" header="Requester" />
-        <Column
-          header="Requested Delivery Date"
-          body={requestedDeliveryDateBody}
-        />
-        <Column header="Requested Date" body={requestedDateBody} />
-        <Column header="Created Date" body={createdDateBody} />
-        <Column header="PR Status" body={renderStatus} />
-        <Column header="" body={renderActions} />
-      </DataTable>
+      {isLoading ? (
+        <TableSkeleton rows={8} columns={8} />
+      ) : (
+        <DataTable
+          value={rows}
+          stripedRows
+          paginator
+          lazy
+          first={(filters.pageNumber - 1) * filters.pageSize}
+          rows={filters.pageSize}
+          totalRecords={totalRecords}
+          onPage={onPage}
+          rowsPerPageOptions={[10, 20, 50]}
+          emptyMessage="No purchase requests found"
+        >
+          <Column field="purchaseRequestCode" header="Requision Number" />
+          <Column field="description" header="Description" />
+          <Column field="requestedBy" header="Requester" />
+          <Column
+            header="Requested Delivery Date"
+            body={requestedDeliveryDateBody}
+          />
+          <Column header="Requested Date" body={requestedDateBody} />
+          <Column header="Created Date" body={createdDateBody} />
+          <Column header="PR Status" body={renderStatus} />
+          <Column header="" body={renderActions} />
+        </DataTable>
+      )}
     </div>
   );
 }
