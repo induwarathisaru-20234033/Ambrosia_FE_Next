@@ -2,7 +2,7 @@
 
 import { Form, Formik, Field, ErrorMessage } from "formik";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ScrollPanel } from "primereact/scrollpanel";
 import { useToastRef } from "@/contexts/ToastContext";
 import {
@@ -70,8 +70,10 @@ const formatDateForInput = (value?: string | null): string => {
 
 export default function EditInventoryItemPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const id = params?.id;
   const toastRef = useToastRef();
+  const isViewMode = searchParams?.get("mode") === "view";
 
   const { data: uomResponse } = useGetQuery<
     IBaseApiResponse<IInventoryUoM[]>,
@@ -185,7 +187,7 @@ export default function EditInventoryItemPage() {
           <Form className="p-6">
             <div className="max-w-7xl">
               <h1 className="h1-custom pb-4 text-[#15B097] font-semibold">
-                Update Inventory Item
+                {isViewMode ? "View Inventory Item" : "Update Inventory Item"}
               </h1>
               <div className="mb-8">
                 <h2 className="text-base font-bold text-gray-800 mb-2">
@@ -200,7 +202,7 @@ export default function EditInventoryItemPage() {
                     type="text"
                     placeholder="Item Number"
                     id="itemNumber"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Item Name*"
@@ -208,7 +210,7 @@ export default function EditInventoryItemPage() {
                     type="text"
                     placeholder="Item Name"
                     id="itemName"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Opening  Quantity*"
@@ -216,7 +218,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="Opening Quantity"
                     id="openingQuantity"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <Dropdown
                     name="itemType"
@@ -224,6 +226,7 @@ export default function EditInventoryItemPage() {
                     label="Item Type*"
                     placeholder="Select Item Type"
                     options={itemTypeOptions}
+                    disabled={isViewMode}
                   />
                   <Dropdown
                     name="itemCategory"
@@ -231,6 +234,7 @@ export default function EditInventoryItemPage() {
                     label="Item Category*"
                     placeholder="Select Item Category"
                     options={itemCategoryOptions}
+                    disabled={isViewMode}
                   />
                   <Dropdown
                     name="uom"
@@ -238,6 +242,7 @@ export default function EditInventoryItemPage() {
                     label="UOM*"
                     placeholder="Select UOM"
                     options={uomOptions}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Unit Price"
@@ -245,7 +250,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="0.00"
                     id="unitPrice"
-                    disabled={false}
+                    disabled={isViewMode}
                     showDecimals
                   />
                   <Dropdown
@@ -254,6 +259,7 @@ export default function EditInventoryItemPage() {
                     label="Currency"
                     placeholder="Select Currency"
                     options={currencyOptions}
+                    disabled={isViewMode}
                   />
                 </div>
 
@@ -269,6 +275,7 @@ export default function EditInventoryItemPage() {
                       className="form-control"
                       placeholder="Enter Remarks"
                       rows={4}
+                      disabled={isViewMode}
                     />
                     <ErrorMessage
                       name="remarks"
@@ -293,7 +300,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="Minimum Stock Level"
                     id="minimumStockLevel"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Maximum Stock Level"
@@ -301,7 +308,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="Maximum Stock Level"
                     id="maximumStockLevel"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Re-Order Level"
@@ -309,7 +316,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="Re-Order Level"
                     id="reorderLevel"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Storage Location"
@@ -317,7 +324,7 @@ export default function EditInventoryItemPage() {
                     type="text"
                     placeholder="Storage Location"
                     id="storageLocation"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Shelve Life (Days)"
@@ -325,7 +332,7 @@ export default function EditInventoryItemPage() {
                     type="number"
                     placeholder="Shelve Life (Days)"
                     id="shelfLife"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Storage Conditions"
@@ -333,7 +340,7 @@ export default function EditInventoryItemPage() {
                     type="text"
                     placeholder="Storage Conditions"
                     id="storageConditions"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="SKU"
@@ -341,7 +348,7 @@ export default function EditInventoryItemPage() {
                     type="text"
                     placeholder="SKU"
                     id="sku"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                   <LabelGroup
                     label="Expiry Date"
@@ -349,29 +356,31 @@ export default function EditInventoryItemPage() {
                     type="date"
                     placeholder="Expiry Date"
                     id="expiryDate"
-                    disabled={false}
+                    disabled={isViewMode}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-2 mb-8">
-                <Button
-                  text="Reset"
-                  className="bg-[#696E79] text-white p-[12px] rounded-xl box-shadow w-full"
-                  type="reset"
-                  state={true}
-                  disabled={patchMutation.isPending}
-                  id="reset"
-                />
-                <Button
-                  text="Update"
-                  className="bg-[#15B097] text-white p-[12px] rounded-xl box-shadow w-full"
-                  type="submit"
-                  state={!patchMutation.isPending}
-                  disabled={patchMutation.isPending}
-                  id="submit"
-                />
-              </div>
+              {!isViewMode && (
+                <div className="flex gap-4 mt-2 mb-8">
+                  <Button
+                    text="Reset"
+                    className="bg-[#696E79] text-white p-[12px] rounded-xl box-shadow w-full"
+                    type="reset"
+                    state={true}
+                    disabled={patchMutation.isPending}
+                    id="reset"
+                  />
+                  <Button
+                    text="Update"
+                    className="bg-[#15B097] text-white p-[12px] rounded-xl box-shadow w-full"
+                    type="submit"
+                    state={!patchMutation.isPending}
+                    disabled={patchMutation.isPending}
+                    id="submit"
+                  />
+                </div>
+              )}
             </div>
           </Form>
         </ScrollPanel>

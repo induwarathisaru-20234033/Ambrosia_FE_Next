@@ -23,6 +23,10 @@ const DatePicker = dynamic(() => import("@/components/DatePicker"), {
   ssr: false,
 });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
+const TableSkeleton = dynamic(
+  () => import("@/components/skeletons/TableSkeleton"),
+  { ssr: false },
+);
 
 const statusFilterOptions = [
   { label: "Posted", value: GRNStatus.Posted },
@@ -232,7 +236,7 @@ export default function GoodReceiptNotesTable() {
             <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
               <LabelGroup
                 label="GRN Number"
-                name="grnNumber"
+                name="gRNNumber"
                 type="text"
                 placeholder="GRN Number"
                 id="filterGrnNumber"
@@ -300,38 +304,41 @@ export default function GoodReceiptNotesTable() {
         )}
       </Formik>
 
-      <DataTable
-        value={rows}
-        stripedRows
-        paginator
-        lazy
-        loading={isLoading}
-        first={(filters.pageNumber - 1) * filters.pageSize}
-        rows={filters.pageSize}
-        totalRecords={totalRecords}
-        onPage={onPage}
-        rowsPerPageOptions={[10, 20, 50]}
-        emptyMessage="No good receipt notes found"
-      >
-        <Column
-          header="GRN Number"
-          body={(rowData: IGoodReceiptNote) => rowData.grnNumber ?? "-"}
-        />
-        <Column field="supplier" header="Supplier" />
-        <Column field="receivedBy" header="Received By" />
-        <Column
-          header="Received Date"
-          body={(rowData: IGoodReceiptNote) =>
-            formatLocalDate(rowData.receivedDate)
-          }
-        />
-        <Column
-          header="Received Facility"
-          body={(rowData: IGoodReceiptNote) => rowData.receivedFacility ?? "-"}
-        />
-        <Column header="Status" body={renderStatus} />
-        <Column header="Actions" body={renderActions} />
-      </DataTable>
+      {isLoading ? (
+        <TableSkeleton rows={8} columns={7} />
+      ) : (
+        <DataTable
+          value={rows}
+          stripedRows
+          paginator
+          lazy
+          first={(filters.pageNumber - 1) * filters.pageSize}
+          rows={filters.pageSize}
+          totalRecords={totalRecords}
+          onPage={onPage}
+          rowsPerPageOptions={[10, 20, 50]}
+          emptyMessage="No good receipt notes found"
+        >
+          <Column
+            header="GRN Number"
+            body={(rowData: IGoodReceiptNote) => rowData.grnNumber ?? "-"}
+          />
+          <Column field="supplier" header="Supplier" />
+          <Column field="receivedBy" header="Received By" />
+          <Column
+            header="Received Date"
+            body={(rowData: IGoodReceiptNote) =>
+              formatLocalDate(rowData.receivedDate)
+            }
+          />
+          <Column
+            header="Received Facility"
+            body={(rowData: IGoodReceiptNote) => rowData.receivedFacility ?? "-"}
+          />
+          <Column header="Status" body={renderStatus} />
+          <Column header="Actions" body={renderActions} />
+        </DataTable>
+      )}
     </div>
   );
 }

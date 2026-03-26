@@ -680,8 +680,6 @@ export default function ReservationHistoryTable({
               minWidth: "200px",
               opacity: 1,
             }}
-            frozen
-            alignFrozen="right"
           />
         </DataTable>
       </div>

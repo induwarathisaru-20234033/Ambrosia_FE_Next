@@ -30,6 +30,10 @@ const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
 });
 const Dropdown = dynamic(() => import("@/components/Dropdown"), { ssr: false });
 const Button = dynamic(() => import("@/components/Button"), { ssr: false });
+const TableSkeleton = dynamic(
+  () => import("@/components/skeletons/TableSkeleton"),
+  { ssr: false },
+);
 
 export default function InventoryItemsTable() {
   const router = useRouter();
@@ -73,7 +77,7 @@ export default function InventoryItemsTable() {
     { label: "Discontinued", value: InventoryStatus.Discontinued },
   ];
 
-  const { data: itemsData } = useGetQuery<
+  const { data: itemsData, isLoading: isItemsLoading } = useGetQuery<
     IPaginatedApiResponse<IInventoryItem>,
     InventoryItemsFilters
   >(
@@ -147,7 +151,15 @@ export default function InventoryItemsTable() {
     const sku = item.sku ?? item.itemNumber ?? "N/A";
     const itemName = item.itemName ?? "Inventory Item";
 
-    const printWindow = window.open("", "_blank", "width=100,height=100");
+    const popW = 800;
+    const popH = 600;
+    const left = Math.round((screen.width - popW) / 2);
+    const top = Math.round((screen.height - popH) / 2);
+    const printWindow = window.open(
+      "",
+      "_blank",
+      `width=${popW},height=${popH},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+    );
     if (!printWindow) {
       toastRef.current?.show({
         severity: "error",
@@ -176,12 +188,16 @@ export default function InventoryItemsTable() {
 
     const style = doc.createElement("style");
     style.textContent =
-      "body { font-family: Arial, sans-serif; margin: 24px; }" +
-      ".label { border: 1px solid #ddd; border-radius: 8px; padding: 16px; }" +
-      ".heading { color: #15B097; font-size: 18px; font-weight: 700; margin-bottom: 12px; }" +
-      ".name { font-size: 14px; margin-bottom: 8px; }" +
-      ".barcode-wrap { display: flex; justify-content: center; margin: 12px 0; }" +
-      ".sku { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-align: center; margin-top: 8px; }";
+      "*, *::before, *::after { box-sizing: border-box; }" +
+      "body { font-family: Arial, sans-serif; margin: 0; padding: 32px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }" +
+      ".label { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 40px 48px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }" +
+      ".heading { color: #15B097; font-size: 22px; font-weight: 700; margin-bottom: 6px; }" +
+      ".name { font-size: 15px; color: #444; margin-bottom: 20px; }" +
+      ".barcode-wrap { display: flex; justify-content: center; margin: 16px 0; }" +
+      ".barcode-wrap svg { width: 100%; max-width: 420px; height: auto; }" +
+      ".sku { font-size: 18px; font-weight: 700; letter-spacing: 2px; text-align: center; margin-top: 12px; color: #111; }" +
+      ".print-btn { display: block; margin: 28px auto 0; padding: 10px 36px; background: #15B097; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }" +
+      "@media print { .print-btn { display: none; } body { background: #fff; padding: 0; } }";
     doc.head.appendChild(style);
 
     const label = doc.createElement("div");
@@ -225,17 +241,21 @@ export default function InventoryItemsTable() {
     skuValue.className = "sku";
     skuValue.textContent = sku;
 
+    const printBtn = doc.createElement("button");
+    printBtn.className = "print-btn";
+    printBtn.textContent = "Print";
+    printBtn.onclick = () => printWindow.print();
+
     barcodeWrap.appendChild(barcodeSvg);
 
     label.appendChild(heading);
     label.appendChild(name);
     label.appendChild(barcodeWrap);
     label.appendChild(skuValue);
+    label.appendChild(printBtn);
     doc.body.appendChild(label);
 
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
   };
 
   const renderIdentity = (rowData: IInventoryItem) => {
@@ -415,27 +435,31 @@ export default function InventoryItemsTable() {
         )}
       </Formik>
 
-      <DataTable
-        value={rows}
-        stripedRows
-        paginator
-        lazy
-        first={(filters.pageNumber - 1) * filters.pageSize}
-        rows={filters.pageSize}
-        totalRecords={totalRecords}
-        onPage={onPage}
-        rowsPerPageOptions={[10, 20, 50]}
-        emptyMessage="No inventory items found"
-      >
-        <Column header="Item Identity" body={renderIdentity} />
-        <Column header="SKU / Barcode" body={renderSkuOrBarcode} />
-        <Column header="Category / Type" body={renderCategoryType} />
-        <Column header="Stock Level" body={renderStockLevel} />
-        <Column header="UoM" body={renderUom} />
-        <Column header="Unit Price" body={renderUnitPrice} />
-        <Column header="Status" body={renderStatus} />
-        <Column header="Actions" body={renderActions} />
-      </DataTable>
+      {isItemsLoading ? (
+        <TableSkeleton rows={8} columns={8} />
+      ) : (
+        <DataTable
+          value={rows}
+          stripedRows
+          paginator
+          lazy
+          first={(filters.pageNumber - 1) * filters.pageSize}
+          rows={filters.pageSize}
+          totalRecords={totalRecords}
+          onPage={onPage}
+          rowsPerPageOptions={[10, 20, 50]}
+          emptyMessage="No inventory items found"
+        >
+          <Column header="Item Identity" body={renderIdentity} />
+          <Column header="SKU / Barcode" body={renderSkuOrBarcode} />
+          <Column header="Category / Type" body={renderCategoryType} />
+          <Column header="Stock Level" body={renderStockLevel} />
+          <Column header="UoM" body={renderUom} />
+          <Column header="Unit Price" body={renderUnitPrice} />
+          <Column header="Status" body={renderStatus} />
+          <Column header="Actions" body={renderActions} />
+        </DataTable>
+      )}
     </div>
   );
 }
