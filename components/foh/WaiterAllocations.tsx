@@ -18,13 +18,12 @@ import { Dialog } from "primereact/dialog";
 type SelectedTableAllocation = {
   waiterId: number;
   waiterName: string;
-  table: IWaiterAllocationTable;
+  table: IWaiterAllocationTable | null;
 };
 
 type SelectedUnassignWaiter = {
   waiterId: number;
   waiterName: string;
-  reservations: IWaiterCurrentAllocation["reservations"];
 };
 
 type ReservationAllocationQueryParams = {
@@ -85,13 +84,25 @@ export default function WaiterAllocations() {
   const reservationQueryParams: ReservationAllocationQueryParams | undefined =
     selectedTableAllocation
       ? {
-          ReservationStatus: 2,
+          ReservationStatus: 1,
           PageNumber: 1,
           PageSize: 0,
           ReservationDateFrom: todayReservationRange.ReservationDateFrom,
           ReservationDateTo: todayReservationRange.ReservationDateTo,
         }
       : undefined;
+
+  const unassignReservationQueryParams:
+    | ReservationAllocationQueryParams
+    | undefined = selectedUnassignWaiter
+    ? {
+        ReservationStatus: 2,
+        PageNumber: 1,
+        PageSize: 0,
+        ReservationDateFrom: todayReservationRange.ReservationDateFrom,
+        ReservationDateTo: todayReservationRange.ReservationDateTo,
+      }
+    : undefined;
 
   const { data: reservationData, isLoading: isReservationsLoading } =
     useGetQuery<
@@ -101,7 +112,7 @@ export default function WaiterAllocations() {
       [
         "waiterAllocationReservations",
         selectedTableAllocation?.waiterId ?? 0,
-        selectedTableAllocation?.table.tableId ?? 0,
+        selectedTableAllocation?.table?.tableId ?? 0,
       ],
       "/Reservations",
       reservationQueryParams,
@@ -111,6 +122,23 @@ export default function WaiterAllocations() {
         showErrorToast: true,
       },
     );
+
+  const {
+    data: unassignReservationData,
+    isLoading: isUnassignReservationsLoading,
+  } = useGetQuery<
+    IPaginatedApiResponse<IReservation>,
+    ReservationAllocationQueryParams | undefined
+  >(
+    ["waiterUnassignReservations", selectedUnassignWaiter?.waiterId ?? 0],
+    "/Reservations",
+    unassignReservationQueryParams,
+    {
+      enabled: Boolean(selectedUnassignWaiter),
+      toastRef,
+      showErrorToast: true,
+    },
+  );
 
   const { mutate: assignWaiter, isPending: isAssigningWaiter } = usePatchQuery({
     toastRef,
@@ -125,23 +153,32 @@ export default function WaiterAllocations() {
 
   const waiters = data?.data ?? [];
   const reservationsForSelectedTable =
-    reservationData?.data?.items?.filter(
-      (reservation) =>
-        reservation.table?.id === selectedTableAllocation?.table.tableId,
+    reservationData?.data?.items?.filter((reservation) =>
+      selectedTableAllocation?.table
+        ? reservation.table?.id === selectedTableAllocation.table.tableId
+        : true,
     ) ?? [];
   const showReservationEmptyState =
     !isReservationsLoading && reservationsForSelectedTable.length === 0;
   const showReservationList =
     !isReservationsLoading && reservationsForSelectedTable.length > 0;
-  const unassignReservations = selectedUnassignWaiter?.reservations ?? [];
+  const unassignReservations =
+    unassignReservationData?.data?.items?.filter(
+      (reservation) =>
+        reservation.assignedWaiterId === selectedUnassignWaiter?.waiterId,
+    ) ?? [];
   const showUnassignReservationEmptyState =
-    Boolean(selectedUnassignWaiter) && unassignReservations.length === 0;
+    Boolean(selectedUnassignWaiter) &&
+    !isUnassignReservationsLoading &&
+    unassignReservations.length === 0;
   const showUnassignReservationList =
-    Boolean(selectedUnassignWaiter) && unassignReservations.length > 0;
+    Boolean(selectedUnassignWaiter) &&
+    !isUnassignReservationsLoading &&
+    unassignReservations.length > 0;
 
   const handleOpenAllocationDialog = (
     waiter: IWaiterCurrentAllocation,
-    table: IWaiterAllocationTable,
+    table: IWaiterAllocationTable | null,
   ) => {
     setSelectedWaiterId(waiter.waiterId);
     setSelectedReservationIds([]);
@@ -163,7 +200,6 @@ export default function WaiterAllocations() {
     setSelectedUnassignWaiter({
       waiterId: waiter.waiterId,
       waiterName: waiter.fullName,
-      reservations: waiter.reservations,
     });
   };
 
@@ -246,18 +282,7 @@ export default function WaiterAllocations() {
   };
 
   const handleOpenAssignDialog = (waiter: IWaiterCurrentAllocation) => {
-    const firstTable = waiter.tables[0];
-
-    if (!firstTable) {
-      toastRef.current?.show({
-        severity: "info",
-        summary: "Info",
-        detail: "Click a table to allocate reservations for this waiter.",
-        life: 3000,
-      });
-      return;
-    }
-
+    const firstTable = waiter.tables[0] ?? null;
     handleOpenAllocationDialog(waiter, firstTable);
   };
 
@@ -308,8 +333,7 @@ export default function WaiterAllocations() {
 
               {showReservationEmptyState ? (
                 <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#FAFAFA] px-5 py-8 text-center text-sm text-[#6B7280]">
-                  No reservations found for{" "}
-                  {selectedTableAllocation?.table.tableName} today.
+                  {"No booked reservations found for today."}
                 </div>
               ) : null}
 
@@ -325,7 +349,8 @@ export default function WaiterAllocations() {
                         className="flex cursor-pointer items-center gap-4 rounded-2xl border border-[#F1F5F9] bg-white px-5 py-4 shadow-sm transition-colors hover:bg-[#FFF7F7]"
                       >
                         <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-[#F3F4F6] px-3 py-2 text-sm font-medium text-[#374151]">
-                          {selectedTableAllocation?.table.tableName}
+                          {selectedTableAllocation?.table?.tableName ??
+                            reservation.table?.tableName}
                         </span>
 
                         <span className="min-w-0 flex-1 text-[16px] text-[#111827]">
@@ -395,29 +420,38 @@ export default function WaiterAllocations() {
 
           <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
             <div className="max-h-[380px] space-y-4 overflow-y-auto pr-2">
+              {isUnassignReservationsLoading
+                ? ["one", "two", "three", "four"].map((skeletonKey) => (
+                    <div
+                      key={`unassign-skeleton-${skeletonKey}`}
+                      className="h-16 animate-pulse rounded-2xl border border-[#F3F4F6] bg-[#FAFAFA]"
+                    />
+                  ))
+                : null}
+
               {showUnassignReservationEmptyState ? (
                 <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#FAFAFA] px-5 py-8 text-center text-sm text-[#6B7280]">
-                  No reservations are currently assigned to this waiter.
+                  No arrived reservations are currently assigned to this waiter.
                 </div>
               ) : null}
 
               {showUnassignReservationList
                 ? unassignReservations.map((reservation) => {
                     const isChecked = selectedReservationIds.includes(
-                      reservation.reservationId,
+                      reservation.id,
                     );
 
                     return (
                       <label
-                        key={reservation.reservationId}
+                        key={reservation.id}
                         className="flex cursor-pointer items-center gap-4 rounded-2xl border border-[#F1F5F9] bg-white px-5 py-4 shadow-sm transition-colors hover:bg-[#FFF7F7]"
                       >
                         <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-[#F3F4F6] px-3 py-2 text-sm font-medium text-[#374151]">
-                          {reservation.tableName}
+                          {reservation.table?.tableName}
                         </span>
 
                         <span className="min-w-0 flex-1 text-[16px] text-[#111827]">
-                          {reservation.reservationId} - {reservation.reservationCode}
+                          {reservation.id} - {reservation.reservationCode}
                         </span>
 
                         <input
@@ -425,7 +459,7 @@ export default function WaiterAllocations() {
                           className="h-6 w-6 shrink-0 cursor-pointer rounded-md border border-[#D1D5DB] accent-[#FF6B6B]"
                           checked={isChecked}
                           onChange={() =>
-                            toggleReservationSelection(reservation.reservationId)
+                            toggleReservationSelection(reservation.id)
                           }
                         />
                       </label>
@@ -545,7 +579,7 @@ export default function WaiterAllocations() {
                     className="!w-full !rounded-full !bg-white !border !border-[#FF6B6B] !text-[#FF6B6B] !py-2"
                     state={!isUnassigningWaiter}
                     outlined={true}
-                    disabled={false}
+                    disabled={waiter.allocatedReservationCount === 0}
                     onClick={() => handleOpenUnassignDialog(waiter)}
                   />
                 </div>

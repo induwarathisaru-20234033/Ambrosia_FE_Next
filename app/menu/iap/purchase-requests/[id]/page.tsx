@@ -6,14 +6,17 @@ import dynamic from "next/dynamic";
 import { useToastRef } from "@/contexts/ToastContext";
 import {
   IBaseApiResponse,
+  ICreatePurchaseRequestBody,
   IInventoryItem,
   IPaginatedApiResponse,
   IPurchaseRequest,
 } from "@/data-types";
 import { useGetQuery } from "@/services/queries/getQuery";
+import { usePutQuery } from "@/services/queries/putQuery";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { useParams } from "next/navigation";
+import { usePatchQuery } from "@/services/queries/patchQuery";
 
 const DatePicker = dynamic(() => import("@/components/DatePicker"), {
   ssr: false,
@@ -43,6 +46,7 @@ interface MaterialLineItem {
   itemNumber: string;
   itemName: string;
   itemCategory: string;
+  inventoryItemId: number;
   quantity: number;
   uoM: string;
   unitPrice: number;
@@ -124,6 +128,7 @@ export default function EditPurchaseRequestsPage() {
         (item.inventoryItemId ? String(item.inventoryItemId) : ""),
       itemName: item.inventoryItem?.itemName || "",
       itemCategory: item.inventoryItem?.itemCategory || "",
+      inventoryItemId: item.inventoryItemId ?? 0,
       quantity: Number(item.requestedQuantity ?? 0),
       uoM: item.inventoryItem?.uoM || item.inventoryItem?.uom || "",
       unitPrice: Number(item.price ?? 0),
@@ -145,6 +150,12 @@ export default function EditPurchaseRequestsPage() {
   );
 
   const materialSuggestions = materialItemsData?.data?.items ?? [];
+
+  const { mutate: updatePurchaseRequest, isPending: isUpdating } = usePatchQuery({
+    redirectPath: "/menu/iap/purchase-requests",
+    successMessage: "Purchase request updated successfully!",
+    toastRef,
+  });
 
   const initialValues: FormValues = {
     description: purchaseRequestData?.description ?? "",
@@ -190,6 +201,7 @@ export default function EditPurchaseRequestsPage() {
       itemNumber: selectedMaterial.itemNumber ?? "",
       itemName: selectedMaterial.itemName ?? "",
       itemCategory: selectedMaterial.itemCategory ?? "",
+      inventoryItemId: Number(selectedMaterial.id ?? 0),
       quantity: 1,
       uoM: selectedMaterial.uoM ?? selectedMaterial.uom ?? "",
       unitPrice: Number(selectedMaterial.unitPrice ?? 0),
@@ -237,8 +249,47 @@ export default function EditPurchaseRequestsPage() {
   return (
     <Formik<FormValues>
       initialValues={initialValues}
-      onSubmit={() => {
-        // Update API integration will be connected in the next step.
+      onSubmit={(values) => {
+        if (!values.description.trim()) {
+          toastRef.current?.show({
+            severity: "error",
+            summary: "Error",
+            detail: "Description is required.",
+            life: 5000,
+          });
+          return;
+        }
+
+        if (lineItems.length === 0) {
+          toastRef.current?.show({
+            severity: "error",
+            summary: "Error",
+            detail: "At least one material line item is required.",
+            life: 5000,
+          });
+          return;
+        }
+
+        const body: ICreatePurchaseRequestBody = {
+          description: values.description.trim(),
+          supplier: values.supplier.trim(),
+          requestedBy: values.requester.trim(),
+          requestedDeliveryDate: values.requestedDeliveryDate
+            ? values.requestedDeliveryDate.toISOString()
+            : "",
+          isUrgent: values.urgent === "Yes",
+          prItems: lineItems.map((item) => ({
+            lineItemNo: item.lineNo,
+            requestedQuantity: item.quantity,
+            price: item.unitPrice,
+            inventoryItemId: item.inventoryItemId,
+          })),
+        };
+
+        updatePurchaseRequest({
+          url: `/PurchaseRequests/${requestId}`,
+          body,
+        });
       }}
       enableReinitialize
     >
@@ -419,6 +470,7 @@ export default function EditPurchaseRequestsPage() {
                 type="button"
                 className="bg-[#696E79] text-white mr-2 p-[12px] rounded-xl box-shadow w-full"
                 state={true}
+                disabled={isUpdating}
                 onClick={() => {
                   resetForm();
                   setMaterialSearch("");
@@ -433,7 +485,8 @@ export default function EditPurchaseRequestsPage() {
                 text="Save"
                 type="submit"
                 className="bg-[#15B097] text-white p-[12px] rounded-xl box-shadow w-full"
-                state={true}
+                state={!isUpdating}
+                disabled={isUpdating}
               />
             </div>
           </div>
