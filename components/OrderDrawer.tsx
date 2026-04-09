@@ -13,7 +13,7 @@ const getOrderStatusLabel = (status?: number) => {
     case 1:
       return "Draft";
     case 2:
-      return "Sent to KDS";
+      return "Sent to KDS/BDS";
     case 3:
       return "Preparing";
     case 4:
