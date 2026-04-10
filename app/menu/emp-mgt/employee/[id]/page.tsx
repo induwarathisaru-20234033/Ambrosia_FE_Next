@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { InputSwitch } from "primereact/inputswitch";
 import { Container, Row, Form as BootstrapForm } from "react-bootstrap";
+import { usePutQuery } from "@/services/queries/putQuery";
 
 const LabelGroup = dynamic(() => import("@/components/LabelGroup"), {
   ssr: false,
@@ -43,7 +44,7 @@ export default function EditEmployeePage() {
   const router = useRouter();
   const toastRef = useToastRef();
 
-  const patchMutation = usePatchQuery({
+  const patchMutation = usePutQuery({
     redirectPath: "/menu/emp-mgt",
     successMessage: "Employee updated successfully!",
     toastRef: toastRef,
