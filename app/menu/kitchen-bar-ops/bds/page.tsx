@@ -552,7 +552,6 @@ const handlePlaceManualOrder = async () => {
       <PlaceDirectOrderModal
         isOpen={isPlaceOrderModalOpen}
         onClose={handleClosePlaceOrderModal}
-        // tables={tables}
         onConfirm={handlePlaceManualOrder}
       />
     </div>

@@ -45,9 +45,7 @@ export default function PlaceDirectOrderModal({
                 Confirm
               </YellowButton>
 
-              <WhiteButton onClick={onClose}>
-                Cancel
-              </WhiteButton>
+              <WhiteButton onClick={onClose}>Cancel</WhiteButton>
             </div>
           </div>
         </div>
