@@ -17,6 +17,7 @@ import { StandardOpeningHours } from "./OpeningHoursForm";
 import ServiceLogicCard from "./ServiceLogicCard";
 import Button from "../Button";
 import ServiceHoursAndRulesSkeleton from "../skeletons/ServiceHoursAndRulesSkeleton";
+import { usePutQuery } from "@/services/queries/putQuery";
 
 export default function ServiceHoursAndRules() {
   const toastRef = useToastRef();
@@ -51,7 +52,7 @@ export default function ServiceHoursAndRules() {
     toastRef: toastRef,
   });
 
-  const patchMutation = usePatchQuery({
+  const putMutation = usePutQuery({
     invalidateKey: ["schedule"],
     successMessage: "Schedule updated successfully",
     toastRef: toastRef,
@@ -178,7 +179,7 @@ export default function ServiceHoursAndRules() {
         .flat(),
     };
 
-    const mutation = shouldCreateConfig ? postMutation : patchMutation;
+    const mutation = shouldCreateConfig ? postMutation : putMutation;
 
     mutation.mutate({
       url: "Configs",
@@ -190,7 +191,7 @@ export default function ServiceHoursAndRules() {
     return <ServiceHoursAndRulesSkeleton />;
   }
 
-  const isSaving = postMutation.isPending || patchMutation.isPending;
+  const isSaving = postMutation.isPending || putMutation.isPending;
 
   const isSaveDisabled =
     isSaving || !isServiceLogicValid || !isOpeningHoursValid;
