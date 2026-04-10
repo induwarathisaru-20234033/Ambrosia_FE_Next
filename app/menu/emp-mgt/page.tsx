@@ -12,6 +12,7 @@ import { TabView, TabPanel } from "primereact/tabview";
 import { useToastRef } from "@/contexts/ToastContext";
 import ViewRoleDrawer from "@/components/ViewRoleDrawer";
 import AssignRoleModal from "@/components/AssignRoleModal";
+import UnassignRoleModal from "@/components/UnassignRoleModal";
 import {
   IBaseApiResponse,
   IPaginatedApiResponse,
@@ -101,7 +102,11 @@ export default function ViewEmployeePage() {
   const [isViewRoleOpen, setIsViewRoleOpen] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [selectedRoleForAssign, setSelectedRoleForAssign] = useState<IRole | null>(null);
+  const [selectedRoleForAssign, setSelectedRoleForAssign] =
+    useState<IRole | null>(null);
+  const [unassignModalVisible, setUnassignModalVisible] = useState(false);
+  const [selectedRoleForUnassign, setSelectedRoleForUnassign] =
+    useState<IRole | null>(null);
 
   const initialEmployeeFilters: SearchEmployeeRequest = {
     employeeId: "",
@@ -122,8 +127,9 @@ export default function ViewEmployeePage() {
     pageSize: 10,
   };
 
-  const [employeeFilters, setEmployeeFilters] =
-    useState<SearchEmployeeRequest>(initialEmployeeFilters);
+  const [employeeFilters, setEmployeeFilters] = useState<SearchEmployeeRequest>(
+    initialEmployeeFilters,
+  );
 
   const [roleFilters, setRoleFilters] =
     useState<SearchRoleRequest>(initialRoleFilters);
@@ -176,21 +182,19 @@ export default function ViewEmployeePage() {
   const assignedEmployees =
     assignedEmployeesResponse?.data?.assignedEmployees || [];
 
-  const {
-  data: selectedRoleResponse,
-  isFetching: isFetchingSelectedRole,
-} = useGetQuery<IBaseApiResponse<IRoleViewData>, any>(
-  ["role-view", selectedRoleId ?? 0],
-  `/roles/${selectedRoleId}`,
-  {
-    includePermissions: true,
-    includeFeatures: true,
-  },
-  {
-    enabled: !!selectedRoleId && isViewRoleOpen,
-    toastRef,
-  },
-);
+  const { data: selectedRoleResponse, isFetching: isFetchingSelectedRole } =
+    useGetQuery<IBaseApiResponse<IRoleViewData>, any>(
+      ["role-view", selectedRoleId ?? 0],
+      `/roles/${selectedRoleId}`,
+      {
+        includePermissions: true,
+        includeFeatures: true,
+      },
+      {
+        enabled: !!selectedRoleId && isViewRoleOpen,
+        toastRef,
+      },
+    );
 
   const selectedRole = selectedRoleResponse?.data || null;
 
@@ -255,11 +259,16 @@ export default function ViewEmployeePage() {
 
   const handleRoleAssigned = () => {
     // Refresh the roles table
-    setRoleFilters(prev => ({ ...prev, pageNumber: 1 }));
+    setRoleFilters((prev) => ({ ...prev, pageNumber: 1 }));
   };
 
-  const handleUnassignRole = (id: number) => {
-    router.push(`/menu/emp-mgt/roles/${id}/unassign`);
+  const handleUnassignRole = (role: IRole) => {
+    setSelectedRoleForUnassign(role);
+    setUnassignModalVisible(true);
+  };
+
+  const handleRoleUnassigned = () => {
+    setRoleFilters((prev) => ({ ...prev, pageNumber: 1 }));
   };
 
   const handleViewRole = (id: number) => {
@@ -548,7 +557,7 @@ export default function ViewEmployeePage() {
                   <button
                     type="button"
                     className="bg-[#0086ED] text-white py-1 px-3 rounded-md hover:bg-blue-600"
-                    onClick={() => handleUnassignRole(rowData.id)}
+                    onClick={() => handleUnassignRole(rowData)}
                   >
                     Un-Assign
                   </button>
@@ -590,6 +599,17 @@ export default function ViewEmployeePage() {
           }}
           role={selectedRoleForAssign}
           onAssigned={handleRoleAssigned}
+        />
+      )}
+      {unassignModalVisible && (
+        <UnassignRoleModal
+          visible={unassignModalVisible}
+          onHide={() => {
+            setUnassignModalVisible(false);
+            setSelectedRoleForUnassign(null);
+          }}
+          role={selectedRoleForUnassign}
+          onUnassigned={handleRoleUnassigned}
         />
       )}
     </Container>
