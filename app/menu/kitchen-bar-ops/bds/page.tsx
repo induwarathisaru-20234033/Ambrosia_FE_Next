@@ -18,7 +18,6 @@ import {
   IBaseApiResponse,
   IPaginatedData,
   IBackendOrder,
-  ITable,
 } from "@/data-types";
 import OrderMgtBackButton from "@/components/OrderMgtBackButton";
 
@@ -151,16 +150,10 @@ export default function BDSPage() {
     { enabled: true, toastRef }
   );
 
-  const { data: tablesResponse } = useGetQuery<
-    IBaseApiResponse<ITable[]>,
-    undefined
-  >(["bds-tables"], "/tables", undefined, { enabled: true, toastRef });
 
   const drinkMenuItems: MenuItem[] = Array.isArray(menuResponse)
     ? menuResponse
     : menuResponse?.data ?? [];
-
-  const tables: ITable[] = tablesResponse?.data ?? [];
 
   const getItemStatusFromOrderStatus = (
     orderStatus: number
@@ -366,59 +359,59 @@ export default function BDSPage() {
     });
   };
 
-  const handlePlaceManualOrder = async (tableId: number) => {
-    if (!selectedManualTab) return;
+const handlePlaceManualOrder = async () => {
+  if (!selectedManualTab) return;
 
-    const currentTab = manualTabs.find((tab) => tab.id === selectedManualTab.id);
-    if (!currentTab) return;
+  const currentTab = manualTabs.find((tab) => tab.id === selectedManualTab.id);
+  if (!currentTab) return;
 
-    if (currentTab.items.length === 0) {
-      toastRef?.current?.show({
-        severity: "warn",
-        summary: "Validation",
-        detail: "Add at least one item first",
-        life: 3000,
-      });
-      return;
-    }
+  if (currentTab.items.length === 0) {
+    toastRef?.current?.show({
+      severity: "warn",
+      summary: "Validation",
+      detail: "Add at least one item first",
+      life: 3000,
+    });
+    return;
+  }
 
-    try {
-      await axiosAuth.post("/orders", {
-        tableId,
-        items: currentTab.items.map((item) => ({
-          menuItemId: item.menuItemId,
-          quantity: item.quantity,
-          specialInstructions: item.specialInstructions ?? "",
-        })),
-        isDraft: false,
-      });
+  try {
+    await axiosAuth.post("/orders", {
+      tableId: null,
+      items: currentTab.items.map((item) => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        specialInstructions: item.specialInstructions ?? "",
+      })),
+      isDraft: false,
+    });
 
-      setManualTabs((prev) => prev.filter((tab) => tab.id !== currentTab.id));
+    setManualTabs((prev) => prev.filter((tab) => tab.id !== currentTab.id));
 
-      toastRef?.current?.show({
-        severity: "success",
-        summary: "Success",
-        detail: "Direct bar order placed successfully",
-        life: 3000,
-      });
+    toastRef?.current?.show({
+      severity: "success",
+      summary: "Success",
+      detail: "Direct bar order placed successfully",
+      life: 3000,
+    });
 
-      handleClosePlaceOrderModal();
-      setRefreshKey((prev) => prev + 1);
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.errors?.[0] ||
-        error?.message ||
-        "Failed to place direct bar order";
+    handleClosePlaceOrderModal();
+    setRefreshKey((prev) => prev + 1);
+  } catch (error: any) {
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.errors?.[0] ||
+      error?.message ||
+      "Failed to place direct bar order";
 
-      toastRef?.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: errorMessage,
-        life: 5000,
-      });
-    }
-  };
+    toastRef?.current?.show({
+      severity: "error",
+      summary: "Error",
+      detail: errorMessage,
+      life: 5000,
+    });
+  }
+};
 
   const handleIncreaseItem = (tabId: string | number, itemId: number) => {
     updateManualTab(tabId, (tab) => ({
@@ -559,7 +552,7 @@ export default function BDSPage() {
       <PlaceDirectOrderModal
         isOpen={isPlaceOrderModalOpen}
         onClose={handleClosePlaceOrderModal}
-        tables={tables}
+        // tables={tables}
         onConfirm={handlePlaceManualOrder}
       />
     </div>
